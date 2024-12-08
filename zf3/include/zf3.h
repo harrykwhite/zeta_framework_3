@@ -10,10 +10,6 @@
 #include <glad/glad.h>
 #include <zf3_common.h>
 
-#define ZF3_KILOBYTES(X) ((X) << 10)
-#define ZF3_MEGABYTES(X) ((X) << 20)
-#define ZF3_GIGABYTES(X) ((X) << 30)
-
 #define ZF3_GL_VERSION_MAJOR 4
 #define ZF3_GL_VERSION_MINOR 1
 
@@ -229,21 +225,5 @@ typedef struct {
 
 void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs);
 void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs);
-
-//
-// Utilities
-//
-typedef unsigned char ZF3Byte;
-
-typedef struct {
-    ZF3Byte* buf;
-    int size;
-    int used;
-} ZF3MemArena;
-
-bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size);
-void* zf3_mem_arena_push(ZF3MemArena* const memArena, const int size);
-void zf3_mem_arena_reset(ZF3MemArena* const memArena);
-void zf3_mem_arena_cleanup(ZF3MemArena* const memArena);
 
 #endif

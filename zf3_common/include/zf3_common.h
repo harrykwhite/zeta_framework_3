@@ -1,7 +1,29 @@
 #ifndef ZF3_COMMON_H
 #define ZF3_COMMON_H
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <math.h>
+#include <assert.h>
+
+#define ZF3_KILOBYTES(X) ((X) << 10)
+#define ZF3_MEGABYTES(X) ((X) << 20)
+#define ZF3_GIGABYTES(X) ((X) << 30)
+
+typedef unsigned char ZF3Byte;
+
+//
+// Assets
+//
+#define ZF3_ASSETS_FILE_NAME "assets.zf3"
+
+//
+// Logging
+//
+void zf3_log(const char* const format, ...);
+void zf3_log_error(const char* const format, ...);
 
 //
 // Math
@@ -24,5 +46,24 @@ typedef struct {
 
 void zf3_init_identity_matrix_4x4(ZF3Matrix4x4* const mat);
 void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
+
+//
+// Memory
+//
+typedef struct {
+    ZF3Byte* buf;
+    int size;
+    int used;
+} ZF3MemArena;
+
+bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size);
+void* zf3_mem_arena_push(ZF3MemArena* const memArena, const int size);
+void zf3_mem_arena_reset(ZF3MemArena* const memArena);
+void zf3_mem_arena_cleanup(ZF3MemArena* const memArena);
+
+//
+// Miscellaneous
+//
+char* zf3_get_file_contents(const char* const filename);
 
 #endif

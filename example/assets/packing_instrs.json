@@ -1,0 +1,19 @@
+{
+    "textures": [
+        "textures/sprite_sheet.png"
+    ],
+    "fonts": [
+        {
+            "rfp": "fonts/eb_garamond.ttf",
+            "pt_size": 18
+        },
+        {
+            "rfp": "fonts/eb_garamond.ttf",
+            "pt_size": 24
+        },
+        {
+            "rfp": "fonts/eb_garamond.ttf",
+            "pt_size": 36
+        }
+    ]
+}
