@@ -59,6 +59,8 @@ static void game_loop(Game* const game) {
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
+    ZF3InputState inputState = {0};
+
     while (!glfwWindowShouldClose(game->glfwWindow)) {
         glfwPollEvents();
 
@@ -71,14 +73,17 @@ static void game_loop(Game* const game) {
         const int tickCnt = frameDurAccum / TARG_TICK_DUR;
 
         if (tickCnt > 0) {
+            // Refresh input.
+            const ZF3InputState inputStateLast = inputState;
+            zf3_load_input_state(&inputState, game->glfwWindow);
+
             // Execute ticks.
             int i = 0;
 
             do {
                 frameDurAccum -= TARG_TICK_DUR;
                 ++i;
-            }
-            while (i < tickCnt);
+            } while (i < tickCnt);
         }
 
         // Render.
