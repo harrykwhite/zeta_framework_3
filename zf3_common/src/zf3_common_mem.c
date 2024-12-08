@@ -38,3 +38,15 @@ void zf3_mem_arena_cleanup(ZF3MemArena* const memArena) {
     free(memArena->buf);
 
 }
+
+bool zf3_is_zero(const void* const mem, const int size) {
+    const ZF3Byte* const memBytes = mem;
+
+    for (int i = 0; i < size; ++i) {
+        if (memBytes[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}

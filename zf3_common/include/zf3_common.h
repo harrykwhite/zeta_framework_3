@@ -8,16 +8,14 @@
 #include <math.h>
 #include <assert.h>
 
-#define ZF3_KILOBYTES(X) ((X) << 10)
-#define ZF3_MEGABYTES(X) ((X) << 20)
-#define ZF3_GIGABYTES(X) ((X) << 30)
-
-typedef unsigned char ZF3Byte;
-
 //
 // Assets
 //
 #define ZF3_ASSETS_FILE_NAME "assets.zf3"
+
+#define ZF3_TEX_WIDTH_LIMIT 2048
+#define ZF3_TEX_HEIGHT_LIMIT 2048
+#define ZF3_TEX_CHANNEL_COUNT 4
 
 //
 // Logging
@@ -50,6 +48,12 @@ void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const 
 //
 // Memory
 //
+#define ZF3_KILOBYTES(X) ((X) << 10)
+#define ZF3_MEGABYTES(X) ((X) << 20)
+#define ZF3_GIGABYTES(X) ((X) << 30)
+
+typedef unsigned char ZF3Byte;
+
 typedef struct {
     ZF3Byte* buf;
     int size;
@@ -60,6 +64,8 @@ bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size);
 void* zf3_mem_arena_push(ZF3MemArena* const memArena, const int size);
 void zf3_mem_arena_reset(ZF3MemArena* const memArena);
 void zf3_mem_arena_cleanup(ZF3MemArena* const memArena);
+
+bool zf3_is_zero(const void* const mem, const int size);
 
 //
 // Miscellaneous
