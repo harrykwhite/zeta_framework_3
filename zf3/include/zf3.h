@@ -209,6 +209,15 @@ inline bool zf3_is_gamepad_button_released(const ZF3GamepadButtonCode gamepadBut
 //
 // Assets
 //
+#define ZF3_TEX_LIMIT 256
+
+typedef struct {
+    int texCnt;
+
+    GLuint texGLIDs[ZF3_TEX_LIMIT];
+    ZF3Vec2DInt texSizes[ZF3_TEX_LIMIT];
+} ZF3Assets;
+
 typedef struct {
     GLuint spriteQuadGLID;
     int spriteQuadProjUniLoc;
@@ -222,6 +231,9 @@ typedef struct {
     int charQuadRotUniLoc;
     int charQuadBlendUniLoc;
 } ZF3ShaderProgs;
+
+bool zf3_load_assets(ZF3Assets* const assets, ZF3MemArena* const scratchSpace);
+void zf3_unload_assets(ZF3Assets* const assets);
 
 void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs);
 void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs);

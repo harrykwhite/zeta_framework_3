@@ -150,7 +150,56 @@ static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, cons
     return progGLID;
 }
 
+bool zf3_load_assets(ZF3Assets* const assets, ZF3MemArena* const scratchSpace) {
+    assert(zf3_is_zero(assets, sizeof(*assets)));
+
+    // Open the assets file.
+    FILE* const fs = fopen(ZF3_ASSETS_FILE_NAME, "rb");
+
+    if (!fs) {
+        return false;
+    }
+
+    // Read asset counts.
+    fread(&assets->texCnt, sizeof(assets->texCnt), 1, fs);
+
+    //
+    // Textures
+    //
+    if (assets->texCnt > 0) {
+        // Generate textures and store their IDs.
+        glGenTextures(assets->texCnt, assets->texGLIDs);
+
+        // Read the sizes and pixel data of textures and finish setting them up.
+        const int pxDataBufSize = ZF3_TEX_CHANNEL_COUNT * ZF3_TEX_WIDTH_LIMIT * ZF3_TEX_HEIGHT_LIMIT;
+        unsigned char* const pxDataBuf = zf3_mem_arena_push(scratchSpace, pxDataBufSize); // A buffer for temporarily storing the pixel data of each texture.
+        assert(pxDataBuf);
+
+        for (int i = 0; i < assets->texCnt; ++i) {
+            fread(&assets->texSizes[i], sizeof(assets->texSizes[i]), 1, fs);
+
+            fread(pxDataBuf, 1, ZF3_TEX_CHANNEL_COUNT * assets->texSizes[i].x * assets->texSizes[i].y, fs);
+
+            glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[i]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, assets->texSizes[i].x, assets->texSizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pxDataBuf);
+        }
+    }
+
+    fclose(fs);
+
+    return true;
+}
+
+void zf3_unload_assets(ZF3Assets* const assets) {
+    glDeleteTextures(assets->texCnt, assets->texGLIDs);
+    memset(assets, 0, sizeof(*assets));
+}
+
 void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs) {
+    assert(zf3_is_zero(shaderProgs, sizeof(*shaderProgs)));
+
     // Load the sprite quad shader program.
     shaderProgs->spriteQuadGLID = create_shader_prog_from_srcs(s_spriteQuadVertSrc, s_spriteQuadFragSrc);
     assert(shaderProgs->spriteQuadGLID);

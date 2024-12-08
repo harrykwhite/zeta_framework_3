@@ -13,9 +13,9 @@
 //
 #define ZF3_ASSETS_FILE_NAME "assets.zf3"
 
+#define ZF3_TEX_CHANNEL_COUNT 4
 #define ZF3_TEX_WIDTH_LIMIT 2048
 #define ZF3_TEX_HEIGHT_LIMIT 2048
-#define ZF3_TEX_CHANNEL_COUNT 4
 
 //
 // Logging

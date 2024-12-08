@@ -18,3 +18,9 @@ target_include_directories(example PRIVATE
 )
 
 target_link_libraries(example PRIVATE glfw zf3)
+
+add_dependencies(example zf3_asset_packer)
+
+add_custom_command(TARGET example POST_BUILD
+	COMMAND $<TARGET_FILE:zf3_asset_packer> ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}
+)

@@ -1,6 +1,7 @@
 #include <zf3.h>
 
-#define MEM_ARENA_SIZE ZF3_MEGABYTES(64)
+#define PERM_MEM_ARENA_SIZE ZF3_MEGABYTES(128)
+#define TEMP_MEM_ARENA_SIZE ZF3_MEGABYTES(32)
 
 #define TARG_TICKS_PER_SEC 60
 #define TARG_TICK_DUR (1.0 / TARG_TICKS_PER_SEC)
@@ -9,26 +10,40 @@
 typedef unsigned short GameCleanupBitset;
 
 enum GameCleanupBit {
-    MEM_ARENA_CLEANUP_BIT = 1 << 0,
-    GLFW_CLEANUP_BIT = 1 << 1,
-    GLFW_WINDOW_CLEANUP_BIT = 1 << 2,
-    SHADER_PROGS_CLEANUP_BIT = 1 << 3
+    PERM_MEM_ARENA_CLEANUP_BIT = 1 << 0,
+    TEMP_MEM_ARENA_CLEANUP_BIT = 1 << 1,
+    GLFW_CLEANUP_BIT = 1 << 2,
+    GLFW_WINDOW_CLEANUP_BIT = 1 << 3,
+    ASSETS_CLEANUP_BIT = 1 << 4,
+    SHADER_PROGS_CLEANUP_BIT = 1 << 5
 };
 
 typedef struct {
     GameCleanupBitset cleanupBitset;
-    ZF3MemArena memArena;
+
+    ZF3MemArena permMemArena;
+    ZF3MemArena tempMemArena;
+
     GLFWwindow* glfwWindow;
+    ZF3Assets* assets;
     ZF3ShaderProgs shaderProgs;
 } Game;
 
 static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
-    // Initialise the memory arena.
-    if (!zf3_mem_arena_init(&game->memArena, MEM_ARENA_SIZE)) {
+    assert(zf3_is_zero(game, sizeof(*game)));
+
+    // Initialise the memory arenas.
+    if (!zf3_mem_arena_init(&game->permMemArena, PERM_MEM_ARENA_SIZE)) {
         return false;
     }
 
-    game->cleanupBitset |= MEM_ARENA_CLEANUP_BIT;
+    game->cleanupBitset |= PERM_MEM_ARENA_CLEANUP_BIT;
+
+    if (!zf3_mem_arena_init(&game->tempMemArena, TEMP_MEM_ARENA_SIZE)) {
+        return false;
+    }
+
+    game->cleanupBitset |= TEMP_MEM_ARENA_CLEANUP_BIT;
 
     // Initialise GLFW.
     if (!glfwInit()) {
@@ -47,10 +62,19 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
     game->cleanupBitset |= GLFW_WINDOW_CLEANUP_BIT;
 
     // Initialise OpenGL function pointers.
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         return false;
     }
+
+    // Load assets.
+    game->assets = zf3_mem_arena_push(&game->permMemArena, sizeof(*game->assets));
+    assert(game->assets);
+
+    if (!zf3_load_assets(game->assets, &game->tempMemArena)) {
+        return false;
+    }
+
+    game->cleanupBitset |= ASSETS_CLEANUP_BIT;
 
     // Load shader programs.
     zf3_load_shader_progs(&game->shaderProgs);
@@ -116,8 +140,12 @@ static void game_cleanup(Game* const game) {
         glfwTerminate();
     }
 
-    if (game->cleanupBitset & MEM_ARENA_CLEANUP_BIT) {
-        zf3_mem_arena_cleanup(&game->memArena);
+    if (game->cleanupBitset & TEMP_MEM_ARENA_CLEANUP_BIT) {
+        zf3_mem_arena_cleanup(&game->tempMemArena);
+    }
+
+    if (game->cleanupBitset & PERM_MEM_ARENA_CLEANUP_BIT) {
+        zf3_mem_arena_cleanup(&game->permMemArena);
     }
 }
 
