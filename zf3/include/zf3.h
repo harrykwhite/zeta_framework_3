@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <zf3_common.h>
 
 #define ZF3_KILOBYTES(X) ((X) << 10)
 #define ZF3_MEGABYTES(X) ((X) << 20)
@@ -16,10 +17,8 @@
 #define ZF3_GL_VERSION_MAJOR 4
 #define ZF3_GL_VERSION_MINOR 1
 
-typedef unsigned char ZF3Byte;
-
 //
-// zf3_game.c
+// Game
 //
 typedef struct {
     int windowInitWidth;
@@ -31,7 +30,7 @@ typedef struct {
 void zf3_run_game(const ZF3GameInfo* const gameInfo);
 
 //
-// zf3_window.c
+// Window
 //
 typedef unsigned long long ZF3KeysDownBits;
 typedef unsigned char ZF3MouseButtonsDownBits;
@@ -173,14 +172,12 @@ inline bool zf3_is_key_down(const ZF3KeyCode keyCode, const ZF3InputState* const
     return inputState->keysDownBits & ((ZF3KeysDownBits)1 << keyCode);
 }
 
-inline bool zf3_is_key_pressed(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast)
-{
+inline bool zf3_is_key_pressed(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
     const ZF3KeysDownBits keyBit = (ZF3KeysDownBits)1 << keyCode;
     return (inputState->keysDownBits & keyBit) && !(inputStateLast->keysDownBits & keyBit);
 }
 
-inline bool zf3_is_key_released(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast)
-{
+inline bool zf3_is_key_released(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
     const ZF3KeysDownBits keyBit = (ZF3KeysDownBits)1 << keyCode;
     return !(inputState->keysDownBits & keyBit) && (inputStateLast->keysDownBits & keyBit);
 }
@@ -214,8 +211,10 @@ inline bool zf3_is_gamepad_button_released(const ZF3GamepadButtonCode gamepadBut
 }
 
 //
-// zf3_utils.c
+// Utilities
 //
+typedef unsigned char ZF3Byte;
+
 typedef struct {
     ZF3Byte* buf;
     int size;

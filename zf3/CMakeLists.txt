@@ -24,7 +24,8 @@ target_compile_definitions(zf3 PRIVATE GLFW_INCLUDE_NONE)
 
 target_include_directories(zf3 PRIVATE
 	include
+	${PARENT_SRC_DIR}/zf3_common/include
 	${PARENT_SRC_DIR}/vendor/glad/include
 )
 
-target_link_libraries(zf3 PRIVATE glfw OpenAL::OpenAL)
+target_link_libraries(zf3 PRIVATE zf3_common glfw OpenAL::OpenAL)

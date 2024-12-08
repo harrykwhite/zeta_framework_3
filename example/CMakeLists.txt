@@ -13,6 +13,7 @@ target_compile_definitions(example PRIVATE GLFW_INCLUDE_NONE)
 
 target_include_directories(example PRIVATE
     ${PARENT_SRC_DIR}/zf3/include
+    ${PARENT_SRC_DIR}/zf3_common/include
     ${PARENT_SRC_DIR}/vendor/glad/include
 )
 
