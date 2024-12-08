@@ -211,6 +211,26 @@ inline bool zf3_is_gamepad_button_released(const ZF3GamepadButtonCode gamepadBut
 }
 
 //
+// Assets
+//
+typedef struct {
+    GLuint spriteQuadGLID;
+    int spriteQuadProjUniLoc;
+    int spriteQuadViewUniLoc;
+    int spriteQuadTexturesUniLoc;
+
+    GLuint charQuadGLID;
+    int charQuadProjUniLoc;
+    int charQuadViewUniLoc;
+    int charQuadPosUniLoc;
+    int charQuadRotUniLoc;
+    int charQuadBlendUniLoc;
+} ZF3ShaderProgs;
+
+void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs);
+void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs);
+
+//
 // Utilities
 //
 typedef unsigned char ZF3Byte;

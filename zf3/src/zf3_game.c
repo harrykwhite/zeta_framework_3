@@ -11,13 +11,15 @@ typedef unsigned short GameCleanupBitset;
 enum GameCleanupBit {
     MEM_ARENA_CLEANUP_BIT = 1 << 0,
     GLFW_CLEANUP_BIT = 1 << 1,
-    GLFW_WINDOW_CLEANUP_BIT = 1 << 2
+    GLFW_WINDOW_CLEANUP_BIT = 1 << 2,
+    SHADER_PROGS_CLEANUP_BIT = 1 << 3
 };
 
 typedef struct {
     GameCleanupBitset cleanupBitset;
     ZF3MemArena memArena;
     GLFWwindow* glfwWindow;
+    ZF3ShaderProgs shaderProgs;
 } Game;
 
 static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
@@ -43,6 +45,16 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
     }
 
     game->cleanupBitset |= GLFW_WINDOW_CLEANUP_BIT;
+
+    // Initialise OpenGL function pointers.
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        return false;
+    }
+
+    // Load shader programs.
+    zf3_load_shader_progs(&game->shaderProgs);
+    game->cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
 
     // Show the window now that everything is set up.
     glfwShowWindow(game->glfwWindow);
@@ -92,6 +104,10 @@ static void game_loop(Game* const game) {
 }
 
 static void game_cleanup(Game* const game) {
+    if (game->cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
+        zf3_unload_shader_progs(&game->shaderProgs);
+    }
+
     if (game->cleanupBitset & GLFW_WINDOW_CLEANUP_BIT) {
         glfwDestroyWindow(game->glfwWindow);
     }
