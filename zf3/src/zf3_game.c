@@ -1,6 +1,6 @@
 #include <zf3.h>
 
-#define PERM_MEM_ARENA_SIZE ZF3_MEGABYTES(128)
+#define PERM_MEM_ARENA_SIZE ZF3_MEGABYTES(64)
 #define TEMP_MEM_ARENA_SIZE ZF3_MEGABYTES(32)
 
 #define TARG_TICKS_PER_SEC 60
@@ -15,7 +15,8 @@ enum GameCleanupBit {
     GLFW_CLEANUP_BIT = 1 << 2,
     GLFW_WINDOW_CLEANUP_BIT = 1 << 3,
     ASSETS_CLEANUP_BIT = 1 << 4,
-    SHADER_PROGS_CLEANUP_BIT = 1 << 5
+    SHADER_PROGS_CLEANUP_BIT = 1 << 5,
+    SCENE_SYSTEM_CLEANUP_BIT = 1 << 6
 };
 
 typedef struct {
@@ -84,6 +85,13 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
     zf3_load_shader_progs(&game->shaderProgs);
     game->cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
 
+    // Load the initial scene.
+    if (!zf3_scene_system_init()) {
+        return false;
+    }
+
+    game->cleanupBitset |= SCENE_SYSTEM_CLEANUP_BIT;
+
     // Show the window now that everything is set up.
     glfwShowWindow(game->glfwWindow);
 
@@ -96,12 +104,6 @@ static double calc_valid_frame_dur(const double frameTime, const double frameTim
 }
 
 static void game_loop(Game* const game) {
-    ZF3SpriteRenderer* const spriteRenderer = zf3_mem_arena_push(&game->permMemArena, sizeof(*spriteRenderer)); // TEMP
-
-    ZF3Sprite* const sprite = zf3_gen_sprites(spriteRenderer, 1);
-    sprite->alpha = 1.0f;
-    sprite->size = (ZF3Vec2D) {32.0f, 32.0f};
-
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
@@ -127,25 +129,25 @@ static void game_loop(Game* const game) {
             int i = 0;
 
             do {
+                zf3_proc_scene_tick();
+
                 frameDurAccum -= TARG_TICK_DUR;
                 ++i;
             } while (i < tickCnt);
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        zf3_render_sprites(spriteRenderer, &game->shaderProgs);
-
+        zf3_render_scene(&game->shaderProgs);
         glfwSwapBuffers(game->glfwWindow);
 
         glfwPollEvents();
     }
-
-    zf3_sprite_renderer_cleanup(spriteRenderer);
 }
 
 static void game_cleanup(Game* const game) {
+    if (game->cleanupBitset & SCENE_SYSTEM_CLEANUP_BIT) {
+        zf3_scene_system_cleanup();
+    }
+
     if (game->cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
         zf3_unload_shader_progs(&game->shaderProgs);
     }
