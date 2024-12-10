@@ -26,6 +26,9 @@ void zf3_log_error(const char* const format, ...);
 //
 // Math
 //
+#define ZF3_MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define ZF3_MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+
 #define ZF3_PI 3.14159265358979323846f
 
 typedef struct {
@@ -42,6 +45,18 @@ typedef struct {
     float elems[4][4];
 } ZF3Matrix4x4;
 
+typedef struct {
+    int x;
+    int y;
+    int width;
+    int height;
+} ZF3Rect;
+
+typedef struct {
+    int begin;
+    int end;
+} ZF3Range;
+
 void zf3_init_identity_matrix_4x4(ZF3Matrix4x4* const mat);
 void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far);
 
@@ -51,6 +66,8 @@ void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const 
 #define ZF3_KILOBYTES(X) ((X) << 10)
 #define ZF3_MEGABYTES(X) ((X) << 20)
 #define ZF3_GIGABYTES(X) ((X) << 30)
+
+#define ZF3_BITS_TO_BYTES(X) ((((X) + 7) & ~7) / 8)
 
 typedef unsigned char ZF3Byte;
 

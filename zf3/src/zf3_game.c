@@ -25,9 +25,10 @@ typedef struct {
     ZF3MemArena tempMemArena;
 
     GLFWwindow* glfwWindow;
-    ZF3Assets* assets;
     ZF3ShaderProgs shaderProgs;
 } Game;
+
+ZF3Assets* i_assets; // TEMP?
 
 static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
     assert(zf3_is_zero(game, sizeof(*game)));
@@ -61,16 +62,19 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
 
     game->cleanupBitset |= GLFW_WINDOW_CLEANUP_BIT;
 
+    // Enable VSync.
+    glfwSwapInterval(1);
+
     // Initialise OpenGL function pointers.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         return false;
     }
 
     // Load assets.
-    game->assets = zf3_mem_arena_push(&game->permMemArena, sizeof(*game->assets));
-    assert(game->assets);
+    i_assets = zf3_mem_arena_push(&game->permMemArena, sizeof(*i_assets));
+    assert(i_assets);
 
-    if (!zf3_load_assets(game->assets, &game->tempMemArena)) {
+    if (!zf3_load_assets(i_assets, &game->tempMemArena)) {
         return false;
     }
 
@@ -92,13 +96,19 @@ static double calc_valid_frame_dur(const double frameTime, const double frameTim
 }
 
 static void game_loop(Game* const game) {
+    ZF3SpriteRenderer* const spriteRenderer = zf3_mem_arena_push(&game->permMemArena, sizeof(*spriteRenderer)); // TEMP
+
+    ZF3Sprite* const sprite = zf3_gen_sprites(spriteRenderer, 1);
+    sprite->alpha = 1.0f;
+    sprite->size = (ZF3Vec2D) {32.0f, 32.0f};
+
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
     ZF3InputState inputState = {0};
 
     while (!glfwWindowShouldClose(game->glfwWindow)) {
-        glfwPollEvents();
+        zf3_mem_arena_reset(&game->tempMemArena);
 
         const double frameTimeLast = frameTime;
         frameTime = glfwGetTime();
@@ -122,14 +132,26 @@ static void game_loop(Game* const game) {
             } while (i < tickCnt);
         }
 
-        // Render.
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        zf3_render_sprites(spriteRenderer, &game->shaderProgs);
+
         glfwSwapBuffers(game->glfwWindow);
+
+        glfwPollEvents();
     }
+
+    zf3_sprite_renderer_cleanup(spriteRenderer);
 }
 
 static void game_cleanup(Game* const game) {
     if (game->cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
         zf3_unload_shader_progs(&game->shaderProgs);
+    }
+
+    if (game->cleanupBitset & ASSETS_CLEANUP_BIT) {
+        zf3_unload_assets(i_assets);
     }
 
     if (game->cleanupBitset & GLFW_WINDOW_CLEANUP_BIT) {
@@ -157,4 +179,8 @@ void zf3_run_game(const ZF3GameInfo* const gameInfo) {
     }
 
     game_cleanup(&game);
+}
+
+const ZF3Assets* zf3_get_assets() {
+    return i_assets;
 }

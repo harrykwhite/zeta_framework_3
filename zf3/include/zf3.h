@@ -14,18 +14,6 @@
 #define ZF3_GL_VERSION_MINOR 1
 
 //
-// Game
-//
-typedef struct {
-    int windowInitWidth;
-    int windowInitHeight;
-    const char* windowTitle;
-    bool windowResizable;
-} ZF3GameInfo;
-
-void zf3_run_game(const ZF3GameInfo* const gameInfo);
-
-//
 // Window
 //
 typedef unsigned long long ZF3KeysDownBits;
@@ -219,17 +207,14 @@ typedef struct {
 } ZF3Assets;
 
 typedef struct {
-    GLuint spriteQuadGLID;
-    int spriteQuadProjUniLoc;
-    int spriteQuadViewUniLoc;
-    int spriteQuadTexturesUniLoc;
-
-    GLuint charQuadGLID;
-    int charQuadProjUniLoc;
-    int charQuadViewUniLoc;
-    int charQuadPosUniLoc;
-    int charQuadRotUniLoc;
-    int charQuadBlendUniLoc;
+    GLuint spriteGLID;
+    int spriteViewUniLoc;
+    int spriteProjUniLoc;
+    int spritePosUniLoc;
+    int spriteSizeUniLoc;
+    int spriteRotUniLoc;
+    int spriteAlphaUniLoc;
+    int spriteTexUniLoc;
 } ZF3ShaderProgs;
 
 bool zf3_load_assets(ZF3Assets* const assets, ZF3MemArena* const scratchSpace);
@@ -237,5 +222,68 @@ void zf3_unload_assets(ZF3Assets* const assets);
 
 void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs);
 void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs);
+
+//
+// Game
+//
+typedef struct {
+    int windowInitWidth;
+    int windowInitHeight;
+    const char* windowTitle;
+    bool windowResizable;
+} ZF3GameInfo;
+
+void zf3_run_game(const ZF3GameInfo* const gameInfo);
+
+const ZF3Assets* zf3_get_assets();
+
+//
+// Rendering
+//
+#define ZF3_SPRITE_LIMIT 8192
+
+typedef struct {
+    ZF3Vec2D pos;
+    ZF3Vec2D size;
+    float rot;
+    float alpha;
+    int texIndex;
+} ZF3Sprite;
+
+typedef struct {
+    GLuint spriteVertArrayGLIDs[ZF3_SPRITE_LIMIT];
+    GLuint spriteVertBufGLIDs[ZF3_SPRITE_LIMIT];
+    GLuint spriteElemBufGLIDs[ZF3_SPRITE_LIMIT];
+    ZF3Sprite sprites[ZF3_SPRITE_LIMIT];
+    int numSpritesGenerated;
+} ZF3SpriteRenderer;
+
+void zf3_sprite_renderer_cleanup(ZF3SpriteRenderer* const renderer);
+ZF3Sprite* zf3_gen_sprites(ZF3SpriteRenderer* const renderer, const int spriteCnt);
+void zf3_render_sprites(const ZF3SpriteRenderer* const renderer, const ZF3ShaderProgs* const shaderProgs);
+
+//
+// Utilities
+//
+inline bool is_bit_active(const ZF3Byte* const bytes, const int bitIndex) {
+    assert(bytes);
+    assert(bitIndex >= 0);
+
+    return bytes[bitIndex / 8] & (1 << (bitIndex % 8));
+}
+
+inline void activate_bit(ZF3Byte* const bytes, const int bitIndex) {
+    assert(bytes);
+    assert(bitIndex >= 0);
+
+    bytes[bitIndex / 8] |= 1 << (bitIndex % 8);
+}
+
+inline void deactivate_bit(ZF3Byte* const bytes, const int bitIndex) {
+    assert(bytes);
+    assert(bitIndex >= 0);
+
+    bytes[bitIndex / 8] &= ~(1 << (bitIndex % 8));
+}
 
 #endif

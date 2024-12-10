@@ -1,18 +1,19 @@
 #include <zf3_common.h>
 
 bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size) {
+    assert(zf3_is_zero(memArena, sizeof(*memArena)));
     assert(size > 0);
 
     memArena->buf = malloc(size);
 
     if (!memArena->buf) {
+        assert(false);
         return false;
     }
 
     memset(memArena->buf, 0, size);
 
     memArena->size = size;
-    memArena->used = 0;
 
     return true;
 }
@@ -21,6 +22,7 @@ void* zf3_mem_arena_push(ZF3MemArena* const memArena, const int size) {
     assert(size > 0);
 
     if (memArena->used + size > memArena->size) {
+        assert(false);
         return NULL;
     }
 
@@ -36,7 +38,7 @@ void zf3_mem_arena_reset(ZF3MemArena* const memArena) {
 
 void zf3_mem_arena_cleanup(ZF3MemArena* const memArena) {
     free(memArena->buf);
-
+    memset(memArena, 0, sizeof(*memArena));
 }
 
 bool zf3_is_zero(const void* const mem, const int size) {

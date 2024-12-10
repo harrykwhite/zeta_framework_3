@@ -140,7 +140,7 @@ GLFWwindow* zf3_create_glfw_window(const int width, const int height, const char
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZF3_GL_VERSION_MINOR);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, resizable);
-    glfwWindowHint(GLFW_VISIBLE, false);
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 
     GLFWwindow* const window = glfwCreateWindow(width, height, title, NULL, NULL);
 
