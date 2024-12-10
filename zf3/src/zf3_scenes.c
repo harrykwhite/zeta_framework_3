@@ -72,9 +72,9 @@ void zf3_proc_scene_tick() {
     }
 }
 
-void zf3_render_scene(const ZF3ShaderProgs* const shaderProgs) {
+void zf3_render_scene() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    zf3_render_sprites(i_activeScenePtrs.spriteRenderer, shaderProgs);
+    zf3_render_sprites(i_activeScenePtrs.spriteRenderer);
 }

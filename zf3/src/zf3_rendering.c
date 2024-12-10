@@ -54,24 +54,26 @@ ZF3Sprite* zf3_gen_sprites(ZF3SpriteRenderer* const renderer, const int spriteCn
     return &renderer->sprites[spritesBeginIndex];
 }
 
-void zf3_render_sprites(const ZF3SpriteRenderer* const renderer, const ZF3ShaderProgs* const shaderProgs) {
-    glUseProgram(shaderProgs->spriteGLID);
+void zf3_render_sprites(const ZF3SpriteRenderer* const renderer) {
+    const ZF3ShaderProgs* const progs = zf3_get_shader_progs();
+
+    glUseProgram(progs->spriteGLID);
 
     ZF3Matrix4x4 viewMat;
     zf3_init_identity_matrix_4x4(&viewMat);
-    glUniformMatrix4fv(shaderProgs->spriteViewUniLoc, 1, GL_FALSE, (GLfloat*)&viewMat);
+    glUniformMatrix4fv(progs->spriteViewUniLoc, 1, GL_FALSE, (GLfloat*)&viewMat);
 
     ZF3Matrix4x4 projMat;
     zf3_init_ortho_matrix_4x4(&projMat, 0.0f, 1280.0f, 720.0f, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(shaderProgs->spriteProjUniLoc, 1, GL_FALSE, (GLfloat*)&projMat);
+    glUniformMatrix4fv(progs->spriteProjUniLoc, 1, GL_FALSE, (GLfloat*)&projMat);
 
     for (int i = 0; i < renderer->numSpritesGenerated; ++i) {
         const ZF3Sprite* const sprite = &renderer->sprites[i];
 
-        glUniform2fv(shaderProgs->spritePosUniLoc, 1, (GLfloat*)&sprite->pos);
-        glUniform2fv(shaderProgs->spriteSizeUniLoc, 1, (GLfloat*)&sprite->size);
-        glUniform1f(shaderProgs->spriteRotUniLoc, sprite->rot);
-        glUniform1f(shaderProgs->spriteAlphaUniLoc, sprite->alpha);
+        glUniform2fv(progs->spritePosUniLoc, 1, (GLfloat*)&sprite->pos);
+        glUniform2fv(progs->spriteSizeUniLoc, 1, (GLfloat*)&sprite->size);
+        glUniform1f(progs->spriteRotUniLoc, sprite->rot);
+        glUniform1f(progs->spriteAlphaUniLoc, sprite->alpha);
 
         glBindTexture(GL_TEXTURE_2D, zf3_get_assets()->texGLIDs[sprite->texIndex]);
 

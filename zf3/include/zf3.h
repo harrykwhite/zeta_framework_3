@@ -132,11 +132,13 @@ typedef struct {
     int spriteTexUniLoc;
 } ZF3ShaderProgs;
 
-bool zf3_load_assets(ZF3Assets* const assets, ZF3MemArena* const scratchSpace);
-void zf3_unload_assets(ZF3Assets* const assets);
+bool zf3_load_assets();
+void zf3_unload_assets();
+const ZF3Assets* zf3_get_assets();
 
-void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs);
-void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs);
+bool zf3_load_shader_progs();
+void zf3_unload_shader_progs();
+const ZF3ShaderProgs* zf3_get_shader_progs();
 
 //
 // Rendering
@@ -161,7 +163,7 @@ typedef struct {
 
 void zf3_sprite_renderer_cleanup(ZF3SpriteRenderer* const renderer);
 ZF3Sprite* zf3_gen_sprites(ZF3SpriteRenderer* const renderer, const int spriteCnt);
-void zf3_render_sprites(const ZF3SpriteRenderer* const renderer, const ZF3ShaderProgs* const shaderProgs);
+void zf3_render_sprites(const ZF3SpriteRenderer* const renderer);
 
 //
 // Scenes
@@ -187,7 +189,7 @@ void zf3_register_scene_types(const ZF3SceneTypeInfo* const typeInfos, const int
 bool zf3_scene_system_init();
 void zf3_scene_system_cleanup();
 void zf3_proc_scene_tick();
-void zf3_render_scene(const ZF3ShaderProgs* const shaderProgs);
+void zf3_render_scene();
 
 //
 // Game
@@ -200,7 +202,6 @@ typedef struct {
 } ZF3GameInfo;
 
 void zf3_run_game(const ZF3GameInfo* const gameInfo);
-const ZF3Assets* zf3_get_assets();
 
 //
 // Utilities

@@ -1,6 +1,9 @@
 #include <zf3.h>
 
-static const char* const s_spriteVertShaderSrc =
+static ZF3Assets* i_assets;
+static ZF3ShaderProgs* i_shaderProgs;
+
+static const char* const i_spriteVertShaderSrc =
 "#version 430 core\n"
 "\n"
 "layout (location = 0) in vec2 a_vert;\n"
@@ -30,7 +33,7 @@ static const char* const s_spriteVertShaderSrc =
 "    v_texCoord = a_vert;\n"
 "}\n";
 
-const char* const s_spriteFragShaderSrc =
+const char* const i_spriteFragShaderSrc =
 "#version 430 core\n"
 "\n"
 "in vec2 v_texCoord;\n"
@@ -95,69 +98,130 @@ static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, cons
     return progGLID;
 }
 
-bool zf3_load_assets(ZF3Assets* const assets, ZF3MemArena* const scratchSpace) {
-    assert(zf3_is_zero(assets, sizeof(*assets)));
+static bool load_textures(FILE* const fs) {
+    assert(i_assets);
+    assert(i_assets->texCnt > 0);
+
+    // Generate textures and store their IDs.
+    glGenTextures(i_assets->texCnt, i_assets->texGLIDs);
+
+    // Read the sizes and pixel data of textures and finish setting them up.
+    const int pxDataBufSize = ZF3_TEX_CHANNEL_COUNT * ZF3_TEX_WIDTH_LIMIT * ZF3_TEX_HEIGHT_LIMIT;
+    unsigned char* const pxDataBuf = malloc(pxDataBufSize); // A buffer for temporarily storing the pixel data of each texture.
+
+    if (!pxDataBuf) {
+        return false;
+    }
+
+    bool err = false;
+
+    for (int i = 0; i < i_assets->texCnt; ++i) {
+        if (fread(&i_assets->texSizes[i], sizeof(i_assets->texSizes[i]), 1, fs) < 1) {
+            err = true;
+            break;
+        }
+
+        if (fread(pxDataBuf, ZF3_TEX_CHANNEL_COUNT * i_assets->texSizes[i].x * i_assets->texSizes[i].y, 1, fs) < 1) {
+            err = true;
+            break;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, i_assets->texGLIDs[i]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, i_assets->texSizes[i].x, i_assets->texSizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pxDataBuf);
+    }
+
+    free(pxDataBuf);
+
+    if (err) {
+        glDeleteTextures(i_assets->texCnt, i_assets->texGLIDs);
+        //memset(i_assets->texGLIDs, 0, sizeof(i_assets->texGLIDs));
+        //memset(i_assets->texSizes, 0, sizeof(i_assets->texSizes));
+        return false;
+    }
+
+    return true;
+}
+
+bool zf3_load_assets() {
+    assert(!i_assets);
+
+    // Allocate the assets.
+    i_assets = calloc(1, sizeof(*i_assets));
+
+    if (!i_assets) {
+        return false;
+    }
 
     // Open the assets file.
     FILE* const fs = fopen(ZF3_ASSETS_FILE_NAME, "rb");
 
     if (!fs) {
+        free(i_assets);
+        i_assets = NULL;
         return false;
     }
 
     // Read asset counts.
-    fread(&assets->texCnt, sizeof(assets->texCnt), 1, fs);
+    fread(&i_assets->texCnt, sizeof(i_assets->texCnt), 1, fs);
 
-    //
-    // Textures
-    //
-    if (assets->texCnt > 0) {
-        // Generate textures and store their IDs.
-        glGenTextures(assets->texCnt, assets->texGLIDs);
-
-        // Read the sizes and pixel data of textures and finish setting them up.
-        const int pxDataBufSize = ZF3_TEX_CHANNEL_COUNT * ZF3_TEX_WIDTH_LIMIT * ZF3_TEX_HEIGHT_LIMIT;
-        unsigned char* const pxDataBuf = zf3_mem_arena_push(scratchSpace, pxDataBufSize); // A buffer for temporarily storing the pixel data of each texture.
-        assert(pxDataBuf);
-
-        for (int i = 0; i < assets->texCnt; ++i) {
-            fread(&assets->texSizes[i], sizeof(assets->texSizes[i]), 1, fs);
-
-            fread(pxDataBuf, 1, ZF3_TEX_CHANNEL_COUNT * assets->texSizes[i].x * assets->texSizes[i].y, fs);
-
-            glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[i]);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, assets->texSizes[i].x, assets->texSizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pxDataBuf);
-        }
-    }
+    // Load assets.
+    const bool loadErr = !load_textures(fs);
 
     fclose(fs);
+
+    if (loadErr) {
+        free(i_assets);
+        i_assets = NULL;
+        return false;
+    }
 
     return true;
 }
 
-void zf3_unload_assets(ZF3Assets* const assets) {
-    glDeleteTextures(assets->texCnt, assets->texGLIDs);
-    memset(assets, 0, sizeof(*assets));
+void zf3_unload_assets() {
+    assert(i_assets);
+    glDeleteTextures(i_assets->texCnt, i_assets->texGLIDs);
+    free(i_assets);
+    i_assets = NULL;
 }
 
-void zf3_load_shader_progs(ZF3ShaderProgs* const shaderProgs) {
-    assert(zf3_is_zero(shaderProgs, sizeof(*shaderProgs)));
-
-    shaderProgs->spriteGLID = create_shader_prog_from_srcs(s_spriteVertShaderSrc, s_spriteFragShaderSrc);
-    assert(shaderProgs->spriteGLID);
-
-    shaderProgs->spriteViewUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_view");
-    shaderProgs->spriteProjUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_proj");
-    shaderProgs->spritePosUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_pos");
-    shaderProgs->spriteSizeUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_size");
-    shaderProgs->spriteRotUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_rot");
-    shaderProgs->spriteAlphaUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_alpha");
-    shaderProgs->spriteTexUniLoc = glGetUniformLocation(shaderProgs->spriteGLID, "u_tex");
+const ZF3Assets* zf3_get_assets() {
+    assert(i_assets);
+    return i_assets;
 }
 
-void zf3_unload_shader_progs(ZF3ShaderProgs* const shaderProgs) {
-    glDeleteProgram(shaderProgs->spriteGLID);
-    memset(shaderProgs, 0, sizeof(*shaderProgs));
+bool zf3_load_shader_progs() {
+    assert(!i_shaderProgs);
+
+    i_shaderProgs = calloc(1, sizeof(*i_shaderProgs));
+
+    if (!i_shaderProgs) {
+        return false;
+    }
+
+    i_shaderProgs->spriteGLID = create_shader_prog_from_srcs(i_spriteVertShaderSrc, i_spriteFragShaderSrc);
+    assert(i_shaderProgs->spriteGLID);
+
+    i_shaderProgs->spriteViewUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_view");
+    i_shaderProgs->spriteProjUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_proj");
+    i_shaderProgs->spritePosUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_pos");
+    i_shaderProgs->spriteSizeUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_size");
+    i_shaderProgs->spriteRotUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_rot");
+    i_shaderProgs->spriteAlphaUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_alpha");
+    i_shaderProgs->spriteTexUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_tex");
+
+    return true;
+}
+
+void zf3_unload_shader_progs() {
+    assert(i_shaderProgs);
+    glDeleteProgram(i_shaderProgs->spriteGLID);
+    free(i_shaderProgs);
+}
+
+const ZF3ShaderProgs* zf3_get_shader_progs() {
+    assert(i_shaderProgs);
+    return i_shaderProgs;
 }
