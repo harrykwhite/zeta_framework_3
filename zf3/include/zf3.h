@@ -16,10 +16,6 @@
 //
 // Window
 //
-typedef unsigned long long ZF3KeysDownBits;
-typedef unsigned char ZF3MouseButtonsDownBits;
-typedef unsigned short ZF3GamepadButtonsDownBits;
-
 typedef enum {
     ZF3_KEY_SPACE,
 
@@ -98,101 +94,20 @@ typedef enum {
     ZF3_MOUSE_BUTTON_CODE_CNT
 } ZF3MouseButtonCode;
 
-typedef enum {
-    ZF3_GAMEPAD_BUTTON_A,
-    ZF3_GAMEPAD_BUTTON_B,
-    ZF3_GAMEPAD_BUTTON_X,
-    ZF3_GAMEPAD_BUTTON_Y,
+bool zf3_window_init(const int width, const int height, const char* const title, const bool resizable);
+void zf3_window_cleanup();
+void zf3_show_window();
+bool zf3_should_window_close();
+void zf3_swap_buffers();
 
-    ZF3_GAMEPAD_BUTTON_LEFT_BUMPER,
-    ZF3_GAMEPAD_BUTTON_RIGHT_BUMPER,
+void zf3_save_input_state();
 
-    ZF3_GAMEPAD_BUTTON_BACK,
-    ZF3_GAMEPAD_BUTTON_START,
-    ZF3_GAMEPAD_BUTTON_GUIDE,
-
-    ZF3_GAMEPAD_BUTTON_LEFT_THUMB,
-    ZF3_GAMEPAD_BUTTON_RIGHT_THUMB,
-
-    ZF3_GAMEPAD_BUTTON_DPAD_UP,
-    ZF3_GAMEPAD_BUTTON_DPAD_RIGHT,
-    ZF3_GAMEPAD_BUTTON_DPAD_DOWN,
-    ZF3_GAMEPAD_BUTTON_DPAD_LEFT,
-
-    ZF3_GAMEPAD_BUTTON_CODE_CNT
-} ZF3GamepadButtonCode;
-
-typedef enum {
-    ZF3_GAMEPAD_AXIS_LEFT_X,
-    ZF3_GAMEPAD_AXIS_LEFT_Y,
-
-    ZF3_GAMEPAD_AXIS_RIGHT_X,
-    ZF3_GAMEPAD_AXIS_RIGHT_Y,
-
-    ZF3_GAMEPAD_AXIS_LEFT_TRIGGER,
-    ZF3_GAMEPAD_AXIS_RIGHT_TRIGGER,
-
-    ZF3_GAMEPAD_AXIS_CODE_CNT
-} ZF3GamepadAxisCode;
-
-typedef struct {
-    bool connected; // Included to support zero-initialisation.
-    int glfwJoystickIndex;
-    ZF3GamepadButtonsDownBits buttonsDownBits;
-    float axisValues[ZF3_GAMEPAD_AXIS_CODE_CNT];
-} ZF3GamepadState;
-
-typedef struct {
-    ZF3KeysDownBits keysDownBits;
-    ZF3MouseButtonsDownBits mouseButtonsDownBits;
-    ZF3GamepadState gamepadState;
-} ZF3InputState;
-
-GLFWwindow* zf3_create_glfw_window(const int width, const int height, const char* const title, const bool resizable);
-
-void zf3_load_input_state(ZF3InputState* const inputState, GLFWwindow* const glfwWindow);
-
-inline bool zf3_is_key_down(const ZF3KeyCode keyCode, const ZF3InputState* const inputState) {
-    return inputState->keysDownBits & ((ZF3KeysDownBits)1 << keyCode);
-}
-
-inline bool zf3_is_key_pressed(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3KeysDownBits keyBit = (ZF3KeysDownBits)1 << keyCode;
-    return (inputState->keysDownBits & keyBit) && !(inputStateLast->keysDownBits & keyBit);
-}
-
-inline bool zf3_is_key_released(const ZF3KeyCode keyCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3KeysDownBits keyBit = (ZF3KeysDownBits)1 << keyCode;
-    return !(inputState->keysDownBits & keyBit) && (inputStateLast->keysDownBits & keyBit);
-}
-
-inline bool zf3_is_mouse_button_down(const ZF3MouseButtonCode mouseButtonCode, const ZF3InputState* const inputState) {
-    return inputState->mouseButtonsDownBits & ((ZF3MouseButtonsDownBits)1 << mouseButtonCode);
-}
-
-inline bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode mouseButtonCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3MouseButtonsDownBits mouseButtonBit = (ZF3MouseButtonsDownBits)1 << mouseButtonCode;
-    return (inputState->mouseButtonsDownBits & mouseButtonBit) && !(inputStateLast->mouseButtonsDownBits & mouseButtonBit);
-}
-
-inline bool zf3_is_mouse_button_released(const ZF3MouseButtonCode mouseButtonCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3MouseButtonsDownBits mouseButtonBit = (ZF3MouseButtonsDownBits)1 << mouseButtonCode;
-    return !(inputState->mouseButtonsDownBits & mouseButtonBit) && (inputStateLast->mouseButtonsDownBits & mouseButtonBit);
-}
-
-inline bool zf3_is_gamepad_button_down(const ZF3GamepadButtonCode gamepadButtonCode, const ZF3InputState* const inputState) {
-    return inputState->gamepadState.buttonsDownBits & ((ZF3GamepadButtonsDownBits)1 << gamepadButtonCode);
-}
-
-inline bool zf3_is_gamepad_button_pressed(const ZF3GamepadButtonCode gamepadButtonCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3GamepadButtonsDownBits gamepadButtonBit = (ZF3GamepadButtonsDownBits)1 << gamepadButtonCode;
-    return (inputState->gamepadState.buttonsDownBits & gamepadButtonBit) && !(inputStateLast->gamepadState.buttonsDownBits & gamepadButtonBit);
-}
-
-inline bool zf3_is_gamepad_button_released(const ZF3GamepadButtonCode gamepadButtonCode, const ZF3InputState* const inputState, const ZF3InputState* const inputStateLast) {
-    const ZF3GamepadButtonsDownBits gamepadButtonBit = (ZF3GamepadButtonsDownBits)1 << gamepadButtonCode;
-    return !(inputState->gamepadState.buttonsDownBits & gamepadButtonBit) && (inputStateLast->gamepadState.buttonsDownBits & gamepadButtonBit);
-}
+bool zf3_is_key_down(const ZF3KeyCode keyCode);
+bool zf3_is_key_pressed(const ZF3KeyCode keyCode);
+bool zf3_is_key_released(const ZF3KeyCode keyCode);
+bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode);
+bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode);
+bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode);
 
 //
 // Assets

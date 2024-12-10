@@ -12,11 +12,10 @@ typedef unsigned short GameCleanupBitset;
 enum GameCleanupBit {
     PERM_MEM_ARENA_CLEANUP_BIT = 1 << 0,
     TEMP_MEM_ARENA_CLEANUP_BIT = 1 << 1,
-    GLFW_CLEANUP_BIT = 1 << 2,
-    GLFW_WINDOW_CLEANUP_BIT = 1 << 3,
-    ASSETS_CLEANUP_BIT = 1 << 4,
-    SHADER_PROGS_CLEANUP_BIT = 1 << 5,
-    SCENE_SYSTEM_CLEANUP_BIT = 1 << 6
+    WINDOW_CLEANUP_BIT = 1 << 2,
+    ASSETS_CLEANUP_BIT = 1 << 3,
+    SHADER_PROGS_CLEANUP_BIT = 1 << 4,
+    SCENE_SYSTEM_CLEANUP_BIT = 1 << 5
 };
 
 typedef struct {
@@ -25,7 +24,6 @@ typedef struct {
     ZF3MemArena permMemArena;
     ZF3MemArena tempMemArena;
 
-    GLFWwindow* glfwWindow;
     ZF3ShaderProgs shaderProgs;
 } Game;
 
@@ -52,16 +50,12 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
         return false;
     }
 
-    game->cleanupBitset |= GLFW_CLEANUP_BIT;
-
     // Create the GLFW window.
-    game->glfwWindow = zf3_create_glfw_window(gameInfo->windowInitWidth, gameInfo->windowInitHeight, gameInfo->windowTitle, gameInfo->windowResizable);
-
-    if (!game->glfwWindow) {
+    if (!zf3_window_init(gameInfo->windowInitWidth, gameInfo->windowInitHeight, gameInfo->windowTitle, gameInfo->windowResizable)) {
         return false;
     }
 
-    game->cleanupBitset |= GLFW_WINDOW_CLEANUP_BIT;
+    game->cleanupBitset |= WINDOW_CLEANUP_BIT;
 
     // Enable VSync.
     glfwSwapInterval(1);
@@ -93,7 +87,7 @@ static bool game_init(Game* const game, const ZF3GameInfo* const gameInfo) {
     game->cleanupBitset |= SCENE_SYSTEM_CLEANUP_BIT;
 
     // Show the window now that everything is set up.
-    glfwShowWindow(game->glfwWindow);
+    zf3_show_window();
 
     return true;
 }
@@ -107,9 +101,7 @@ static void game_loop(Game* const game) {
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
-    ZF3InputState inputState = {0};
-
-    while (!glfwWindowShouldClose(game->glfwWindow)) {
+    while (!zf3_should_window_close()) {
         zf3_mem_arena_reset(&game->tempMemArena);
 
         const double frameTimeLast = frameTime;
@@ -121,10 +113,6 @@ static void game_loop(Game* const game) {
         const int tickCnt = frameDurAccum / TARG_TICK_DUR;
 
         if (tickCnt > 0) {
-            // Refresh input.
-            const ZF3InputState inputStateLast = inputState;
-            zf3_load_input_state(&inputState, game->glfwWindow);
-
             // Execute ticks.
             int i = 0;
 
@@ -134,10 +122,13 @@ static void game_loop(Game* const game) {
                 frameDurAccum -= TARG_TICK_DUR;
                 ++i;
             } while (i < tickCnt);
+
+            // Cache the input state.
+            zf3_save_input_state();
         }
 
         zf3_render_scene(&game->shaderProgs);
-        glfwSwapBuffers(game->glfwWindow);
+        zf3_swap_buffers();
 
         glfwPollEvents();
     }
@@ -156,13 +147,11 @@ static void game_cleanup(Game* const game) {
         zf3_unload_assets(i_assets);
     }
 
-    if (game->cleanupBitset & GLFW_WINDOW_CLEANUP_BIT) {
-        glfwDestroyWindow(game->glfwWindow);
+    if (game->cleanupBitset & WINDOW_CLEANUP_BIT) {
+        zf3_window_cleanup();
     }
 
-    if (game->cleanupBitset & GLFW_CLEANUP_BIT) {
-        glfwTerminate();
-    }
+    glfwTerminate();
 
     if (game->cleanupBitset & TEMP_MEM_ARENA_CLEANUP_BIT) {
         zf3_mem_arena_cleanup(&game->tempMemArena);

@@ -25,6 +25,14 @@ void level_one_init(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs)
 
 void level_one_tick(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs, int* const nextSceneTypeIndex) {
     LevelOneSceneData* const data = ptrs->userData;
+
+    if (zf3_is_key_down(ZF3_KEY_W)) {
+        --data->playerSprite->pos.y;
+    }
+
+    if (zf3_is_key_down(ZF3_KEY_S)) {
+        ++data->playerSprite->pos.y;
+    }
 }
 
 void level_one_cleanup(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs) {
