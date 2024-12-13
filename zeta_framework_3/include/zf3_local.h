@@ -34,15 +34,8 @@ void zf3_unload_shader_progs();
 // Rendering
 //
 void zf3_init_rendering_internals();
-void zf3_clean_renderer(ZF3Renderer* const renderer);
-void zf3_render_sprite_batches(const ZF3Renderer* const renderer);
-void zf3_empty_sprite_batches(ZF3Renderer* const renderer);
-
-//
-// Scenes
-//
-bool zf3_scene_system_init();
-void zf3_scene_system_cleanup();
-void zf3_proc_scene_tick();
+void zf3_clean_renderer();
+void zf3_render_sprite_batches();
+void zf3_empty_sprite_batches();
 
 #endif

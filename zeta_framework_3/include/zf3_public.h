@@ -11,14 +11,22 @@
 //
 // Game
 //
+typedef void (*ZF3GameUserInit)();
+typedef void (*ZF3GameUserTick)();
+typedef void (*ZF3GameUserCleanup)();
+
 typedef struct {
+    ZF3GameUserInit init;
+    ZF3GameUserTick tick;
+    ZF3GameUserCleanup cleanup;
+
     int windowInitWidth;
     int windowInitHeight;
     const char* windowTitle;
     bool windowResizable;
-} ZF3GameInfo;
+} ZF3GameUserInfo;
 
-void zf3_run_game(const ZF3GameInfo* const gameInfo);
+void zf3_run_game(const ZF3GameUserInfo* const userInfo);
 
 //
 // Window
@@ -172,28 +180,7 @@ typedef struct {
     int spriteBatchCnt;
 } ZF3Renderer;
 
-void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const ZF3SpriteBatchWriteData* const writeData);
-
-//
-// Scenes
-//
-typedef struct {
-    void* userData;
-} ZF3ScenePtrs;
-
-typedef void (*ZF3SceneInit)(ZF3MemArena* memArena, const ZF3ScenePtrs* ptrs);
-typedef void (*ZF3SceneTick)(ZF3MemArena* memArena, const ZF3ScenePtrs* ptrs, int* const nextSceneTypeIndex);
-typedef void (*ZF3SceneCleanup)(ZF3MemArena* memArena, const ZF3ScenePtrs* ptrs);
-
-typedef struct {
-    ZF3SceneInit init;
-    ZF3SceneTick tick;
-    ZF3SceneCleanup cleanup;
-
-    int userDataSize;
-} ZF3SceneTypeInfo;
-
-void zf3_register_scene_types(const ZF3SceneTypeInfo* const typeInfos, const int typeCnt);
+void zf3_write_to_sprite_batch(const ZF3SpriteBatchWriteData* const writeData);
 
 //
 // Utilities

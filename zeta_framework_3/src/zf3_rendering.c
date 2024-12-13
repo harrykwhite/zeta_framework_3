@@ -6,10 +6,12 @@
 static unsigned short i_quadIndices[QUAD_INDICES_LEN];
 static int i_texUnits[ZF3_TEX_UNIT_LIMIT];
 
-static void add_sprite_batch(ZF3Renderer* const renderer) {
-    const int batchIndex = renderer->spriteBatchCnt;
+ZF3Renderer i_renderer;
 
-    ZF3SpriteBatchGLIDs* const glIDs = &renderer->spriteBatchGLIDs[batchIndex];
+static void add_sprite_batch() {
+    const int batchIndex = i_renderer.spriteBatchCnt;
+
+    ZF3SpriteBatchGLIDs* const glIDs = &i_renderer.spriteBatchGLIDs[batchIndex];
 
     // Generate vertex array.
     glGenVertexArrays(1, &glIDs->vertArrayGLID);
@@ -28,31 +30,31 @@ static void add_sprite_batch(ZF3Renderer* const renderer) {
     // Set vertex attribute pointers.
     const int vertsStride = sizeof(float) * ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT;
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, false, vertsStride, sizeof(float) * 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 0));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, vertsStride, sizeof(float) * 2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, false, vertsStride, sizeof(float) * 4);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 4));
     glEnableVertexAttribArray(2);
 
-    glVertexAttribPointer(3, 1, GL_FLOAT, false, vertsStride, sizeof(float) * 6);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 6));
     glEnableVertexAttribArray(3);
 
-    glVertexAttribPointer(4, 1, GL_FLOAT, false, vertsStride, sizeof(float) * 7);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 7));
     glEnableVertexAttribArray(4);
 
-    glVertexAttribPointer(5, 2, GL_FLOAT, false, vertsStride, sizeof(float) * 8);
+    glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 8));
     glEnableVertexAttribArray(5);
 
-    glVertexAttribPointer(6, 1, GL_FLOAT, false, vertsStride, sizeof(float) * 10);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 10));
     glEnableVertexAttribArray(6);
 
     // Unbind.
     glBindVertexArray(0);
 
-    ++renderer->spriteBatchCnt;
+    ++i_renderer.spriteBatchCnt;
 }
 
 static int add_tex_unit_to_sprite_batch(ZF3SpriteBatchTransData* const batchB, const int texIndex) {
@@ -88,75 +90,75 @@ void zf3_init_rendering_internals() {
     }
 }
 
-void zf3_clean_renderer(ZF3Renderer* const renderer) {
-    for (int i = 0; i < renderer->spriteBatchCnt; ++i) {
-        glDeleteVertexArrays(1, &renderer->spriteBatchGLIDs[i].vertArrayGLID);
-        glDeleteBuffers(1, &renderer->spriteBatchGLIDs[i].vertBufGLID);
-        glDeleteBuffers(1, &renderer->spriteBatchGLIDs[i].elemBufGLID);
+void zf3_clean_renderer() {
+    for (int i = 0; i < i_renderer.spriteBatchCnt; ++i) {
+        glDeleteVertexArrays(1, &i_renderer.spriteBatchGLIDs[i].vertArrayGLID);
+        glDeleteBuffers(1, &i_renderer.spriteBatchGLIDs[i].vertBufGLID);
+        glDeleteBuffers(1, &i_renderer.spriteBatchGLIDs[i].elemBufGLID);
     }
 
-    memset(renderer, 0, sizeof(ZF3Renderer));
+    memset(&i_renderer, 0, sizeof(i_renderer));
 }
 
-void zf3_render_sprite_batches(const ZF3Renderer* const renderer) {
+void zf3_render_sprite_batches() {
     const ZF3ShaderProgs* const progs = zf3_get_shader_progs();
 
     glUseProgram(progs->spriteQuadGLID);
 
     ZF3Matrix4x4 projMat;
     zf3_init_ortho_matrix_4x4(&projMat, 0.0f, zf3_get_window_size().x, zf3_get_window_size().y, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(progs->spriteQuadProjUniLoc, 1, GL_FALSE, projMat.elems);
+    glUniformMatrix4fv(progs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
 
     ZF3Matrix4x4 viewMat;
     zf3_init_identity_matrix_4x4(&viewMat);
-    glUniformMatrix4fv(progs->spriteQuadViewUniLoc, 1, GL_FALSE, viewMat.elems);
+    glUniformMatrix4fv(progs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat.elems);
 
     glUniform1iv(progs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
 
-    for (int i = 0; i < renderer->spriteBatchCnt; ++i) {
-        const ZF3SpriteBatchGLIDs* const batchA = &renderer->spriteBatchGLIDs[i];
-        const ZF3SpriteBatchTransData* const batchB = &renderer->spriteBatchTransDatas[i];
+    for (int i = 0; i < i_renderer.spriteBatchCnt; ++i) {
+        const ZF3SpriteBatchGLIDs* const batchGLIDs = &i_renderer.spriteBatchGLIDs[i];
+        const ZF3SpriteBatchTransData* const batchTransData = &i_renderer.spriteBatchTransDatas[i];
 
-        glBindVertexArray(batchA->vertArrayGLID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchA->elemBufGLID);
+        glBindVertexArray(batchGLIDs->vertArrayGLID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchGLIDs->elemBufGLID);
 
-        for (int j = 0; j < batchB->texUnitsInUse; ++j) {
+        for (int j = 0; j < batchTransData->texUnitsInUse; ++j) {
             glActiveTexture(GL_TEXTURE0 + i_texUnits[j]);
-            glBindTexture(GL_TEXTURE_2D, zf3_get_assets()->texGLIDs[batchB->texUnitTexIDs[j]]);
+            glBindTexture(GL_TEXTURE_2D, zf3_get_assets()->texGLIDs[batchTransData->texUnitTexIDs[j]]);
         }
 
-        glDrawElements(GL_TRIANGLES, 6 * batchB->slotsUsed, GL_UNSIGNED_SHORT, NULL);
+        glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, NULL);
     }
 }
 
-void zf3_empty_sprite_batches(ZF3Renderer* const renderer) {
-    memset(renderer->spriteBatchTransDatas, 0, sizeof(renderer->spriteBatchTransDatas));
-    renderer->spriteBatchesFilled = 0;
+void zf3_empty_sprite_batches() {
+    memset(i_renderer.spriteBatchTransDatas, 0, sizeof(i_renderer.spriteBatchTransDatas));
+    i_renderer.spriteBatchesFilled = 0;
 }
 
-void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const ZF3SpriteBatchWriteData* const writeData) {
-    if (!renderer->spriteBatchCnt) {
-        add_sprite_batch(renderer);
+void zf3_write_to_sprite_batch(const ZF3SpriteBatchWriteData* const writeData) {
+    if (!i_renderer.spriteBatchCnt) {
+        add_sprite_batch(i_renderer);
     }
 
-    const int batchIndex = renderer->spriteBatchesFilled;
-    ZF3SpriteBatchTransData* const batchB = &renderer->spriteBatchTransDatas[batchIndex];
+    const int batchIndex = i_renderer.spriteBatchesFilled;
+    ZF3SpriteBatchTransData* const batchTransData = &i_renderer.spriteBatchTransDatas[batchIndex];
 
     int texUnit;
 
-    if (batchB->slotsUsed == ZF3_SPRITE_BATCH_SLOT_LIMIT || (texUnit = add_tex_unit_to_sprite_batch(batchB, writeData->texIndex)) == -1) {
-        ++renderer->spriteBatchesFilled;
+    if (batchTransData->slotsUsed == ZF3_SPRITE_BATCH_SLOT_LIMIT || (texUnit = add_tex_unit_to_sprite_batch(batchTransData, writeData->texIndex)) == -1) {
+        ++i_renderer.spriteBatchesFilled;
 
-        if (renderer->spriteBatchesFilled == renderer->spriteBatchCnt) {
-            add_sprite_batch(renderer);
+        if (i_renderer.spriteBatchesFilled == i_renderer.spriteBatchCnt) {
+            add_sprite_batch(i_renderer);
         }
 
-        zf3_write_to_sprite_batch(renderer, writeData);
+        zf3_write_to_sprite_batch(writeData);
 
         return;
     }
 
-    const int slotIndex = batchB->slotsUsed;
+    const int slotIndex = batchTransData->slotsUsed;
 
     const ZF3Vec2DInt texSize = zf3_get_assets()->texSizes[writeData->texIndex];
 
@@ -210,10 +212,10 @@ void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const ZF3SpriteBatch
         writeData->alpha
     };
 
-    const ZF3SpriteBatchGLIDs* const batchA = &renderer->spriteBatchGLIDs[batchIndex];
+    const ZF3SpriteBatchGLIDs* const batchA = &i_renderer.spriteBatchGLIDs[batchIndex];
     glBindVertexArray(batchA->vertArrayGLID);
     glBindBuffer(GL_ARRAY_BUFFER, batchA->vertBufGLID);
     glBufferSubData(GL_ARRAY_BUFFER, slotIndex * sizeof(float) * ZF3_SPRITE_BATCH_SLOT_VERT_CNT, sizeof(verts), verts);
 
-    ++batchB->slotsUsed;
+    ++batchTransData->slotsUsed;
 }

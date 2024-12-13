@@ -9,18 +9,17 @@ typedef unsigned short GameCleanupBitset;
 enum GameCleanupBit {
     WINDOW_CLEANUP_BIT = 1 << 0,
     ASSETS_CLEANUP_BIT = 1 << 1,
-    SHADER_PROGS_CLEANUP_BIT = 1 << 2,
-    SCENE_SYSTEM_CLEANUP_BIT = 1 << 3
+    SHADER_PROGS_CLEANUP_BIT = 1 << 2
 };
 
-static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameInfo* const gameInfo) {
+static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameUserInfo* const userInfo) {
     // Initialise GLFW.
     if (!glfwInit()) {
         return false;
     }
 
     // Create the GLFW window.
-    if (!zf3_window_init(gameInfo->windowInitWidth, gameInfo->windowInitHeight, gameInfo->windowTitle, gameInfo->windowResizable)) {
+    if (!zf3_window_init(userInfo->windowInitWidth, userInfo->windowInitHeight, userInfo->windowTitle, userInfo->windowResizable)) {
         return false;
     }
 
@@ -48,15 +47,11 @@ static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameInfo*
 
     *cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
 
-    //
+    // Set up rendering.
     zf3_init_rendering_internals();
 
-    // Load the initial scene.
-    if (!zf3_scene_system_init()) {
-        return false;
-    }
-
-    *cleanupBitset |= SCENE_SYSTEM_CLEANUP_BIT;
+    // Call the user-defined initialisation function.
+    userInfo->init();
 
     // Show the window now that everything is set up.
     zf3_show_window();
@@ -69,9 +64,7 @@ static double calc_valid_frame_dur(const double frameTime, const double frameTim
     return dur >= 0.0 && dur <= TARG_TICK_DUR * TICK_DUR_LIMIT_MULT ? dur : 0.0;
 }
 
-static void game_loop() {
-    ZF3Renderer renderer = {0}; // TEMP
-
+static void game_loop(const ZF3GameUserInfo* const userInfo) {
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
@@ -89,8 +82,8 @@ static void game_loop() {
             int i = 0;
 
             do {
-                zf3_empty_sprite_batches(&renderer);
-                zf3_proc_scene_tick();
+                zf3_empty_sprite_batches();
+                userInfo->tick();
 
                 frameDurAccum -= TARG_TICK_DUR;
                 ++i;
@@ -100,19 +93,28 @@ static void game_loop() {
             zf3_save_input_state();
         }
 
-        zf3_render_sprite_batches(&renderer);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        zf3_render_sprite_batches();
         zf3_swap_buffers();
 
         glfwPollEvents();
     }
-
-    zf3_clean_renderer(&renderer);
 }
 
-static void game_cleanup(const GameCleanupBitset cleanupBitset) {
-    if (cleanupBitset & SCENE_SYSTEM_CLEANUP_BIT) {
-        zf3_scene_system_cleanup();
+void zf3_run_game(const ZF3GameUserInfo* const userInfo) {
+    GameCleanupBitset cleanupBitset = 0;
+
+    if (game_init(&cleanupBitset, userInfo)) {
+        game_loop(userInfo);
     }
+
+    //
+    // Cleanup
+    //
+    userInfo->cleanup();
+
+    zf3_clean_renderer();
 
     if (cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
         zf3_unload_shader_progs();
@@ -127,14 +129,4 @@ static void game_cleanup(const GameCleanupBitset cleanupBitset) {
     }
 
     glfwTerminate();
-}
-
-void zf3_run_game(const ZF3GameInfo* const gameInfo) {
-    GameCleanupBitset cleanupBitset = 0;
-
-    if (game_init(&cleanupBitset, gameInfo)) {
-        game_loop();
-    }
-
-    game_cleanup(cleanupBitset);
 }

@@ -1,6 +1,5 @@
 {
     "textures": [
-        "textures\\square.png",
-        "textures\\rect.png"
+        "textures/cam.png"
     ]
 }

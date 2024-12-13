@@ -11,7 +11,6 @@ add_library(zeta_framework_3 STATIC
     src/zf3_assets.c
     src/zf3_rendering.c
     src/zf3_audio.c
-    src/zf3_scenes.c
     src/zf3_utils.c
     ${PARENT_SRC_DIR}/vendor/glad/src/glad.c
 

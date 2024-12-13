@@ -6,13 +6,10 @@ get_filename_component(PARENT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
 
 add_executable(example
 	src/entry.c
-	src/player.c
-	src/title_screen.c
-	src/world.c
+	src/game.c
 	${PARENT_SRC_DIR}/vendor/glad/src/glad.c
 
-	src/player.h
-	src/scenes.h
+	src/game.h
 )
 
 target_compile_definitions(example PRIVATE GLFW_INCLUDE_NONE)
