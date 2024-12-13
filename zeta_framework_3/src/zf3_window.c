@@ -1,21 +1,5 @@
 #include <zf3_local.h>
 
-static GLFWwindow* i_glfwWindow;
-static ZF3Vec2DInt i_windowSize;
-
-static ZF3Vec2D i_mousePos;
-
-typedef unsigned long long KeysDownBits;
-typedef unsigned char MouseButtonsDownBits;
-
-typedef struct {
-    KeysDownBits keysDownBits;
-    MouseButtonsDownBits mouseButtonsDownBits;
-} InputState;
-
-static InputState i_inputState;
-static InputState i_inputStateLast;
-
 static ZF3KeyCode glfw_to_zf3_key_code(const int glfwKeyCode) {
     switch (glfwKeyCode) {
         case GLFW_KEY_SPACE: return ZF3_KEY_SPACE;
@@ -103,41 +87,43 @@ static ZF3MouseButtonCode glfw_to_zf3_mouse_button_code(const int buttonCode) {
 }
 
 static void glfw_window_size_callback(GLFWwindow* const window, const int width, const int height) {
-    i_windowSize.x = width;
-    i_windowSize.y = height;
+    ZF3WindowMeta* const windowMeta = glfwGetWindowUserPointer(window);
+    windowMeta->size.x = width;
+    windowMeta->size.y = height;
 
     glViewport(0, 0, width, height);
 }
 
 static void glfw_key_callback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods) {
-    const KeysDownBits keyBit = (KeysDownBits)1 << glfw_to_zf3_key_code(key);
+    ZF3WindowMeta* const windowMeta = glfwGetWindowUserPointer(window);
+    const ZF3KeysDownBitset keyBit = (ZF3KeysDownBitset)1 << glfw_to_zf3_key_code(key);
 
     if (action == GLFW_PRESS) {
-        i_inputState.keysDownBits |= keyBit;
+        windowMeta->inputState.keysDownBits |= keyBit;
     } else if (action == GLFW_RELEASE) {
-        i_inputState.keysDownBits &= ~keyBit;
+        windowMeta->inputState.keysDownBits &= ~keyBit;
     }
 }
 
 static void glfw_mouse_button_callback(GLFWwindow* const window, const int button, const int action, const int mods) {
-    const MouseButtonsDownBits buttonBit = (MouseButtonsDownBits)1 << glfw_to_zf3_mouse_button_code(button);
+    ZF3WindowMeta* const windowMeta = glfwGetWindowUserPointer(window);
+    const ZF3MouseButtonsDownBitset buttonBit = (ZF3MouseButtonsDownBitset)1 << glfw_to_zf3_mouse_button_code(button);
 
     if (action == GLFW_PRESS) {
-        i_inputState.mouseButtonsDownBits |= buttonBit;
+        windowMeta->inputState.mouseButtonsDownBits |= buttonBit;
     } else if (action == GLFW_RELEASE) {
-        i_inputState.mouseButtonsDownBits &= ~buttonBit;
+        windowMeta->inputState.mouseButtonsDownBits &= ~buttonBit;
     }
 }
 
 static void glfw_cursor_pos_callback(GLFWwindow* const window, const double x, const double y) {
-    i_mousePos.x = x;
-    i_mousePos.y = y;
+    ZF3WindowMeta* const windowMeta = glfwGetWindowUserPointer(window);
+    windowMeta->inputState.mousePos.x = x;
+    windowMeta->inputState.mousePos.y = y;
 }
 
-bool zf3_window_init(const int width, const int height, const char* const title, const bool resizable) {
-    assert(!i_glfwWindow);
-    assert(width > 0 && height > 0);
-    assert(title && title[0]);
+GLFWwindow* zf3_create_glfw_window(ZF3WindowMeta* const windowMeta, const int width, const int height, const char* const title, const bool resizable) {
+    memset(windowMeta, 0, sizeof(*windowMeta));
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ZF3_GL_VERSION_MAJOR);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ZF3_GL_VERSION_MINOR);
@@ -145,83 +131,19 @@ bool zf3_window_init(const int width, const int height, const char* const title,
     glfwWindowHint(GLFW_RESIZABLE, resizable);
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 
-    i_glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
+    GLFWwindow* const glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
 
-    if (!i_glfwWindow) {
-        return false;
+    if (glfwWindow) {
+        glfwMakeContextCurrent(glfwWindow);
+
+        glfwSetWindowUserPointer(glfwWindow, windowMeta);
+        glfwSetWindowSizeCallback(glfwWindow, glfw_window_size_callback);
+        glfwSetKeyCallback(glfwWindow, glfw_key_callback);
+        glfwSetMouseButtonCallback(glfwWindow, glfw_mouse_button_callback);
+        glfwSetCursorPosCallback(glfwWindow, glfw_cursor_pos_callback);
+
+        glfwGetWindowSize(glfwWindow, &windowMeta->size.x, &windowMeta->size.y);
     }
 
-    glfwMakeContextCurrent(i_glfwWindow);
-
-    glfwSetWindowSizeCallback(i_glfwWindow, glfw_window_size_callback);
-    glfwSetKeyCallback(i_glfwWindow, glfw_key_callback);
-    glfwSetMouseButtonCallback(i_glfwWindow, glfw_mouse_button_callback);
-    glfwSetCursorPosCallback(i_glfwWindow, glfw_cursor_pos_callback);
-
-    i_windowSize.x = width;
-    i_windowSize.y = height;
-
-    return true;
-}
-
-void zf3_window_cleanup() {
-    assert(i_glfwWindow);
-    glfwDestroyWindow(i_glfwWindow);
-    i_glfwWindow = NULL;
-}
-
-void zf3_show_window() {
-    assert(i_glfwWindow);
-    glfwShowWindow(i_glfwWindow);
-}
-
-bool zf3_should_window_close() {
-    assert(i_glfwWindow);
-    return glfwWindowShouldClose(i_glfwWindow);
-}
-
-void zf3_swap_buffers() {
-    assert(i_glfwWindow);
-    glfwSwapBuffers(i_glfwWindow);
-}
-
-ZF3Vec2DInt zf3_get_window_size() {
-    assert(i_glfwWindow);
-    return i_windowSize;
-}
-
-void zf3_save_input_state() {
-    i_inputStateLast = i_inputState;
-}
-
-bool zf3_is_key_down(const ZF3KeyCode keyCode) {
-    return i_inputState.keysDownBits & ((KeysDownBits)1 << keyCode);
-}
-
-bool zf3_is_key_pressed(const ZF3KeyCode keyCode) {
-    const KeysDownBits keyBit = (KeysDownBits)1 << keyCode;
-    return (i_inputState.keysDownBits & keyBit) && !(i_inputStateLast.keysDownBits & keyBit);
-}
-
-bool zf3_is_key_released(const ZF3KeyCode keyCode) {
-    const KeysDownBits keyBit = (KeysDownBits)1 << keyCode;
-    return !(i_inputState.keysDownBits & keyBit) && (i_inputStateLast.keysDownBits & keyBit);
-}
-
-bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode) {
-    return i_inputState.mouseButtonsDownBits & ((MouseButtonsDownBits)1 << buttonCode);
-}
-
-bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode) {
-    const MouseButtonsDownBits buttonBit = (MouseButtonsDownBits)1 << buttonCode;
-    return (i_inputState.mouseButtonsDownBits & buttonBit) && !(i_inputStateLast.mouseButtonsDownBits & buttonBit);
-}
-
-bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode) {
-    const MouseButtonsDownBits buttonBit = (MouseButtonsDownBits)1 << buttonCode;
-    return !(i_inputState.mouseButtonsDownBits & buttonBit) && (i_inputStateLast.mouseButtonsDownBits & buttonBit);
-}
-
-ZF3Vec2D zf3_get_mouse_pos() {
-    return i_mousePos;
+    return glfwWindow;
 }

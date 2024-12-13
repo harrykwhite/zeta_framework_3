@@ -3,20 +3,14 @@
 #define QUAD_LIMIT ZF3_SPRITE_BATCH_SLOT_LIMIT
 #define QUAD_INDICES_LEN (6 * QUAD_LIMIT)
 
-ZF3Vec2D zf3_g_camPos;
-
-static ZF3Renderer* i_renderer;
-
-static float i_camScale;
-
 static unsigned short i_quadIndices[QUAD_INDICES_LEN];
 static int i_texUnits[ZF3_TEX_UNIT_LIMIT];
 
-static void clean_render_layers() {
-    assert(i_renderer);
+static void clean_render_layers(ZF3Renderer* const renderer) {
+    assert(renderer);
 
-    for (int i = 0; i < i_renderer->layerCnt; ++i) {
-        ZF3RenderLayer* const layer = &i_renderer->layers[i];
+    for (int i = 0; i < renderer->layerCnt; ++i) {
+        ZF3RenderLayer* const layer = &renderer->layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
             glDeleteVertexArrays(1, &layer->spriteBatchGLIDs[j].vertArrayGLID);
@@ -25,16 +19,16 @@ static void clean_render_layers() {
         }
     }
 
-    memset(i_renderer->layers, 0, sizeof(*i_renderer->layers) * i_renderer->layerCnt);
+    memset(renderer->layers, 0, sizeof(*renderer->layers) * renderer->layerCnt);
 
-    i_renderer->layerCnt = 0;
+    renderer->layerCnt = 0;
 }
 
-static void add_sprite_batch(const int layerIndex) {
-    assert(i_renderer);
-    assert(layerIndex >= 0 && layerIndex < i_renderer->layerCnt);
+static void add_sprite_batch(ZF3Renderer* const renderer, const int layerIndex) {
+    assert(renderer);
+    assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
 
-    ZF3RenderLayer* const layer = &i_renderer->layers[layerIndex];
+    ZF3RenderLayer* const layer = &renderer->layers[layerIndex];
     const int batchIndex = layer->spriteBatchCnt;
 
     ZF3SpriteBatchGLIDs* const glIDs = &layer->spriteBatchGLIDs[batchIndex];
@@ -99,34 +93,31 @@ static int add_tex_unit_to_sprite_batch(ZF3SpriteBatchTransData* const batchTran
     return batchTransData->texUnitsInUse++;
 }
 
-static void init_cam_view_matrix(ZF3Matrix4x4* const mat) {
+static void init_cam_view_matrix(ZF3Matrix4x4* const mat, const ZF3Camera* const cam, const ZF3WindowMeta* const windowMeta) {
     memset(mat, 0, sizeof(*mat));
-    mat->elems[0][0] = i_camScale;
-    mat->elems[1][1] = i_camScale;
+    mat->elems[0][0] = cam->scale;
+    mat->elems[1][1] = cam->scale;
     mat->elems[3][3] = 1.0f;
-    mat->elems[3][0] = (-zf3_g_camPos.x * i_camScale) + (zf3_get_window_size().x / 2.0f);
-    mat->elems[3][1] = (-zf3_g_camPos.y * i_camScale) + (zf3_get_window_size().y / 2.0f);
+    mat->elems[3][0] = (-cam->pos.x * cam->scale) + (windowMeta->size.x / 2.0f);
+    mat->elems[3][1] = (-cam->pos.y * cam->scale) + (windowMeta->size.y / 2.0f);
 }
 
-void zf3_load_render_layers(const int layerCnt, const int camLayerCnt, const float camScale) {
-    assert(i_renderer);
+void zf3_load_render_layers(ZF3Renderer* const renderer, const int layerCnt, const int camLayerCnt) {
     assert(layerCnt > 0 && layerCnt <= ZF3_RENDER_LAYER_LIMIT);
     assert(camLayerCnt >= 0 && camLayerCnt <= layerCnt);
-    assert(camScale >= 1.0f);
 
-    clean_render_layers();
-    i_renderer->layerCnt = layerCnt;
-    i_renderer->camLayerCnt = camLayerCnt;
-    i_camScale = camScale;
+    clean_render_layers(renderer);
+    renderer->layerCnt = layerCnt;
+    renderer->camLayerCnt = camLayerCnt;
 }
 
-void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData) {
-    assert(layerIndex >= 0 && layerIndex < i_renderer->layerCnt);
+void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const int layerIndex, const ZF3SpriteBatchWriteData* const writeData, const ZF3Assets* const assets) {
+    assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
 
-    ZF3RenderLayer* const layer = &i_renderer->layers[layerIndex];
+    ZF3RenderLayer* const layer = &renderer->layers[layerIndex];
 
     if (layer->spriteBatchCnt == 0) {
-        add_sprite_batch(layerIndex);
+        add_sprite_batch(renderer, layerIndex);
     }
 
     const int batchIndex = layer->spriteBatchesFilled;
@@ -138,17 +129,17 @@ void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteDa
         ++layer->spriteBatchesFilled;
 
         if (layer->spriteBatchesFilled == layer->spriteBatchCnt) {
-            add_sprite_batch(layerIndex);
+            add_sprite_batch(renderer, layerIndex);
         }
 
-        zf3_write_to_sprite_batch(layerIndex, writeData);
+        zf3_write_to_sprite_batch(renderer, layerIndex, writeData, assets);
 
         return;
     }
 
     const int slotIndex = batchTransData->slotsUsed;
 
-    const ZF3Vec2DInt texSize = zf3_get_assets()->texSizes[writeData->texIndex];
+    const ZF3Vec2DInt texSize = assets->texSizes[writeData->texIndex];
 
     const float verts[] = {
         (0.0f - writeData->origin.x) * writeData->scale.x,
@@ -208,14 +199,7 @@ void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteDa
     ++batchTransData->slotsUsed;
 }
 
-bool zf3_init_rendering_internals() {
-    // Allocate the renderer.
-    i_renderer = calloc(1, sizeof(*i_renderer));
-
-    if (!i_renderer) {
-        return false;
-    }
-
+void zf3_init_rendering_internals() {
     // Set quad indices (the same for all quad buffers).
     for (int i = 0; i < QUAD_LIMIT; i++) {
         i_quadIndices[(i * 6) + 0] = (i * 4) + 0;
@@ -230,43 +214,36 @@ bool zf3_init_rendering_internals() {
     for (int i = 0; i < ZF3_TEX_UNIT_LIMIT; ++i) {
         i_texUnits[i] = i;
     }
-
-    return true;
 }
 
-void zf3_clean_renderer() {
-    assert(i_renderer);
-
-    clean_render_layers();
-    free(i_renderer);
-    i_renderer = NULL;
+void zf3_clean_renderer(ZF3Renderer* const renderer) {
+    clean_render_layers(renderer);
+    memset(renderer, 0, sizeof(*renderer));
 }
 
-void zf3_render_sprite_batches() {
-    assert(i_renderer);
-
-    const ZF3ShaderProgs* const progs = zf3_get_shader_progs();
+void zf3_render_sprite_batches(const ZF3Renderer* const renderer, const ZF3Camera* const cam, const ZF3ShaderProgs* const shaderProgs, const ZF3WindowMeta* const windowMeta, const ZF3Assets* const assets) {
+    assert(!cam == !renderer->camLayerCnt);
 
     ZF3Matrix4x4 projMat;
-    zf3_init_ortho_matrix_4x4(&projMat, 0.0f, zf3_get_window_size().x, zf3_get_window_size().y, 0.0f, -1.0f, 1.0f);
+    zf3_init_ortho_matrix_4x4(&projMat, 0.0f, windowMeta->size.x, windowMeta->size.y, 0.0f, -1.0f, 1.0f);
 
     ZF3Matrix4x4 camViewMat;
-    init_cam_view_matrix(&camViewMat);
+    init_cam_view_matrix(&camViewMat, cam, windowMeta);
 
     ZF3Matrix4x4 defaultViewMat;
     zf3_init_identity_matrix_4x4(&defaultViewMat);
 
-    for (int i = 0; i < i_renderer->layerCnt; ++i) {
-        glUseProgram(progs->spriteQuadGLID);
+    for (int i = 0; i < renderer->layerCnt; ++i) {
+        glUseProgram(shaderProgs->spriteQuadGLID);
 
-        glUniformMatrix4fv(progs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
+        glUniformMatrix4fv(shaderProgs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
 
-        const ZF3Matrix4x4* const viewMat = i < i_renderer->camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
-        glUniformMatrix4fv(progs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat->elems);
+        const ZF3Matrix4x4* const viewMat = i < renderer->camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
+        glUniformMatrix4fv(shaderProgs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat->elems);
 
-        glUniform1iv(progs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
+        glUniform1iv(shaderProgs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
 
-        const ZF3RenderLayer* const layer = &i_renderer->layers[i];
+        const ZF3RenderLayer* const layer = &renderer->layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
             const ZF3SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[j];
@@ -277,7 +254,7 @@ void zf3_render_sprite_batches() {
 
             for (int k = 0; k < batchTransData->texUnitsInUse; ++k) {
                 glActiveTexture(GL_TEXTURE0 + i_texUnits[k]);
-                glBindTexture(GL_TEXTURE_2D, zf3_get_assets()->texGLIDs[batchTransData->texUnitTexIDs[k]]);
+                glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[batchTransData->texUnitTexIDs[k]]);
             }
 
             glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, NULL);
@@ -285,11 +262,9 @@ void zf3_render_sprite_batches() {
     }
 }
 
-void zf3_empty_sprite_batches() {
-    assert(i_renderer);
-
-    for (int i = 0; i < i_renderer->layerCnt; ++i) {
-        ZF3RenderLayer* const layer = &i_renderer->layers[i];
+void zf3_empty_sprite_batches(ZF3Renderer* const renderer) {
+    for (int i = 0; i < renderer->layerCnt; ++i) {
+        ZF3RenderLayer* const layer = &renderer->layers[i];
         memset(layer->spriteBatchTransDatas, 0, sizeof(layer->spriteBatchTransDatas));
         layer->spriteBatchesFilled = 0;
     }

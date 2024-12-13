@@ -9,13 +9,7 @@
 //
 // Window
 //
-bool zf3_init_window(const int width, const int height, const char* const title, const bool resizable);
-void zf3_clean_window();
-void zf3_show_window();
-bool zf3_should_window_close();
-void zf3_swap_buffers();
-
-void zf3_save_input_state();
+GLFWwindow* zf3_create_glfw_window(ZF3WindowMeta* const windowMeta, const int width, const int height, const char* const title, const bool resizable);
 
 //
 // Assets
@@ -24,18 +18,18 @@ void zf3_save_input_state();
 
 #define ZF3_TEX_LIMIT 256
 
-bool zf3_load_assets();
-void zf3_unload_assets();
+bool zf3_load_assets(ZF3Assets* const assets);
+void zf3_unload_assets(ZF3Assets* const assets);
 
-bool zf3_load_shader_progs();
-void zf3_unload_shader_progs();
+void zf3_load_shader_progs(ZF3ShaderProgs* const progs);
+void zf3_unload_shader_progs(ZF3ShaderProgs* const progs);
 
 //
 // Rendering
 //
-bool zf3_init_rendering_internals();
-void zf3_clean_renderer();
-void zf3_render_sprite_batches();
-void zf3_empty_sprite_batches();
+void zf3_init_rendering_internals();
+void zf3_clean_renderer(ZF3Renderer* const renderer);
+void zf3_render_sprite_batches(const ZF3Renderer* const renderer, const ZF3Camera* const cam, const ZF3ShaderProgs* const shaderProgs, const ZF3WindowMeta* const windowMeta, const ZF3Assets* const assets);
+void zf3_empty_sprite_batches(ZF3Renderer* const renderer);
 
 #endif

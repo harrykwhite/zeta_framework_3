@@ -9,31 +9,11 @@
 #include <zf3c.h>
 
 //
-// Game
-//
-typedef unsigned short ZF3GameCleanupBitset;
-
-typedef void (*ZF3GameUserInit)();
-typedef void (*ZF3GameUserTick)();
-typedef void (*ZF3GameUserCleanup)();
-
-typedef struct {
-    ZF3GameUserInit init;
-    ZF3GameUserTick tick;
-    ZF3GameUserCleanup cleanup;
-
-    int windowInitWidth;
-    int windowInitHeight;
-    const char* windowTitle;
-    bool windowResizable;
-} ZF3GameUserInfo;
-
-ZF3GameCleanupBitset zf3_run_game(const ZF3GameUserInfo* const userInfo);
-void zf3_clean_game(const ZF3GameCleanupBitset cleanupBitset, const ZF3GameUserInfo* const userInfo);
-
-//
 // Window
 //
+typedef unsigned long long ZF3KeysDownBitset;
+typedef unsigned char ZF3MouseButtonsDownBitset;
+
 typedef enum {
     ZF3_KEY_SPACE,
 
@@ -112,15 +92,47 @@ typedef enum {
     ZF3_MOUSE_BUTTON_CODE_CNT
 } ZF3MouseButtonCode;
 
-ZF3Vec2DInt zf3_get_window_size();
+typedef struct {
+    ZF3KeysDownBitset keysDownBits;
 
-bool zf3_is_key_down(const ZF3KeyCode keyCode);
-bool zf3_is_key_pressed(const ZF3KeyCode keyCode);
-bool zf3_is_key_released(const ZF3KeyCode keyCode);
-bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode);
-bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode);
-bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode);
-ZF3Vec2D zf3_get_mouse_pos();
+    ZF3MouseButtonsDownBitset mouseButtonsDownBits;
+    ZF3Vec2D mousePos;
+} ZF3InputState;
+
+typedef struct {
+    ZF3Vec2DInt size;
+
+    ZF3InputState inputState;
+    ZF3InputState inputStateSaved;
+} ZF3WindowMeta;
+
+inline bool zf3_is_key_down(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
+    return windowMeta->inputState.keysDownBits & ((ZF3KeysDownBitset)1 << keyCode);
+}
+
+inline bool zf3_is_key_pressed(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
+    const ZF3KeysDownBitset keyBit = (ZF3KeysDownBitset)1 << keyCode;
+    return (windowMeta->inputState.keysDownBits & keyBit) && !(windowMeta->inputStateSaved.keysDownBits & keyBit);
+}
+
+inline bool zf3_is_key_released(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
+    const ZF3KeysDownBitset keyBit = (ZF3KeysDownBitset)1 << keyCode;
+    return !(windowMeta->inputState.keysDownBits & keyBit) && (windowMeta->inputStateSaved.keysDownBits & keyBit);
+}
+
+inline bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
+    return windowMeta->inputState.mouseButtonsDownBits & ((ZF3MouseButtonsDownBitset)1 << buttonCode);
+}
+
+inline bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
+    const ZF3MouseButtonsDownBitset buttonBit = (ZF3MouseButtonsDownBitset)1 << buttonCode;
+    return (windowMeta->inputState.mouseButtonsDownBits & buttonBit) && !(windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
+}
+
+inline bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
+    const ZF3MouseButtonsDownBitset buttonBit = (ZF3MouseButtonsDownBitset)1 << buttonCode;
+    return !(windowMeta->inputState.mouseButtonsDownBits & buttonBit) && (windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
+}
 
 //
 // Assets
@@ -143,9 +155,6 @@ typedef struct {
     int spriteQuadTexturesUniLoc;
 } ZF3ShaderProgs;
 
-const ZF3Assets* zf3_get_assets();
-const ZF3ShaderProgs* zf3_get_shader_progs();
-
 //
 // Rendering
 //
@@ -154,8 +163,6 @@ const ZF3ShaderProgs* zf3_get_shader_progs();
 #define ZF3_SPRITE_BATCH_SLOT_LIMIT 4096
 #define ZF3_SPRITE_BATCH_SLOT_VERT_CNT ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT * 4
 #define ZF3_TEX_UNIT_LIMIT 16 // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
-
-extern ZF3Vec2D zf3_g_camPos;
 
 typedef struct {
     GLuint vertArrayGLID;
@@ -193,8 +200,56 @@ typedef struct {
     int camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
 } ZF3Renderer;
 
-void zf3_load_render_layers(const int layerCnt, const int camLayerCnt, const float camScale);
-void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData);
+typedef struct {
+    ZF3Vec2D pos;
+    float scale;
+} ZF3Camera;
+
+void zf3_load_render_layers(ZF3Renderer* const renderer, const int layerCnt, const int camLayerCnt);
+void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const int layerIndex, const ZF3SpriteBatchWriteData* const writeData, const ZF3Assets* const assets);
+
+inline ZF3Vec2D zf3_conv_camera_to_screen_pos(const ZF3Vec2D pos, const ZF3Camera *const cam, const ZF3WindowMeta* const windowMeta)
+{
+    return (ZF3Vec2D) {
+        .x = ((pos.x - cam->pos.x) * cam->scale) + (windowMeta->size.x / 2.0f),
+        .y = ((pos.y - cam->pos.y) * cam->scale) + (windowMeta->size.y / 2.0f)
+    };
+}
+
+inline ZF3Vec2D zf3_conv_screen_to_camera_pos(const ZF3Vec2D pos, const ZF3Camera* const cam, const ZF3WindowMeta* const windowMeta)
+{
+    return (ZF3Vec2D) {
+        .x = ((pos.x - (windowMeta->size.x / 2.0f)) / cam->scale) + cam->pos.x,
+        .y = ((pos.y - (windowMeta->size.y / 2.0f)) / cam->scale) + cam->pos.y
+    };
+}
+
+//
+// Game
+//
+typedef struct {
+    const ZF3WindowMeta* const windowMeta;
+    const ZF3Assets* const assets;
+    ZF3Renderer* const renderer;
+    ZF3Camera* const cam;
+} ZF3UserGameFuncData;
+
+typedef void (*ZF3UserGameInit)(const ZF3UserGameFuncData* const data);
+typedef void (*ZF3UserGameTick)(const ZF3UserGameFuncData* const data);
+typedef void (*ZF3UserGameCleanup)();
+
+typedef struct {
+    ZF3UserGameInit init;
+    ZF3UserGameTick tick;
+    ZF3UserGameCleanup cleanup;
+
+    int initWindowWidth;
+    int initWindowHeight;
+    const char* windowTitle;
+    bool windowResizable;
+} ZF3UserGameInfo;
+
+void zf3_run_game(const ZF3UserGameInfo* const userInfo);
 
 //
 // Utilities

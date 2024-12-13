@@ -1,8 +1,5 @@
 #include <zf3_local.h>
 
-static ZF3Assets* i_assets;
-static ZF3ShaderProgs* i_shaderProgs;
-
 static const char* i_spriteQuadVertShaderSrc =
 "#version 430 core\n"
 "layout (location = 0) in vec2 a_vert;\n"
@@ -67,7 +64,7 @@ static GLuint create_shader_from_src(const char* const src, const bool frag) {
     if (!compileSuccess) {
         GLchar infoLog[512];
         glGetShaderInfoLog(glID, sizeof(infoLog), NULL, infoLog);
-        printf("ZF2 ERROR: Failed to compile shader!\n\n%s\n\n", infoLog);
+        printf("ZF3 ERROR: Failed to compile shader!\n\n%s\n\n", infoLog);
 
         glDeleteShader(glID);
 
@@ -78,7 +75,6 @@ static GLuint create_shader_from_src(const char* const src, const bool frag) {
 }
 
 static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, const char* const fragShaderSrc) {
-    // Create the shaders.
     const GLuint vertShaderGLID = create_shader_from_src(vertShaderSrc, false);
 
     if (!vertShaderGLID) {
@@ -92,44 +88,39 @@ static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, cons
         return 0;
     }
 
-    // Create the shader program.
     const GLuint progGLID = glCreateProgram();
     glAttachShader(progGLID, vertShaderGLID);
     glAttachShader(progGLID, fragShaderGLID);
     glLinkProgram(progGLID);
 
-    // Delete the shaders as they are no longer needed.
+    // We no longer need the shaders, as they are now part of the program.
     glDeleteShader(vertShaderGLID);
     glDeleteShader(fragShaderGLID);
 
     return progGLID;
 }
 
-static bool load_textures(FILE* const fs) {
-    assert(i_assets);
-
-    if (i_assets->texCnt > 0) {
-        // Allocate a buffer for temporarily storing the pixel data of each texture.
+static bool load_textures(ZF3Assets* const assets, FILE* const fs) {
+    if (assets->texCnt > 0) {
         const int pxDataBufSize = ZF3_TEX_CHANNEL_COUNT * ZF3_TEX_WIDTH_LIMIT * ZF3_TEX_HEIGHT_LIMIT;
-        unsigned char* const pxDataBuf = malloc(pxDataBufSize);
+        unsigned char* const pxDataBuf = malloc(pxDataBufSize); // For temporarily storing the pixel data of each texture.
 
         if (!pxDataBuf) {
             return false;
         }
 
-        // Generate textures and store their IDs.
-        glGenTextures(i_assets->texCnt, i_assets->texGLIDs);
+        glGenTextures(assets->texCnt, assets->texGLIDs);
 
         // Read the sizes and pixel data of textures and finish setting them up.
-        for (int i = 0; i < i_assets->texCnt; ++i) {
-            fread(&i_assets->texSizes[i], sizeof(i_assets->texSizes[i]), 1, fs);
+        for (int i = 0; i < assets->texCnt; ++i) {
+            fread(&assets->texSizes[i], sizeof(assets->texSizes[i]), 1, fs);
 
-            fread(pxDataBuf, ZF3_TEX_CHANNEL_COUNT * i_assets->texSizes[i].x * i_assets->texSizes[i].y, 1, fs);
+            fread(pxDataBuf, ZF3_TEX_CHANNEL_COUNT * assets->texSizes[i].x * assets->texSizes[i].y, 1, fs);
 
-            glBindTexture(GL_TEXTURE_2D, i_assets->texGLIDs[i]);
+            glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[i]);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, i_assets->texSizes[i].x, i_assets->texSizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pxDataBuf);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, assets->texSizes[i].x, assets->texSizes[i].y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pxDataBuf);
         }
 
         free(pxDataBuf);
@@ -138,80 +129,41 @@ static bool load_textures(FILE* const fs) {
     return true;
 }
 
-bool zf3_load_assets() {
-    assert(!i_assets);
+bool zf3_load_assets(ZF3Assets* const assets) {
+    memset(assets, 0, sizeof(*assets));
 
-    // Allocate the assets.
-    i_assets = calloc(1, sizeof(*i_assets));
-
-    if (!i_assets) {
-        return false;
-    }
-
-    // Open the assets file.
     FILE* const fs = fopen(ZF3_ASSETS_FILE_NAME, "rb");
 
     if (!fs) {
-        free(i_assets);
-        i_assets = NULL;
         return false;
     }
 
-    // Read asset counts.
-    fread(&i_assets->texCnt, sizeof(i_assets->texCnt), 1, fs);
+    fread(&assets->texCnt, sizeof(assets->texCnt), 1, fs);
 
-    // Load assets.
-    const bool loadErr = !load_textures(fs);
+    const bool loadSucceeded = load_textures(assets, fs);
 
     fclose(fs);
 
-    if (loadErr) {
-        free(i_assets);
-        i_assets = NULL;
-        return false;
-    }
-
-    return true;
+    return loadSucceeded;
 }
 
-void zf3_unload_assets() {
-    assert(i_assets);
-    glDeleteTextures(i_assets->texCnt, i_assets->texGLIDs);
-    free(i_assets);
-    i_assets = NULL;
+void zf3_unload_assets(ZF3Assets* const assets) {
+    glDeleteTextures(assets->texCnt, assets->texGLIDs);
+    memset(assets, 0, sizeof(*assets));
 }
 
-const ZF3Assets* zf3_get_assets() {
-    assert(i_assets);
-    return i_assets;
+void zf3_load_shader_progs(ZF3ShaderProgs* const progs) {
+    memset(progs, 0, sizeof(*progs));
+
+    progs->spriteQuadGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
+    assert(progs->spriteQuadGLID);
+
+    progs->spriteQuadProjUniLoc = glGetUniformLocation(progs->spriteQuadGLID, "u_proj");
+    progs->spriteQuadViewUniLoc = glGetUniformLocation(progs->spriteQuadGLID, "u_view");
+    progs->spriteQuadTexturesUniLoc = glGetUniformLocation(progs->spriteQuadGLID, "u_textures");
 }
 
-bool zf3_load_shader_progs() {
-    assert(!i_shaderProgs);
-
-    i_shaderProgs = calloc(1, sizeof(*i_shaderProgs));
-
-    if (!i_shaderProgs) {
-        return false;
-    }
-
-    i_shaderProgs->spriteQuadGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
-    assert(i_shaderProgs->spriteQuadGLID);
-
-    i_shaderProgs->spriteQuadProjUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_proj");
-    i_shaderProgs->spriteQuadViewUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_view");
-    i_shaderProgs->spriteQuadTexturesUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_textures");
-
-    return true;
-}
-
-void zf3_unload_shader_progs() {
-    assert(i_shaderProgs);
-    glDeleteProgram(i_shaderProgs->spriteQuadGLID);
-    free(i_shaderProgs);
-}
-
-const ZF3ShaderProgs* zf3_get_shader_progs() {
-    assert(i_shaderProgs);
-    return i_shaderProgs;
+void zf3_unload_shader_progs(ZF3ShaderProgs* const progs) {
+    glDeleteProgram(progs->spriteQuadGLID);
+    memset(progs, 0, sizeof(*progs));
 }

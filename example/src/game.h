@@ -28,8 +28,8 @@ typedef struct {
     int bulletCnt;
 } Game;
 
-void game_init();
-void game_tick();
-void game_cleanup();
+void init_game(const ZF3UserGameFuncData* const zf3Data);
+void run_game_tick(const ZF3UserGameFuncData* const zf3Data);
+void clean_game();
 
 #endif

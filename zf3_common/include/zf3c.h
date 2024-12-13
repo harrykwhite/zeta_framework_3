@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 
@@ -77,10 +78,10 @@ typedef struct {
     int used;
 } ZF3MemArena;
 
-bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size);
-void* zf3_mem_arena_push(ZF3MemArena* const memArena, const int size);
-void zf3_mem_arena_reset(ZF3MemArena* const memArena);
-void zf3_mem_arena_cleanup(ZF3MemArena* const memArena);
+bool zf3_init_mem_arena(ZF3MemArena* const memArena, const int size);
+void zf3_clean_mem_arena(ZF3MemArena* const memArena);
+void* zf3_push_to_mem_arena(ZF3MemArena* const memArena, const int size);
+void zf3_reset_mem_arena(ZF3MemArena* const memArena);
 
 bool zf3_is_zero(const void* const mem, const int size);
 
