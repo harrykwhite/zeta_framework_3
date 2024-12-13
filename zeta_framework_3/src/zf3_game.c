@@ -4,8 +4,6 @@
 #define TARG_TICK_DUR (1.0 / TARG_TICKS_PER_SEC)
 #define TICK_DUR_LIMIT_MULT 8
 
-typedef unsigned short GameCleanupBitset;
-
 enum GameCleanupBit {
     WINDOW_CLEANUP_BIT = 1 << 0,
     ASSETS_CLEANUP_BIT = 1 << 1,
@@ -13,55 +11,8 @@ enum GameCleanupBit {
     RENDERER_CLEANUP_BIT = 1 << 3
 };
 
-static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameUserInfo* const userInfo) {
-    // Initialise GLFW.
-    if (!glfwInit()) {
-        return false;
-    }
+static bool init_game(GameCleanupBitset* const cleanupBitset, const ZF3GameUserInfo* const userInfo) {
 
-    // Create the GLFW window.
-    if (!zf3_window_init(userInfo->windowInitWidth, userInfo->windowInitHeight, userInfo->windowTitle, userInfo->windowResizable)) {
-        return false;
-    }
-
-    *cleanupBitset |= WINDOW_CLEANUP_BIT;
-
-    // Enable VSync.
-    glfwSwapInterval(1);
-
-    // Initialise OpenGL function pointers.
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        return false;
-    }
-
-    // Load assets.
-    if (!zf3_load_assets()) {
-        return false;
-    }
-
-    *cleanupBitset |= ASSETS_CLEANUP_BIT;
-
-    // Load shader programs.
-    if (!zf3_load_shader_progs()) {
-        return false;
-    }
-
-    *cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
-
-    // Set up rendering.
-    if (!zf3_init_rendering_internals()) {
-        return false;
-    }
-
-    *cleanupBitset |= RENDERER_CLEANUP_BIT;
-
-    // Call the user-defined initialisation function.
-    userInfo->init();
-
-    // Show the window now that everything is set up.
-    zf3_show_window();
-
-    return true;
 }
 
 static double calc_valid_frame_dur(const double frameTime, const double frameTimeLast) {
@@ -69,7 +20,63 @@ static double calc_valid_frame_dur(const double frameTime, const double frameTim
     return dur >= 0.0 && dur <= TARG_TICK_DUR * TICK_DUR_LIMIT_MULT ? dur : 0.0;
 }
 
-static void game_loop(const ZF3GameUserInfo* const userInfo) {
+ZF3GameCleanupBitset zf3_run_game(const ZF3GameUserInfo* const userInfo) {
+    ZF3GameCleanupBitset cleanupBitset = 0;
+
+    //
+    // Initialisation
+    //
+
+    // Initialise GLFW.
+    if (!glfwInit()) {
+        return cleanupBitset;
+    }
+
+    // Create the GLFW window.
+    if (!zf3_init_window(userInfo->windowInitWidth, userInfo->windowInitHeight, userInfo->windowTitle, userInfo->windowResizable)) {
+        return cleanupBitset;
+    }
+
+    cleanupBitset |= WINDOW_CLEANUP_BIT;
+
+    // Enable VSync.
+    glfwSwapInterval(1);
+
+    // Initialise OpenGL function pointers.
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        return cleanupBitset;
+    }
+
+    // Load assets.
+    if (!zf3_load_assets()) {
+        return cleanupBitset;
+    }
+
+    cleanupBitset |= ASSETS_CLEANUP_BIT;
+
+    // Load shader programs.
+    if (!zf3_load_shader_progs()) {
+        return cleanupBitset;
+    }
+
+    cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
+
+    // Set up rendering.
+    if (!zf3_init_rendering_internals()) {
+        return cleanupBitset;
+    }
+
+    cleanupBitset |= RENDERER_CLEANUP_BIT;
+
+    // Call the user-defined initialisation function.
+    userInfo->init();
+
+    // Show the window now that everything is set up.
+    zf3_show_window();
+
+    //
+    // Main Loop
+    //
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
 
@@ -105,18 +112,11 @@ static void game_loop(const ZF3GameUserInfo* const userInfo) {
 
         glfwPollEvents();
     }
+
+    return cleanupBitset;
 }
 
-void zf3_run_game(const ZF3GameUserInfo* const userInfo) {
-    GameCleanupBitset cleanupBitset = 0;
-
-    if (game_init(&cleanupBitset, userInfo)) {
-        game_loop(userInfo);
-    }
-
-    //
-    // Cleanup
-    //
+void zf3_clean_game(const ZF3GameCleanupBitset cleanupBitset, const ZF3GameUserInfo* const userInfo) {
     userInfo->cleanup();
 
     if (cleanupBitset & RENDERER_CLEANUP_BIT) {
@@ -132,7 +132,7 @@ void zf3_run_game(const ZF3GameUserInfo* const userInfo) {
     }
 
     if (cleanupBitset & WINDOW_CLEANUP_BIT) {
-        zf3_window_cleanup();
+        zf3_clean_window();
     }
 
     glfwTerminate();

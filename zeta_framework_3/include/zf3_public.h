@@ -11,6 +11,8 @@
 //
 // Game
 //
+typedef unsigned short ZF3GameCleanupBitset;
+
 typedef void (*ZF3GameUserInit)();
 typedef void (*ZF3GameUserTick)();
 typedef void (*ZF3GameUserCleanup)();
@@ -26,7 +28,8 @@ typedef struct {
     bool windowResizable;
 } ZF3GameUserInfo;
 
-void zf3_run_game(const ZF3GameUserInfo* const userInfo);
+ZF3GameCleanupBitset zf3_run_game(const ZF3GameUserInfo* const userInfo);
+void zf3_clean_game(const ZF3GameCleanupBitset cleanupBitset, const ZF3GameUserInfo* const userInfo);
 
 //
 // Window

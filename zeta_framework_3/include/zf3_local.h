@@ -9,8 +9,8 @@
 //
 // Window
 //
-bool zf3_window_init(const int width, const int height, const char* const title, const bool resizable);
-void zf3_window_cleanup();
+bool zf3_init_window(const int width, const int height, const char* const title, const bool resizable);
+void zf3_clean_window();
 void zf3_show_window();
 bool zf3_should_window_close();
 void zf3_swap_buffers();
