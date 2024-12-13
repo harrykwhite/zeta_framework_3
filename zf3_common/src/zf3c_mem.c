@@ -1,4 +1,4 @@
-#include <zf3_common.h>
+#include <zf3c.h>
 
 bool zf3_mem_arena_init(ZF3MemArena* const memArena, const int size) {
     assert(zf3_is_zero(memArena, sizeof(*memArena)));

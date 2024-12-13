@@ -1,4 +1,4 @@
-#include <zf3.h>
+#include <zf3_local.h>
 
 #define TARG_TICKS_PER_SEC 60
 #define TARG_TICK_DUR (1.0 / TARG_TICKS_PER_SEC)

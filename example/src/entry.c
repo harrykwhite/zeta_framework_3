@@ -1,4 +1,4 @@
-#include <zf3.h>
+#include <zf3_public.h>
 #include "scenes.h"
 
 int main() {

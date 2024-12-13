@@ -1,4 +1,4 @@
-#include <zf3.h>
+#include <zf3_local.h>
 
 #define QUAD_LIMIT ZF3_SPRITE_BATCH_SLOT_LIMIT
 #define QUAD_INDICES_LEN (6 * QUAD_LIMIT)

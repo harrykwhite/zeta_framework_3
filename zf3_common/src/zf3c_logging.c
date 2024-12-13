@@ -1,4 +1,4 @@
-#include <zf3_common.h>
+#include <zf3c.h>
 
 void zf3_log(const char* const format, ...) {
     va_list args;

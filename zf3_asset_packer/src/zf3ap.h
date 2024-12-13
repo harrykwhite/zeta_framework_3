@@ -7,7 +7,7 @@
 #include <string.h>
 #include <cjson/cJSON.h>
 #include <stb_image.h>
-#include <zf3_common.h>
+#include <zf3c.h>
 
 #define SRC_ASSET_FILE_PATH_BUF_SIZE 256
 

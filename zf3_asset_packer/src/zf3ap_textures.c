@@ -1,4 +1,4 @@
-#include "zf3_asset_packer_shared.h"
+#include "zf3ap.h"
 
 bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen) {
     // Get the textures array.

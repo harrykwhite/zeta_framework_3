@@ -1,4 +1,4 @@
-#include <zf3.h>
+#include <zf3_local.h>
 
 static ZF3Assets* i_assets;
 static ZF3ShaderProgs* i_shaderProgs;

@@ -1,7 +1,7 @@
 #ifndef SCENES_H
 #define SCENES_H
 
-#include <zf3.h>
+#include <zf3_public.h>
 #include "player.h"
 
 enum SceneType {

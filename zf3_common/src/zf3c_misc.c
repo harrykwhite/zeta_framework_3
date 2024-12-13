@@ -1,4 +1,4 @@
-#include <zf3_common.h>
+#include <zf3c.h>
 
 char* zf3_get_file_contents(const char* const filename) {
     // Open the file.

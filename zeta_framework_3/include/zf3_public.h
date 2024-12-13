@@ -1,17 +1,24 @@
-#ifndef ZF3_H
-#define ZF3_H
+#ifndef ZF3_PUBLIC_H
+#define ZF3_PUBLIC_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <assert.h>
+#include <string.h>
+#include <stdbool.h>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include <zf3_common.h>
+#include <zf3c.h>
 
-#define ZF3_GL_VERSION_MAJOR 4
-#define ZF3_GL_VERSION_MINOR 1
+//
+// Game
+//
+typedef struct {
+    int windowInitWidth;
+    int windowInitHeight;
+    const char* windowTitle;
+    bool windowResizable;
+} ZF3GameInfo;
+
+void zf3_run_game(const ZF3GameInfo* const gameInfo);
 
 //
 // Window
@@ -94,14 +101,8 @@ typedef enum {
     ZF3_MOUSE_BUTTON_CODE_CNT
 } ZF3MouseButtonCode;
 
-bool zf3_window_init(const int width, const int height, const char* const title, const bool resizable);
-void zf3_window_cleanup();
-void zf3_show_window();
-bool zf3_should_window_close();
-void zf3_swap_buffers();
 ZF3Vec2DInt zf3_get_window_size();
 
-void zf3_save_input_state();
 bool zf3_is_key_down(const ZF3KeyCode keyCode);
 bool zf3_is_key_pressed(const ZF3KeyCode keyCode);
 bool zf3_is_key_released(const ZF3KeyCode keyCode);
@@ -130,12 +131,7 @@ typedef struct {
     int spriteQuadTexturesUniLoc;
 } ZF3ShaderProgs;
 
-bool zf3_load_assets();
-void zf3_unload_assets();
 const ZF3Assets* zf3_get_assets();
-
-bool zf3_load_shader_progs();
-void zf3_unload_shader_progs();
 const ZF3ShaderProgs* zf3_get_shader_progs();
 
 //
@@ -159,8 +155,7 @@ typedef struct {
     int texUnitsInUse;
 } ZF3SpriteBatchTransData;
 
-typedef struct
-{
+typedef struct {
     int texIndex;
     ZF3Vec2D pos;
     ZF3Rect srcRect;
@@ -177,11 +172,6 @@ typedef struct {
     int spriteBatchCnt;
 } ZF3Renderer;
 
-void zf3_init_rendering_internals();
-
-void zf3_clean_renderer(ZF3Renderer* const renderer);
-void zf3_render_sprite_batches(const ZF3Renderer* const renderer);
-void zf3_empty_sprite_batches(ZF3Renderer* const renderer);
 void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const ZF3SpriteBatchWriteData* const writeData);
 
 //
@@ -204,21 +194,6 @@ typedef struct {
 } ZF3SceneTypeInfo;
 
 void zf3_register_scene_types(const ZF3SceneTypeInfo* const typeInfos, const int typeCnt);
-bool zf3_scene_system_init();
-void zf3_scene_system_cleanup();
-void zf3_proc_scene_tick();
-
-//
-// Game
-//
-typedef struct {
-    int windowInitWidth;
-    int windowInitHeight;
-    const char* windowTitle;
-    bool windowResizable;
-} ZF3GameInfo;
-
-void zf3_run_game(const ZF3GameInfo* const gameInfo);
 
 //
 // Utilities

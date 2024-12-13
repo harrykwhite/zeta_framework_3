@@ -1,4 +1,4 @@
-#include "zf3_asset_packer_shared.h"
+#include "zf3ap.h"
 
 #define PACKING_INSTRS_FILE_NAME "packing_instrs.json"
 #define OUTPUT_FILE_PATH_BUF_SIZE 256

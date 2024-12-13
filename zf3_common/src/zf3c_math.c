@@ -1,4 +1,4 @@
-#include <zf3_common.h>
+#include <zf3c.h>
 
 void zf3_init_identity_matrix_4x4(ZF3Matrix4x4* const mat) {
     memset(mat, 0, sizeof(*mat));

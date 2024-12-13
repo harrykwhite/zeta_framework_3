@@ -18,12 +18,12 @@ add_executable(example
 target_compile_definitions(example PRIVATE GLFW_INCLUDE_NONE)
 
 target_include_directories(example PRIVATE
-    ${PARENT_SRC_DIR}/zf3/include
+    ${PARENT_SRC_DIR}/zeta_framework_3/include
     ${PARENT_SRC_DIR}/zf3_common/include
     ${PARENT_SRC_DIR}/vendor/glad/include
 )
 
-target_link_libraries(example PRIVATE glfw zf3)
+target_link_libraries(example PRIVATE glfw zeta_framework_3)
 
 add_dependencies(example zf3_asset_packer)
 

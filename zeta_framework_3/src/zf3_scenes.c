@@ -1,4 +1,4 @@
-#include <zf3.h>
+#include <zf3_local.h>
 
 #define SCENE_TYPE_LIMIT 256
 #define SCENE_MEM_ARENA_SIZE ZF3_MEGABYTES(32)
