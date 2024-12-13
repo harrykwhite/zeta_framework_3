@@ -6,7 +6,8 @@
 #define BULLET_LIMIT 256
 
 typedef enum {
-    GENERAL_RENDER_LAYER,
+    WORLD_RENDER_LAYER,
+    UI_RENDER_LAYER,
 
     RENDER_LAYER_CNT
 } RenderLayer;

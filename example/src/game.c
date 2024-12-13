@@ -15,10 +15,12 @@ static void spawn_bullet(const ZF3Vec2D pos, const float spd, const float dir) {
 }
 
 void game_init() {
-    zf3_load_render_layers(RENDER_LAYER_CNT);
+    zf3_load_render_layers(RENDER_LAYER_CNT, UI_RENDER_LAYER, 2.0f);
 
     i_game.player.pos.x = zf3_get_window_size().x / 2.0f;
     i_game.player.pos.y = zf3_get_window_size().y / 2.0f;
+
+    zf3_g_camPos = i_game.player.pos;
 }
 
 void game_tick() {
@@ -59,7 +61,7 @@ void game_tick() {
             .alpha = 1.0f
         };
 
-        zf3_write_to_sprite_batch(GENERAL_RENDER_LAYER, &writeData);
+        zf3_write_to_sprite_batch(WORLD_RENDER_LAYER, &writeData);
     }
 
     //
@@ -81,7 +83,7 @@ void game_tick() {
             .alpha = 1.0f
         };
 
-        zf3_write_to_sprite_batch(GENERAL_RENDER_LAYER, &writeData);
+        zf3_write_to_sprite_batch(WORLD_RENDER_LAYER, &writeData);
     }
 }
 

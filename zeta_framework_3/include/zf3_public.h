@@ -152,6 +152,8 @@ const ZF3ShaderProgs* zf3_get_shader_progs();
 #define ZF3_SPRITE_BATCH_SLOT_VERT_CNT ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT * 4
 #define ZF3_TEX_UNIT_LIMIT 16 // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
 
+extern ZF3Vec2D zf3_g_camPos;
+
 typedef struct {
     GLuint vertArrayGLID;
     GLuint vertBufGLID;
@@ -185,9 +187,10 @@ typedef struct {
 typedef struct {
     ZF3RenderLayer layers[ZF3_RENDER_LAYER_LIMIT];
     int layerCnt;
+    int camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
 } ZF3Renderer;
 
-void zf3_load_render_layers(const int layerCnt);
+void zf3_load_render_layers(const int layerCnt, const int camLayerCnt, const float camScale);
 void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData);
 
 //

@@ -3,7 +3,11 @@
 #define QUAD_LIMIT ZF3_SPRITE_BATCH_SLOT_LIMIT
 #define QUAD_INDICES_LEN (6 * QUAD_LIMIT)
 
+ZF3Vec2D zf3_g_camPos;
+
 static ZF3Renderer* i_renderer;
+
+static float i_camScale;
 
 static unsigned short i_quadIndices[QUAD_INDICES_LEN];
 static int i_texUnits[ZF3_TEX_UNIT_LIMIT];
@@ -95,12 +99,25 @@ static int add_tex_unit_to_sprite_batch(ZF3SpriteBatchTransData* const batchTran
     return batchTransData->texUnitsInUse++;
 }
 
-void zf3_load_render_layers(const int layerCnt) {
+static void init_cam_view_matrix(ZF3Matrix4x4* const mat) {
+    memset(mat, 0, sizeof(*mat));
+    mat->elems[0][0] = i_camScale;
+    mat->elems[1][1] = i_camScale;
+    mat->elems[3][3] = 1.0f;
+    mat->elems[3][0] = (-zf3_g_camPos.x * i_camScale) + (zf3_get_window_size().x / 2.0f);
+    mat->elems[3][1] = (-zf3_g_camPos.y * i_camScale) + (zf3_get_window_size().y / 2.0f);
+}
+
+void zf3_load_render_layers(const int layerCnt, const int camLayerCnt, const float camScale) {
     assert(i_renderer);
-    assert(layerCnt > 0);
+    assert(layerCnt > 0 && layerCnt <= ZF3_RENDER_LAYER_LIMIT);
+    assert(camLayerCnt >= 0 && camLayerCnt <= layerCnt);
+    assert(camScale >= 1.0f);
 
     clean_render_layers();
     i_renderer->layerCnt = layerCnt;
+    i_renderer->camLayerCnt = camLayerCnt;
+    i_camScale = camScale;
 }
 
 void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData) {
@@ -230,19 +247,25 @@ void zf3_render_sprite_batches() {
 
     const ZF3ShaderProgs* const progs = zf3_get_shader_progs();
 
-    glUseProgram(progs->spriteQuadGLID);
-
     ZF3Matrix4x4 projMat;
     zf3_init_ortho_matrix_4x4(&projMat, 0.0f, zf3_get_window_size().x, zf3_get_window_size().y, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(progs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
 
-    ZF3Matrix4x4 viewMat;
-    zf3_init_identity_matrix_4x4(&viewMat);
-    glUniformMatrix4fv(progs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat.elems);
+    ZF3Matrix4x4 camViewMat;
+    init_cam_view_matrix(&camViewMat);
 
-    glUniform1iv(progs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
+    ZF3Matrix4x4 defaultViewMat;
+    zf3_init_identity_matrix_4x4(&defaultViewMat);
 
     for (int i = 0; i < i_renderer->layerCnt; ++i) {
+        glUseProgram(progs->spriteQuadGLID);
+
+        glUniformMatrix4fv(progs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
+
+        const ZF3Matrix4x4* const viewMat = i < i_renderer->camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
+        glUniformMatrix4fv(progs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat->elems);
+
+        glUniform1iv(progs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
+
         const ZF3RenderLayer* const layer = &i_renderer->layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
