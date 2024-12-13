@@ -2,12 +2,9 @@ project(example)
 
 find_package(glfw3 CONFIG REQUIRED)
 
-get_filename_component(PARENT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
-
 add_executable(example
 	src/entry.c
 	src/game.c
-	${PARENT_SRC_DIR}/vendor/glad/src/glad.c
 
 	src/game.h
 )
@@ -15,9 +12,9 @@ add_executable(example
 target_compile_definitions(example PRIVATE GLFW_INCLUDE_NONE)
 
 target_include_directories(example PRIVATE
-    ${PARENT_SRC_DIR}/zeta_framework_3/include
-    ${PARENT_SRC_DIR}/zf3_common/include
-    ${PARENT_SRC_DIR}/vendor/glad/include
+    ${CMAKE_SOURCE_DIR}/zeta_framework_3/include
+    ${CMAKE_SOURCE_DIR}/zf3_common/include
+    ${CMAKE_SOURCE_DIR}/vendor/glad/include
 )
 
 target_link_libraries(example PRIVATE glfw zeta_framework_3)
