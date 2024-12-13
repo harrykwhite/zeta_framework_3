@@ -165,6 +165,14 @@ void zf3_swap_buffers() {
     glfwSwapBuffers(i_glfwWindow);
 }
 
+ZF3Vec2DInt zf3_get_window_size() {
+    assert(i_glfwWindow);
+
+    ZF3Vec2DInt size;
+    glfwGetWindowSize(i_glfwWindow, &size.x, &size.y);
+    return size;
+}
+
 void zf3_save_input_state() {
     i_inputStateLast = i_inputState;
 }

@@ -3,50 +3,57 @@
 static ZF3Assets* i_assets;
 static ZF3ShaderProgs* i_shaderProgs;
 
-static const char* const i_spriteVertShaderSrc =
+static const char* i_spriteQuadVertShaderSrc =
 "#version 430 core\n"
-"\n"
 "layout (location = 0) in vec2 a_vert;\n"
+"layout (location = 1) in vec2 a_pos;\n"
+"layout (location = 2) in vec2 a_size;\n"
+"layout (location = 3) in float a_rot;\n"
+"layout (location = 4) in float a_texIndex;\n"
+"layout (location = 5) in vec2 a_texCoord;\n"
+"layout (location = 6) in float a_alpha;\n"
 "\n"
+"out flat int v_texIndex;\n"
 "out vec2 v_texCoord;\n"
+"out float v_alpha;\n"
 "\n"
 "uniform mat4 u_view;\n"
 "uniform mat4 u_proj;\n"
-"uniform vec2 u_pos;\n"
-"uniform vec2 u_size;\n"
-"uniform float u_rot;\n"
 "\n"
 "void main()\n"
 "{\n"
-"    float rotCos = cos(u_rot);\n"
-"    float rotSin = -sin(u_rot);\n"
+"    float rotCos = cos(a_rot);\n"
+"    float rotSin = -sin(a_rot);\n"
 "\n"
 "    mat4 model = mat4(\n"
-"        vec4(u_size.x * rotCos, u_size.x * rotSin, 0.0f, 0.0f),\n"
-"        vec4(u_size.y * -rotSin, u_size.y * rotCos, 0.0f, 0.0f),\n"
+"        vec4(a_size.x * rotCos, a_size.x * rotSin, 0.0f, 0.0f),\n"
+"        vec4(a_size.y * -rotSin, a_size.y * rotCos, 0.0f, 0.0f),\n"
 "        vec4(0.0f, 0.0f, 1.0f, 0.0f),\n"
-"        vec4(u_pos.x, u_pos.y, 0.0f, 1.0f)\n"
+"        vec4(a_pos.x, a_pos.y, 0.0f, 1.0f)\n"
 "    );\n"
 "\n"
 "    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0f, 1.0f);\n"
 "\n"
-"    v_texCoord = a_vert;\n"
+"    v_texIndex = int(a_texIndex);\n"
+"    v_texCoord = a_texCoord;\n"
+"    v_alpha = a_alpha;\n"
 "}\n";
 
-const char* const i_spriteFragShaderSrc =
+static const char* i_spriteQuadFragShaderSrc =
 "#version 430 core\n"
 "\n"
+"in flat int v_texIndex;\n"
 "in vec2 v_texCoord;\n"
+"in float v_alpha;\n"
 "\n"
 "out vec4 o_fragColor;\n"
 "\n"
-"uniform float u_alpha;\n"
-"uniform sampler2D u_tex;\n"
+"uniform sampler2D u_textures[32];\n"
 "\n"
 "void main()\n"
 "{\n"
-"    vec4 texColor = texture(u_tex, v_texCoord);\n"
-"    o_fragColor = texColor * vec4(1.0f, 1.0f, 1.0f, u_alpha);\n"
+"    vec4 texColor = texture(u_textures[v_texIndex], v_texCoord);\n"
+"    o_fragColor = texColor * vec4(1.0f, 1.0f, 1.0f, v_alpha);\n"
 "}\n";
 
 static GLuint create_shader_from_src(const char* const src, const bool frag) {
@@ -188,23 +195,19 @@ bool zf3_load_shader_progs() {
         return false;
     }
 
-    i_shaderProgs->spriteGLID = create_shader_prog_from_srcs(i_spriteVertShaderSrc, i_spriteFragShaderSrc);
-    assert(i_shaderProgs->spriteGLID);
+    i_shaderProgs->spriteQuadGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
+    assert(i_shaderProgs->spriteQuadGLID);
 
-    i_shaderProgs->spriteViewUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_view");
-    i_shaderProgs->spriteProjUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_proj");
-    i_shaderProgs->spritePosUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_pos");
-    i_shaderProgs->spriteSizeUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_size");
-    i_shaderProgs->spriteRotUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_rot");
-    i_shaderProgs->spriteAlphaUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_alpha");
-    i_shaderProgs->spriteTexUniLoc = glGetUniformLocation(i_shaderProgs->spriteGLID, "u_tex");
+    i_shaderProgs->spriteQuadProjUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_proj");
+    i_shaderProgs->spriteQuadViewUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_view");
+    i_shaderProgs->spriteQuadTexturesUniLoc = glGetUniformLocation(i_shaderProgs->spriteQuadGLID, "u_textures");
 
     return true;
 }
 
 void zf3_unload_shader_progs() {
     assert(i_shaderProgs);
-    glDeleteProgram(i_shaderProgs->spriteGLID);
+    glDeleteProgram(i_shaderProgs->spriteQuadGLID);
     free(i_shaderProgs);
 }
 

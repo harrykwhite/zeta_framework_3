@@ -2,28 +2,29 @@
 #define SCENES_H
 
 #include <zf3.h>
+#include "player.h"
 
 enum SceneType {
-    LEVEL_ONE_SCENE,
-    LEVEL_TWO_SCENE,
+    TITLE_SCREEN_SCENE,
+    WORLD_SCENE,
 
     SCENE_TYPE_CNT
 };
 
 typedef struct {
-    ZF3Sprite* playerSprite;
-} LevelOneSceneData;
+    int a;
+} TitleScreenData;
 
 typedef struct {
-    ZF3Sprite* playerSprite;
-} LevelTwoSceneData;
+    Player player;
+} WorldData;
 
-void level_one_init(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
-void level_one_tick(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs, int* const nextSceneTypeIndex);
-void level_one_cleanup(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
+void title_screen_init(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
+void title_screen_tick(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs, int* const nextSceneTypeIndex);
+void title_screen_cleanup(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
 
-void level_two_init(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
-void level_two_tick(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs, int* const nextSceneTypeIndex);
-void level_two_cleanup(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
+void world_init(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
+void world_tick(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs, int* const nextSceneTypeIndex);
+void world_cleanup(ZF3MemArena* const memArena, const ZF3ScenePtrs* const ptrs);
 
 #endif

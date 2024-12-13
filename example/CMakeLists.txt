@@ -6,10 +6,12 @@ get_filename_component(PARENT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
 
 add_executable(example
 	src/entry.c
-	src/level_one.c
-	src/level_two.c
+	src/player.c
+	src/title_screen.c
+	src/world.c
 	${PARENT_SRC_DIR}/vendor/glad/src/glad.c
 
+	src/player.h
 	src/scenes.h
 )
 

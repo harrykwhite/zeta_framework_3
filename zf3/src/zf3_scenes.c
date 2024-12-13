@@ -16,9 +16,10 @@ static void load_scene(const int sceneTypeIndex) {
     assert(!i_activeSceneMemArena.used);
     assert(sceneTypeIndex >= 0 && sceneTypeIndex < i_sceneTypeCnt);
 
+    const ZF3SceneTypeInfo* const sceneTypeInfo = &i_sceneTypeInfos[sceneTypeIndex];
+
     i_activeSceneTypeIndex = sceneTypeIndex;
 
-    i_activeScenePtrs.spriteRenderer = zf3_mem_arena_push(&i_activeSceneMemArena, sizeof(ZF3SpriteRenderer));
     i_activeScenePtrs.userData = zf3_mem_arena_push(&i_activeSceneMemArena, i_sceneTypeInfos[sceneTypeIndex].userDataSize);
 
     i_sceneTypeInfos[sceneTypeIndex].init(&i_activeSceneMemArena, &i_activeScenePtrs);
@@ -26,7 +27,6 @@ static void load_scene(const int sceneTypeIndex) {
 
 static void unload_active_scene() {
     i_sceneTypeInfos[i_activeSceneTypeIndex].cleanup(&i_activeSceneMemArena, &i_activeScenePtrs);
-    zf3_sprite_renderer_cleanup(i_activeScenePtrs.spriteRenderer);
     zf3_mem_arena_reset(&i_activeSceneMemArena);
 }
 
@@ -70,11 +70,4 @@ void zf3_proc_scene_tick() {
         unload_active_scene();
         load_scene(nextSceneTypeIndex);
     }
-}
-
-void zf3_render_scene() {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    zf3_render_sprites(i_activeScenePtrs.spriteRenderer);
 }

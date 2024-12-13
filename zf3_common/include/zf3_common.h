@@ -87,6 +87,12 @@ bool zf3_is_zero(const void* const mem, const int size);
 //
 // Miscellaneous
 //
+#define ZF3_MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+#define ZF3_MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+
+#define ZF3_BITS_TO_BYTES(X) ((((X) + 7) & ~7) / 8)
+#define ZF3_BYTES_TO_BITS(X) ((X) * 8)
+
 char* zf3_get_file_contents(const char* const filename);
 
 #endif

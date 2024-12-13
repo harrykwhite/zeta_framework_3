@@ -6,15 +6,15 @@ int main() {
     {
         ZF3SceneTypeInfo sceneTypeInfos[SCENE_TYPE_CNT] = {0};
 
-        sceneTypeInfos[LEVEL_ONE_SCENE].init = level_one_init;
-        sceneTypeInfos[LEVEL_ONE_SCENE].tick = level_one_tick;
-        sceneTypeInfos[LEVEL_ONE_SCENE].cleanup = level_one_cleanup;
-        sceneTypeInfos[LEVEL_ONE_SCENE].userDataSize = sizeof(LevelOneSceneData);
+        sceneTypeInfos[TITLE_SCREEN_SCENE].init = title_screen_init;
+        sceneTypeInfos[TITLE_SCREEN_SCENE].tick = title_screen_tick;
+        sceneTypeInfos[TITLE_SCREEN_SCENE].cleanup = title_screen_cleanup;
+        sceneTypeInfos[TITLE_SCREEN_SCENE].userDataSize = sizeof(TitleScreenData);
 
-        sceneTypeInfos[LEVEL_TWO_SCENE].init = level_two_init;
-        sceneTypeInfos[LEVEL_TWO_SCENE].tick = level_two_tick;
-        sceneTypeInfos[LEVEL_TWO_SCENE].cleanup = level_two_cleanup;
-        sceneTypeInfos[LEVEL_TWO_SCENE].userDataSize = sizeof(LevelTwoSceneData);
+        sceneTypeInfos[WORLD_SCENE].init = world_init;
+        sceneTypeInfos[WORLD_SCENE].tick = world_tick;
+        sceneTypeInfos[WORLD_SCENE].cleanup = world_cleanup;
+        sceneTypeInfos[WORLD_SCENE].userDataSize = sizeof(WorldData);
 
         zf3_register_scene_types(sceneTypeInfos, SCENE_TYPE_CNT);
     }
