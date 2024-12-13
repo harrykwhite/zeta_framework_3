@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zf3_public.h>
+#include <zf3.h>
 
 constexpr int gk_bulletLimit = 256;
 

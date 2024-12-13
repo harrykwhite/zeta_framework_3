@@ -1,4 +1,4 @@
-#include <zf3_local.h>
+#include <zf3_assets.h>
 
 namespace zf3 {
 
@@ -104,7 +104,7 @@ static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, cons
 
 static bool load_textures(Assets* const assets, FILE* const fs) {
     if (assets->texCnt > 0) {
-        const int pxDataBufSize = gk_texChannelCnt * TEX_WIDTH_LIMIT * TEX_HEIGHT_LIMIT;
+        const int pxDataBufSize = gk_texChannelCnt * gk_texSizeLimit.x * gk_texSizeLimit.y;
         unsigned char* const pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each texture.
 
         if (!pxDataBuf) {

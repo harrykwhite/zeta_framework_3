@@ -1,4 +1,4 @@
-#include <zf3_local.h>
+#include <zf3_game.h>
 
 namespace zf3 {
 

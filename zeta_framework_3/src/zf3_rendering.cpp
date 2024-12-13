@@ -1,4 +1,4 @@
-#include <zf3_local.h>
+#include <zf3_rendering.h>
 
 namespace zf3 {
 

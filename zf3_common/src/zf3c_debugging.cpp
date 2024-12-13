@@ -1,4 +1,4 @@
-#include <zf3c.h>
+#include <zf3c_debugging.h>
 
 namespace zf3 {
 

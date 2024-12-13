@@ -1,4 +1,4 @@
-#include <zf3_local.h>
+#include <zf3_window.h>
 
 namespace zf3 {
 
@@ -127,11 +127,11 @@ static void glfw_cursor_pos_callback(GLFWwindow* const window, const double x, c
 GLFWwindow* create_glfw_window(WindowMeta* const windowMeta, const int width, const int height, const char* const title, const bool resizable) {
     memset(windowMeta, 0, sizeof(*windowMeta));
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gk_glVersionMajor);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gk_glVersionMinor);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, resizable);
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, false);
 
     GLFWwindow* const glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
 

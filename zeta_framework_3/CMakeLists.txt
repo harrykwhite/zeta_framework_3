@@ -9,11 +9,16 @@ add_library(zeta_framework_3 STATIC
     src/zf3_assets.cpp
     src/zf3_rendering.cpp
     src/zf3_audio.cpp
-    src/zf3_utils.cpp
+    src/zf3_misc.cpp
     ${CMAKE_SOURCE_DIR}/vendor/glad/src/glad.c
 
-    include/zf3_public.h
-    include/zf3_local.h
+    include/zf3.h
+    include/zf3_game.h
+    include/zf3_window.h
+    include/zf3_assets.h
+    include/zf3_rendering.h
+    include/zf3_audio.h
+    include/zf3_misc.h
     ${CMAKE_SOURCE_DIR}/vendor/glad/include/glad/glad.h
     ${CMAKE_SOURCE_DIR}/vendor/glad/include/KHR/khrplatform.h
 )

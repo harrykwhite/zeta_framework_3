@@ -1,4 +1,4 @@
-#include <zf3_public.h>
+#include <zf3.h>
 #include "game.h"
 
 int main() {
