@@ -5,6 +5,12 @@
 
 #define BULLET_LIMIT 256
 
+typedef enum {
+    GENERAL_RENDER_LAYER,
+
+    RENDER_LAYER_CNT
+} RenderLayer;
+
 typedef struct {
     ZF3Vec2D pos;
 } Player;

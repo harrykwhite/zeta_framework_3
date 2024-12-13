@@ -113,8 +113,7 @@ void zf3_run_game(const ZF3GameUserInfo* const userInfo) {
     // Cleanup
     //
     userInfo->cleanup();
-
-    zf3_clean_renderer();
+    assert(!zf3_is_renderer_initialized()); // The user has to clean up the renderer themselves.
 
     if (cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
         zf3_unload_shader_progs();

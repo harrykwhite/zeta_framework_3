@@ -146,7 +146,7 @@ const ZF3ShaderProgs* zf3_get_shader_progs();
 //
 // Rendering
 //
-#define ZF3_SPRITE_BATCH_LIMIT 256
+#define ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT 256
 #define ZF3_SPRITE_BATCH_SLOT_LIMIT 4096
 #define ZF3_SPRITE_BATCH_SLOT_VERT_CNT ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT * 4
 #define ZF3_TEX_UNIT_LIMIT 16
@@ -175,13 +175,22 @@ typedef struct {
 } ZF3SpriteBatchWriteData;
 
 typedef struct {
-    ZF3SpriteBatchGLIDs spriteBatchGLIDs[ZF3_SPRITE_BATCH_LIMIT];
-    ZF3SpriteBatchTransData spriteBatchTransDatas[ZF3_SPRITE_BATCH_LIMIT]; // Cleared on emptying.
+    ZF3SpriteBatchGLIDs spriteBatchGLIDs[ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT];
+    ZF3SpriteBatchTransData spriteBatchTransDatas[ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT]; // Cleared on emptying.
     int spriteBatchesFilled; // Reset on emptying.
     int spriteBatchCnt;
+
+} ZF3RenderLayer;
+
+typedef struct {
+    ZF3RenderLayer* layers;
+    int layerCnt;
 } ZF3Renderer;
 
-void zf3_write_to_sprite_batch(const ZF3SpriteBatchWriteData* const writeData);
+bool zf3_init_renderer(const int layerCnt);
+void zf3_clean_renderer();
+void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData);
+bool zf3_is_renderer_initialized();
 
 //
 // Utilities
