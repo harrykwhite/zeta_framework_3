@@ -117,6 +117,7 @@ bool zf3_is_key_released(const ZF3KeyCode keyCode);
 bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode);
 bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode);
 bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode);
+ZF3Vec2D zf3_get_mouse_pos();
 
 //
 // Assets

@@ -8,10 +8,12 @@ typedef struct {
     MouseButtonsDownBits mouseButtonsDownBits;
 } InputState;
 
-GLFWwindow* i_glfwWindow;
+static GLFWwindow* i_glfwWindow;
 
-InputState i_inputState;
-InputState i_inputStateLast;
+static InputState i_inputState;
+static InputState i_inputStateLast;
+
+static ZF3Vec2D i_mousePos;
 
 static ZF3KeyCode glfw_to_zf3_key_code(const int glfwKeyCode) {
     switch (glfwKeyCode) {
@@ -119,6 +121,11 @@ static void glfw_mouse_button_callback(GLFWwindow* const window, const int butto
     }
 }
 
+static void glfw_cursor_pos_callback(GLFWwindow* const window, const double x, const double y) {
+    i_mousePos.x = x;
+    i_mousePos.y = y;
+}
+
 bool zf3_window_init(const int width, const int height, const char* const title, const bool resizable) {
     assert(!i_glfwWindow);
     assert(width > 0 && height > 0);
@@ -140,6 +147,7 @@ bool zf3_window_init(const int width, const int height, const char* const title,
 
     glfwSetKeyCallback(i_glfwWindow, glfw_key_callback);
     glfwSetMouseButtonCallback(i_glfwWindow, glfw_mouse_button_callback);
+    glfwSetCursorPosCallback(i_glfwWindow, glfw_cursor_pos_callback);
 
     return true;
 }
@@ -203,4 +211,8 @@ bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode) {
 bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode) {
     const MouseButtonsDownBits buttonBit = (MouseButtonsDownBits)1 << buttonCode;
     return !(i_inputState.mouseButtonsDownBits & buttonBit) && (i_inputStateLast.mouseButtonsDownBits & buttonBit);
+}
+
+ZF3Vec2D zf3_get_mouse_pos() {
+    return i_mousePos;
 }
