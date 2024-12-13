@@ -2,13 +2,15 @@
 #include "game.h"
 
 int main() {
-    ZF3GameUserInfo gameInfo = {0};
-    gameInfo.init = game_init;
-    gameInfo.tick = game_tick;
-    gameInfo.cleanup = game_cleanup;
-    gameInfo.windowInitWidth = 1280;
-    gameInfo.windowInitHeight = 720;
-    gameInfo.windowTitle = "Example ZF3 Game";
+    const ZF3GameUserInfo gameInfo = {
+        .init = game_init,
+        .tick = game_tick,
+        .cleanup = game_cleanup,
+        .windowInitWidth = 1280,
+        .windowInitHeight = 720,
+        .windowTitle = "Example ZF3 Game",
+        .windowResizable = true
+    };
 
     zf3_run_game(&gameInfo);
 }

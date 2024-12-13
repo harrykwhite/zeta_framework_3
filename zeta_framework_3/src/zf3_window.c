@@ -1,5 +1,10 @@
 #include <zf3_local.h>
 
+static GLFWwindow* i_glfwWindow;
+static ZF3Vec2DInt i_windowSize;
+
+static ZF3Vec2D i_mousePos;
+
 typedef unsigned long long KeysDownBits;
 typedef unsigned char MouseButtonsDownBits;
 
@@ -8,12 +13,8 @@ typedef struct {
     MouseButtonsDownBits mouseButtonsDownBits;
 } InputState;
 
-static GLFWwindow* i_glfwWindow;
-
 static InputState i_inputState;
 static InputState i_inputStateLast;
-
-static ZF3Vec2D i_mousePos;
 
 static ZF3KeyCode glfw_to_zf3_key_code(const int glfwKeyCode) {
     switch (glfwKeyCode) {
@@ -101,6 +102,13 @@ static ZF3MouseButtonCode glfw_to_zf3_mouse_button_code(const int buttonCode) {
     }
 }
 
+static void glfw_window_size_callback(GLFWwindow* const window, const int width, const int height) {
+    i_windowSize.x = width;
+    i_windowSize.y = height;
+
+    glViewport(0, 0, width, height);
+}
+
 static void glfw_key_callback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods) {
     const KeysDownBits keyBit = (KeysDownBits)1 << glfw_to_zf3_key_code(key);
 
@@ -145,9 +153,13 @@ bool zf3_window_init(const int width, const int height, const char* const title,
 
     glfwMakeContextCurrent(i_glfwWindow);
 
+    glfwSetWindowSizeCallback(i_glfwWindow, glfw_window_size_callback);
     glfwSetKeyCallback(i_glfwWindow, glfw_key_callback);
     glfwSetMouseButtonCallback(i_glfwWindow, glfw_mouse_button_callback);
     glfwSetCursorPosCallback(i_glfwWindow, glfw_cursor_pos_callback);
+
+    i_windowSize.x = width;
+    i_windowSize.y = height;
 
     return true;
 }
@@ -175,10 +187,7 @@ void zf3_swap_buffers() {
 
 ZF3Vec2DInt zf3_get_window_size() {
     assert(i_glfwWindow);
-
-    ZF3Vec2DInt size;
-    glfwGetWindowSize(i_glfwWindow, &size.x, &size.y);
-    return size;
+    return i_windowSize;
 }
 
 void zf3_save_input_state() {

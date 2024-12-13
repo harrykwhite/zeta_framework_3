@@ -6,7 +6,7 @@
 static unsigned short i_quadIndices[QUAD_INDICES_LEN];
 static int i_texUnits[ZF3_TEX_UNIT_LIMIT];
 
-ZF3Renderer i_renderer;
+static ZF3Renderer i_renderer;
 
 static void add_sprite_batch() {
     const int batchIndex = i_renderer.spriteBatchCnt;
