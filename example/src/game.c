@@ -15,7 +15,7 @@ static void spawn_bullet(const ZF3Vec2D pos, const float spd, const float dir) {
 }
 
 void game_init() {
-    zf3_init_renderer(RENDER_LAYER_CNT); // TODO: Handle failure case.
+    zf3_load_render_layers(RENDER_LAYER_CNT);
 
     i_game.player.pos.x = zf3_get_window_size().x / 2.0f;
     i_game.player.pos.y = zf3_get_window_size().y / 2.0f;
@@ -86,5 +86,4 @@ void game_tick() {
 }
 
 void game_cleanup() {
-    zf3_clean_renderer();
 }

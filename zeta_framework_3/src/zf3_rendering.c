@@ -3,16 +3,34 @@
 #define QUAD_LIMIT ZF3_SPRITE_BATCH_SLOT_LIMIT
 #define QUAD_INDICES_LEN (6 * QUAD_LIMIT)
 
+static ZF3Renderer* i_renderer;
+
 static unsigned short i_quadIndices[QUAD_INDICES_LEN];
 static int i_texUnits[ZF3_TEX_UNIT_LIMIT];
 
-static ZF3Renderer i_renderer;
+static void clean_render_layers() {
+    assert(i_renderer);
+
+    for (int i = 0; i < i_renderer->layerCnt; ++i) {
+        ZF3RenderLayer* const layer = &i_renderer->layers[i];
+
+        for (int j = 0; j < layer->spriteBatchCnt; ++j) {
+            glDeleteVertexArrays(1, &layer->spriteBatchGLIDs[j].vertArrayGLID);
+            glDeleteBuffers(1, &layer->spriteBatchGLIDs[j].vertBufGLID);
+            glDeleteBuffers(1, &layer->spriteBatchGLIDs[j].elemBufGLID);
+        }
+    }
+
+    memset(i_renderer->layers, 0, sizeof(*i_renderer->layers) * i_renderer->layerCnt);
+
+    i_renderer->layerCnt = 0;
+}
 
 static void add_sprite_batch(const int layerIndex) {
-    assert(zf3_is_renderer_initialized());
-    assert(layerIndex >= 0 && layerIndex < i_renderer.layerCnt);
+    assert(i_renderer);
+    assert(layerIndex >= 0 && layerIndex < i_renderer->layerCnt);
 
-    ZF3RenderLayer* const layer = &i_renderer.layers[layerIndex];
+    ZF3RenderLayer* const layer = &i_renderer->layers[layerIndex];
     const int batchIndex = layer->spriteBatchCnt;
 
     ZF3SpriteBatchGLIDs* const glIDs = &layer->spriteBatchGLIDs[batchIndex];
@@ -62,8 +80,6 @@ static void add_sprite_batch(const int layerIndex) {
 }
 
 static int add_tex_unit_to_sprite_batch(ZF3SpriteBatchTransData* const batchTransData, const int texIndex) {
-    assert(zf3_is_renderer_initialized());
-
     for (int i = 0; i < batchTransData->texUnitsInUse; ++i) {
         if (batchTransData->texUnitTexIDs[i] == texIndex) {
             return i;
@@ -79,44 +95,18 @@ static int add_tex_unit_to_sprite_batch(ZF3SpriteBatchTransData* const batchTran
     return batchTransData->texUnitsInUse++;
 }
 
-bool zf3_init_renderer(const int layerCnt) {
-    assert(!zf3_is_renderer_initialized());
+void zf3_load_render_layers(const int layerCnt) {
+    assert(i_renderer);
     assert(layerCnt > 0);
 
-    i_renderer.layers = calloc(layerCnt, sizeof(*i_renderer.layers)); // NOTE: It would be better to allocate a buffer at the start and just reuse that. Maybe even let the user define the max layer count they'll need.
-
-    if (!i_renderer.layers) {
-        return false;
-    }
-
-    i_renderer.layerCnt = layerCnt;
-
-    return true;
-}
-
-void zf3_clean_renderer() {
-    assert(zf3_is_renderer_initialized());
-
-    for (int i = 0; i < i_renderer.layerCnt; ++i) {
-        ZF3RenderLayer* const layer = &i_renderer.layers[i];
-
-        for (int j = 0; j < layer->spriteBatchCnt; ++j) {
-            glDeleteVertexArrays(1, &layer->spriteBatchGLIDs[j].vertArrayGLID);
-            glDeleteBuffers(1, &layer->spriteBatchGLIDs[j].vertBufGLID);
-            glDeleteBuffers(1, &layer->spriteBatchGLIDs[j].elemBufGLID);
-        }
-    }
-
-    free(i_renderer.layers);
-
-    memset(&i_renderer, 0, sizeof(i_renderer));
+    clean_render_layers();
+    i_renderer->layerCnt = layerCnt;
 }
 
 void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteData* const writeData) {
-    assert(zf3_is_renderer_initialized());
-    assert(layerIndex >= 0 && layerIndex < i_renderer.layerCnt);
+    assert(layerIndex >= 0 && layerIndex < i_renderer->layerCnt);
 
-    ZF3RenderLayer* const layer = &i_renderer.layers[layerIndex];
+    ZF3RenderLayer* const layer = &i_renderer->layers[layerIndex];
 
     if (layer->spriteBatchCnt == 0) {
         add_sprite_batch(layerIndex);
@@ -201,11 +191,14 @@ void zf3_write_to_sprite_batch(const int layerIndex, const ZF3SpriteBatchWriteDa
     ++batchTransData->slotsUsed;
 }
 
-bool zf3_is_renderer_initialized() {
-    return i_renderer.layers != NULL;
-}
+bool zf3_init_rendering_internals() {
+    // Allocate the renderer.
+    i_renderer = calloc(1, sizeof(*i_renderer));
 
-void zf3_init_rendering_internals() {
+    if (!i_renderer) {
+        return false;
+    }
+
     // Set quad indices (the same for all quad buffers).
     for (int i = 0; i < QUAD_LIMIT; i++) {
         i_quadIndices[(i * 6) + 0] = (i * 4) + 0;
@@ -220,10 +213,20 @@ void zf3_init_rendering_internals() {
     for (int i = 0; i < ZF3_TEX_UNIT_LIMIT; ++i) {
         i_texUnits[i] = i;
     }
+
+    return true;
+}
+
+void zf3_clean_renderer() {
+    assert(i_renderer);
+
+    clean_render_layers();
+    free(i_renderer);
+    i_renderer = NULL;
 }
 
 void zf3_render_sprite_batches() {
-    assert(zf3_is_renderer_initialized());
+    assert(i_renderer);
 
     const ZF3ShaderProgs* const progs = zf3_get_shader_progs();
 
@@ -239,8 +242,8 @@ void zf3_render_sprite_batches() {
 
     glUniform1iv(progs->spriteQuadTexturesUniLoc, ZF3_TEX_UNIT_LIMIT, i_texUnits);
 
-    for (int i = 0; i < i_renderer.layerCnt; ++i) {
-        const ZF3RenderLayer* const layer = &i_renderer.layers[i];
+    for (int i = 0; i < i_renderer->layerCnt; ++i) {
+        const ZF3RenderLayer* const layer = &i_renderer->layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
             const ZF3SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[j];
@@ -260,10 +263,10 @@ void zf3_render_sprite_batches() {
 }
 
 void zf3_empty_sprite_batches() {
-    assert(zf3_is_renderer_initialized());
+    assert(i_renderer);
 
-    for (int i = 0; i < i_renderer.layerCnt; ++i) {
-        ZF3RenderLayer* const layer = &i_renderer.layers[i];
+    for (int i = 0; i < i_renderer->layerCnt; ++i) {
+        ZF3RenderLayer* const layer = &i_renderer->layers[i];
         memset(layer->spriteBatchTransDatas, 0, sizeof(layer->spriteBatchTransDatas));
         layer->spriteBatchesFilled = 0;
     }

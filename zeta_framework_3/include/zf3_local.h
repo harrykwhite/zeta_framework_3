@@ -33,7 +33,8 @@ void zf3_unload_shader_progs();
 //
 // Rendering
 //
-void zf3_init_rendering_internals();
+bool zf3_init_rendering_internals();
+void zf3_clean_renderer();
 void zf3_render_sprite_batches();
 void zf3_empty_sprite_batches();
 

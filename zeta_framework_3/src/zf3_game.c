@@ -9,7 +9,8 @@ typedef unsigned short GameCleanupBitset;
 enum GameCleanupBit {
     WINDOW_CLEANUP_BIT = 1 << 0,
     ASSETS_CLEANUP_BIT = 1 << 1,
-    SHADER_PROGS_CLEANUP_BIT = 1 << 2
+    SHADER_PROGS_CLEANUP_BIT = 1 << 2,
+    RENDERER_CLEANUP_BIT = 1 << 3
 };
 
 static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameUserInfo* const userInfo) {
@@ -48,7 +49,11 @@ static bool game_init(GameCleanupBitset* const cleanupBitset, const ZF3GameUserI
     *cleanupBitset |= SHADER_PROGS_CLEANUP_BIT;
 
     // Set up rendering.
-    zf3_init_rendering_internals();
+    if (!zf3_init_rendering_internals()) {
+        return false;
+    }
+
+    *cleanupBitset |= RENDERER_CLEANUP_BIT;
 
     // Call the user-defined initialisation function.
     userInfo->init();
@@ -113,7 +118,10 @@ void zf3_run_game(const ZF3GameUserInfo* const userInfo) {
     // Cleanup
     //
     userInfo->cleanup();
-    assert(!zf3_is_renderer_initialized()); // The user has to clean up the renderer themselves.
+
+    if (cleanupBitset & RENDERER_CLEANUP_BIT) {
+        zf3_clean_renderer();
+    }
 
     if (cleanupBitset & SHADER_PROGS_CLEANUP_BIT) {
         zf3_unload_shader_progs();
