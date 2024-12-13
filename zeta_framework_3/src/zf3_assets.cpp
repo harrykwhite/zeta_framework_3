@@ -1,5 +1,7 @@
 #include <zf3_local.h>
 
+namespace zf3 {
+
 static const char* i_spriteQuadVertShaderSrc =
 "#version 430 core\n"
 "layout (location = 0) in vec2 a_vert;\n"
@@ -64,7 +66,7 @@ static GLuint create_shader_from_src(const char* const src, const bool frag) {
     if (!compileSuccess) {
         GLchar infoLog[512];
         glGetShaderInfoLog(glID, sizeof(infoLog), NULL, infoLog);
-        printf("ZF3 ERROR: Failed to compile shader!\n\n%s\n\n", infoLog);
+        printf(" ERROR: Failed to compile shader!\n\n%s\n\n", infoLog);
 
         glDeleteShader(glID);
 
@@ -100,10 +102,10 @@ static GLuint create_shader_prog_from_srcs(const char* const vertShaderSrc, cons
     return progGLID;
 }
 
-static bool load_textures(ZF3Assets* const assets, FILE* const fs) {
+static bool load_textures(Assets* const assets, FILE* const fs) {
     if (assets->texCnt > 0) {
-        const int pxDataBufSize = ZF3_TEX_CHANNEL_COUNT * ZF3_TEX_WIDTH_LIMIT * ZF3_TEX_HEIGHT_LIMIT;
-        unsigned char* const pxDataBuf = malloc(pxDataBufSize); // For temporarily storing the pixel data of each texture.
+        const int pxDataBufSize = gk_texChannelCnt * TEX_WIDTH_LIMIT * TEX_HEIGHT_LIMIT;
+        unsigned char* const pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each texture.
 
         if (!pxDataBuf) {
             return false;
@@ -115,7 +117,7 @@ static bool load_textures(ZF3Assets* const assets, FILE* const fs) {
         for (int i = 0; i < assets->texCnt; ++i) {
             fread(&assets->texSizes[i], sizeof(assets->texSizes[i]), 1, fs);
 
-            fread(pxDataBuf, ZF3_TEX_CHANNEL_COUNT * assets->texSizes[i].x * assets->texSizes[i].y, 1, fs);
+            fread(pxDataBuf, gk_texChannelCnt * assets->texSizes[i].x * assets->texSizes[i].y, 1, fs);
 
             glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[i]);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -129,10 +131,10 @@ static bool load_textures(ZF3Assets* const assets, FILE* const fs) {
     return true;
 }
 
-bool zf3_load_assets(ZF3Assets* const assets) {
+bool load_assets(Assets* const assets) {
     memset(assets, 0, sizeof(*assets));
 
-    FILE* const fs = fopen(ZF3_ASSETS_FILE_NAME, "rb");
+    FILE* const fs = fopen(gk_assetsFileName, "rb");
 
     if (!fs) {
         return false;
@@ -147,12 +149,12 @@ bool zf3_load_assets(ZF3Assets* const assets) {
     return loadSucceeded;
 }
 
-void zf3_unload_assets(ZF3Assets* const assets) {
+void unload_assets(Assets* const assets) {
     glDeleteTextures(assets->texCnt, assets->texGLIDs);
     memset(assets, 0, sizeof(*assets));
 }
 
-void zf3_load_shader_progs(ZF3ShaderProgs* const progs) {
+void load_shader_progs(ShaderProgs* const progs) {
     memset(progs, 0, sizeof(*progs));
 
     progs->spriteQuadGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
@@ -163,7 +165,9 @@ void zf3_load_shader_progs(ZF3ShaderProgs* const progs) {
     progs->spriteQuadTexturesUniLoc = glGetUniformLocation(progs->spriteQuadGLID, "u_textures");
 }
 
-void zf3_unload_shader_progs(ZF3ShaderProgs* const progs) {
+void unload_shader_progs(ShaderProgs* const progs) {
     glDeleteProgram(progs->spriteQuadGLID);
     memset(progs, 0, sizeof(*progs));
+}
+
 }

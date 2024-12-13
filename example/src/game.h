@@ -1,35 +1,32 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include <zf3_public.h>
 
-#define BULLET_LIMIT 256
+constexpr int gk_bulletLimit = 256;
 
-typedef enum {
+enum RenderLayer {
     WORLD_RENDER_LAYER,
     UI_RENDER_LAYER,
 
     RENDER_LAYER_CNT
-} RenderLayer;
+};
 
-typedef struct {
-    ZF3Vec2D pos;
-} Player;
+struct Player {
+    zf3::Vec2D pos;
+};
 
-typedef struct {
-    ZF3Vec2D pos;
-    ZF3Vec2D vel;
-} Bullet;
+struct Bullet {
+    zf3::Vec2D pos;
+    zf3::Vec2D vel;
+};
 
-typedef struct {
+struct Game {
     Player player;
 
-    Bullet bullets[BULLET_LIMIT];
+    Bullet bullets[gk_bulletLimit];
     int bulletCnt;
-} Game;
+};
 
-void init_game(const ZF3UserGameFuncData* const zf3Data);
-void run_game_tick(const ZF3UserGameFuncData* const zf3Data);
+void init_game(const zf3::UserGameFuncData* const zf3Data);
+void run_game_tick(const zf3::UserGameFuncData* const zf3Data);
 void clean_game();
-
-#endif

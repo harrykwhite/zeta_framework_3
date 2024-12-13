@@ -2,7 +2,7 @@
 #include "game.h"
 
 int main() {
-    const ZF3UserGameInfo gameInfo = {
+    const zf3::UserGameInfo gameInfo = {
         .init = init_game,
         .tick = run_game_tick,
         .cleanup = clean_game,
@@ -12,5 +12,5 @@ int main() {
         .windowResizable = true
     };
 
-    zf3_run_game(&gameInfo);
+    zf3::run_game(&gameInfo);
 }

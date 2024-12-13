@@ -1,5 +1,4 @@
-#ifndef ZF3_PUBLIC_H
-#define ZF3_PUBLIC_H
+#pragma once
 
 #include <assert.h>
 #include <string.h>
@@ -8,217 +7,217 @@
 #include <glad/glad.h>
 #include <zf3c.h>
 
+namespace zf3 {
+
 //
 // Window
 //
-typedef unsigned long long ZF3KeysDownBitset;
-typedef unsigned char ZF3MouseButtonsDownBitset;
+using KeysDownBitset = unsigned long long;
+using MouseButtonsDownBitset = unsigned char;
 
-typedef enum {
-    ZF3_KEY_SPACE,
+enum KeyCode {
+    INVALID_KEY_CODE = -1,
 
-    ZF3_KEY_0,
-    ZF3_KEY_1,
-    ZF3_KEY_2,
-    ZF3_KEY_3,
-    ZF3_KEY_4,
-    ZF3_KEY_5,
-    ZF3_KEY_6,
-    ZF3_KEY_7,
-    ZF3_KEY_8,
-    ZF3_KEY_9,
+    KEY_SPACE,
 
-    ZF3_KEY_A,
-    ZF3_KEY_B,
-    ZF3_KEY_C,
-    ZF3_KEY_D,
-    ZF3_KEY_E,
-    ZF3_KEY_F,
-    ZF3_KEY_G,
-    ZF3_KEY_H,
-    ZF3_KEY_I,
-    ZF3_KEY_J,
-    ZF3_KEY_K,
-    ZF3_KEY_L,
-    ZF3_KEY_M,
-    ZF3_KEY_N,
-    ZF3_KEY_O,
-    ZF3_KEY_P,
-    ZF3_KEY_Q,
-    ZF3_KEY_R,
-    ZF3_KEY_S,
-    ZF3_KEY_T,
-    ZF3_KEY_U,
-    ZF3_KEY_V,
-    ZF3_KEY_W,
-    ZF3_KEY_X,
-    ZF3_KEY_Y,
-    ZF3_KEY_Z,
+    KEY_0,
+    KEY_1,
+    KEY_2,
+    KEY_3,
+    KEY_4,
+    KEY_5,
+    KEY_6,
+    KEY_7,
+    KEY_8,
+    KEY_9,
 
-    ZF3_KEY_ESCAPE,
-    ZF3_KEY_ENTER,
-    ZF3_KEY_TAB,
+    KEY_A,
+    KEY_B,
+    KEY_C,
+    KEY_D,
+    KEY_E,
+    KEY_F,
+    KEY_G,
+    KEY_H,
+    KEY_I,
+    KEY_J,
+    KEY_K,
+    KEY_L,
+    KEY_M,
+    KEY_N,
+    KEY_O,
+    KEY_P,
+    KEY_Q,
+    KEY_R,
+    KEY_S,
+    KEY_T,
+    KEY_U,
+    KEY_V,
+    KEY_W,
+    KEY_X,
+    KEY_Y,
+    KEY_Z,
 
-    ZF3_KEY_RIGHT,
-    ZF3_KEY_LEFT,
-    ZF3_KEY_DOWN,
-    ZF3_KEY_UP,
+    KEY_ESCAPE,
+    KEY_ENTER,
+    KEY_TAB,
 
-    ZF3_KEY_F1,
-    ZF3_KEY_F2,
-    ZF3_KEY_F3,
-    ZF3_KEY_F4,
-    ZF3_KEY_F5,
-    ZF3_KEY_F6,
-    ZF3_KEY_F7,
-    ZF3_KEY_F8,
-    ZF3_KEY_F9,
-    ZF3_KEY_F10,
-    ZF3_KEY_F11,
-    ZF3_KEY_F12,
+    KEY_RIGHT,
+    KEY_LEFT,
+    KEY_DOWN,
+    KEY_UP,
 
-    ZF3_KEY_LEFT_SHIFT,
-    ZF3_KEY_LEFT_CONTROL,
-    ZF3_KEY_LEFT_ALT,
+    KEY_F1,
+    KEY_F2,
+    KEY_F3,
+    KEY_F4,
+    KEY_F5,
+    KEY_F6,
+    KEY_F7,
+    KEY_F8,
+    KEY_F9,
+    KEY_F10,
+    KEY_F11,
+    KEY_F12,
 
-    ZF3_KEY_CODE_CNT
-} ZF3KeyCode;
+    KEY_LEFT_SHIFT,
+    KEY_LEFT_CONTROL,
+    KEY_LEFT_ALT,
 
-typedef enum {
-    ZF3_MOUSE_BUTTON_LEFT,
-    ZF3_MOUSE_BUTTON_RIGHT,
-    ZF3_MOUSE_BUTTON_MID,
+    NUM_KEY_CODES
+};
 
-    ZF3_MOUSE_BUTTON_CODE_CNT
-} ZF3MouseButtonCode;
+enum MouseButtonCode {
+    INVALID_MOUSE_BUTTON_CODE = -1,
 
-typedef struct {
-    ZF3KeysDownBitset keysDownBits;
+    MOUSE_BUTTON_LEFT,
+    MOUSE_BUTTON_RIGHT,
+    MOUSE_BUTTON_MID,
 
-    ZF3MouseButtonsDownBitset mouseButtonsDownBits;
-    ZF3Vec2D mousePos;
-} ZF3InputState;
+    NUM_MOUSE_BUTTON_CODES
+};
 
-typedef struct {
-    ZF3Vec2DInt size;
+struct InputState {
+    KeysDownBitset keysDownBits;
+    MouseButtonsDownBitset mouseButtonsDownBits;
+    Vec2D mousePos;
+};
 
-    ZF3InputState inputState;
-    ZF3InputState inputStateSaved;
-} ZF3WindowMeta;
+struct WindowMeta {
+    Vec2DInt size;
+    InputState inputState;
+    InputState inputStateSaved;
+};
 
-inline bool zf3_is_key_down(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
-    return windowMeta->inputState.keysDownBits & ((ZF3KeysDownBitset)1 << keyCode);
+inline bool is_key_down(const KeyCode keyCode, const WindowMeta* const windowMeta) {
+    return windowMeta->inputState.keysDownBits & ((KeysDownBitset)1 << keyCode);
 }
 
-inline bool zf3_is_key_pressed(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
-    const ZF3KeysDownBitset keyBit = (ZF3KeysDownBitset)1 << keyCode;
+inline bool is_key_pressed(const KeyCode keyCode, const WindowMeta* const windowMeta) {
+    const KeysDownBitset keyBit = (KeysDownBitset)1 << keyCode;
     return (windowMeta->inputState.keysDownBits & keyBit) && !(windowMeta->inputStateSaved.keysDownBits & keyBit);
 }
 
-inline bool zf3_is_key_released(const ZF3KeyCode keyCode, const ZF3WindowMeta* const windowMeta) {
-    const ZF3KeysDownBitset keyBit = (ZF3KeysDownBitset)1 << keyCode;
+inline bool is_key_released(const KeyCode keyCode, const WindowMeta* const windowMeta) {
+    const KeysDownBitset keyBit = (KeysDownBitset)1 << keyCode;
     return !(windowMeta->inputState.keysDownBits & keyBit) && (windowMeta->inputStateSaved.keysDownBits & keyBit);
 }
 
-inline bool zf3_is_mouse_button_down(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
-    return windowMeta->inputState.mouseButtonsDownBits & ((ZF3MouseButtonsDownBitset)1 << buttonCode);
+inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
+    return windowMeta->inputState.mouseButtonsDownBits & ((MouseButtonsDownBitset)1 << buttonCode);
 }
 
-inline bool zf3_is_mouse_button_pressed(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
-    const ZF3MouseButtonsDownBitset buttonBit = (ZF3MouseButtonsDownBitset)1 << buttonCode;
+inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
+    const MouseButtonsDownBitset buttonBit = (MouseButtonsDownBitset)1 << buttonCode;
     return (windowMeta->inputState.mouseButtonsDownBits & buttonBit) && !(windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
 }
 
-inline bool zf3_is_mouse_button_released(const ZF3MouseButtonCode buttonCode, const ZF3WindowMeta* const windowMeta) {
-    const ZF3MouseButtonsDownBitset buttonBit = (ZF3MouseButtonsDownBitset)1 << buttonCode;
+inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
+    const MouseButtonsDownBitset buttonBit = (MouseButtonsDownBitset)1 << buttonCode;
     return !(windowMeta->inputState.mouseButtonsDownBits & buttonBit) && (windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
 }
 
 //
 // Assets
 //
-#define ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT 11
+constexpr int gk_spriteQuadShaderProgVertCnt = 11;
 
-#define ZF3_TEX_LIMIT 256
+constexpr int gk_texLimit = 256;
 
-typedef struct {
+struct Assets {
     int texCnt;
+    GLuint texGLIDs[gk_texLimit];
+    Vec2DInt texSizes[gk_texLimit];
+};
 
-    GLuint texGLIDs[ZF3_TEX_LIMIT];
-    ZF3Vec2DInt texSizes[ZF3_TEX_LIMIT];
-} ZF3Assets;
-
-typedef struct {
+struct ShaderProgs {
     GLuint spriteQuadGLID;
     int spriteQuadProjUniLoc;
     int spriteQuadViewUniLoc;
     int spriteQuadTexturesUniLoc;
-} ZF3ShaderProgs;
+};
 
 //
 // Rendering
 //
-#define ZF3_RENDER_LAYER_LIMIT 32
-#define ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT 256
-#define ZF3_SPRITE_BATCH_SLOT_LIMIT 4096
-#define ZF3_SPRITE_BATCH_SLOT_VERT_CNT ZF3_SPRITE_QUAD_SHADER_PROG_VERT_CNT * 4
-#define ZF3_TEX_UNIT_LIMIT 16 // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
+constexpr int gk_renderLayerLimit = 32;
+constexpr int gk_renderLayerSpriteBatchLimit = 256;
+constexpr int gk_spriteBatchSlotLimit = 4096;
+constexpr int gk_spriteBatchSlotVertCnt = gk_spriteQuadShaderProgVertCnt * 4;
+constexpr int gk_texUnitLimit = 16; // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
 
-typedef struct {
+struct SpriteBatchGLIDs {
     GLuint vertArrayGLID;
     GLuint vertBufGLID;
     GLuint elemBufGLID;
-} ZF3SpriteBatchGLIDs;
+};
 
-typedef struct {
+struct SpriteBatchTransData {
     int slotsUsed;
-
-    int texUnitTexIDs[ZF3_TEX_UNIT_LIMIT];
+    int texUnitTexIDs[gk_texUnitLimit];
     int texUnitsInUse;
-} ZF3SpriteBatchTransData;
+};
 
-typedef struct {
+struct SpriteBatchWriteData {
     int texIndex;
-    ZF3Vec2D pos;
-    ZF3Rect srcRect;
-    ZF3Vec2D origin;
+    Vec2D pos;
+    Rect srcRect;
+    Vec2D origin;
     float rot;
-    ZF3Vec2D scale;
+    Vec2D scale;
     float alpha;
-} ZF3SpriteBatchWriteData;
+};
 
-typedef struct {
-    ZF3SpriteBatchGLIDs spriteBatchGLIDs[ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT];
-    ZF3SpriteBatchTransData spriteBatchTransDatas[ZF3_RENDER_LAYER_SPRITE_BATCH_LIMIT]; // Cleared on emptying.
+struct RenderLayer {
+    SpriteBatchGLIDs spriteBatchGLIDs[gk_renderLayerSpriteBatchLimit];
+    SpriteBatchTransData spriteBatchTransDatas[gk_renderLayerSpriteBatchLimit]; // Cleared on emptying.
     int spriteBatchesFilled; // Cleared on emptying.
     int spriteBatchCnt;
-} ZF3RenderLayer;
+};
 
-typedef struct {
-    ZF3RenderLayer layers[ZF3_RENDER_LAYER_LIMIT];
+struct Renderer {
+    RenderLayer layers[gk_renderLayerLimit];
     int layerCnt;
     int camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
-} ZF3Renderer;
+};
 
-typedef struct {
-    ZF3Vec2D pos;
+struct Camera {
+    Vec2D pos;
     float scale;
-} ZF3Camera;
+};
 
-void zf3_load_render_layers(ZF3Renderer* const renderer, const int layerCnt, const int camLayerCnt);
-void zf3_write_to_sprite_batch(ZF3Renderer* const renderer, const int layerIndex, const ZF3SpriteBatchWriteData* const writeData, const ZF3Assets* const assets);
+void load_render_layers(Renderer* const renderer, const int layerCnt, const int camLayerCnt);
+void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets);
 
-inline ZF3Vec2D zf3_conv_camera_to_screen_pos(const ZF3Vec2D pos, const ZF3Camera *const cam, const ZF3WindowMeta* const windowMeta)
-{
-    return (ZF3Vec2D) {
+inline Vec2D conv_camera_to_screen_pos(const Vec2D pos, const Camera* const cam, const WindowMeta* const windowMeta) {
+    return Vec2D {
         .x = ((pos.x - cam->pos.x) * cam->scale) + (windowMeta->size.x / 2.0f),
         .y = ((pos.y - cam->pos.y) * cam->scale) + (windowMeta->size.y / 2.0f)
     };
 }
 
-inline ZF3Vec2D zf3_conv_screen_to_camera_pos(const ZF3Vec2D pos, const ZF3Camera* const cam, const ZF3WindowMeta* const windowMeta)
-{
-    return (ZF3Vec2D) {
+inline Vec2D conv_screen_to_camera_pos(const Vec2D pos, const Camera* const cam, const WindowMeta* const windowMeta) {
+    return Vec2D {
         .x = ((pos.x - (windowMeta->size.x / 2.0f)) / cam->scale) + cam->pos.x,
         .y = ((pos.y - (windowMeta->size.y / 2.0f)) / cam->scale) + cam->pos.y
     };
@@ -227,66 +226,66 @@ inline ZF3Vec2D zf3_conv_screen_to_camera_pos(const ZF3Vec2D pos, const ZF3Camer
 //
 // Game
 //
-typedef struct {
-    const ZF3WindowMeta* const windowMeta;
-    const ZF3Assets* const assets;
-    ZF3Renderer* const renderer;
-    ZF3Camera* const cam;
-} ZF3UserGameFuncData;
+struct UserGameFuncData {
+    const WindowMeta* const windowMeta;
+    const Assets* const assets;
+    Renderer* const renderer;
+    Camera* const cam;
+};
 
-typedef void (*ZF3UserGameInit)(const ZF3UserGameFuncData* const data);
-typedef void (*ZF3UserGameTick)(const ZF3UserGameFuncData* const data);
-typedef void (*ZF3UserGameCleanup)();
+using UserGameInit = void (*)(const UserGameFuncData* const data);
+using UserGameTick = void (*)(const UserGameFuncData* const data);
+using UserGameCleanup = void (*)();
 
-typedef struct {
-    ZF3UserGameInit init;
-    ZF3UserGameTick tick;
-    ZF3UserGameCleanup cleanup;
+struct UserGameInfo {
+    UserGameInit init;
+    UserGameTick tick;
+    UserGameCleanup cleanup;
 
     int initWindowWidth;
     int initWindowHeight;
     const char* windowTitle;
     bool windowResizable;
-} ZF3UserGameInfo;
+};
 
-void zf3_run_game(const ZF3UserGameInfo* const userInfo);
+void run_game(const UserGameInfo* const userInfo);
 
 //
 // Utilities
 //
-inline bool zf3_is_bit_active(const ZF3Byte* const bytes, const int bitIndex) {
+inline bool is_bit_active(const Byte* const bytes, const int bitIndex) {
     assert(bytes);
     assert(bitIndex >= 0);
 
     return bytes[bitIndex / 8] & (1 << (bitIndex % 8));
 }
 
-inline void zf3_activate_bit(ZF3Byte* const bytes, const int bitIndex) {
+inline void activate_bit(Byte* const bytes, const int bitIndex) {
     assert(bytes);
     assert(bitIndex >= 0);
 
     bytes[bitIndex / 8] |= 1 << (bitIndex % 8);
 }
 
-inline void zf3_deactivate_bit(ZF3Byte* const bytes, const int bitIndex) {
+inline void deactivate_bit(Byte* const bytes, const int bitIndex) {
     assert(bytes);
     assert(bitIndex >= 0);
 
     bytes[bitIndex / 8] &= ~(1 << (bitIndex % 8));
 }
 
-inline void zf3_clear_bits(ZF3Byte* const bytes, const int bitCnt) {
+inline void clear_bits(Byte* const bytes, const int bitCnt) {
     assert(bytes);
     assert(bitCnt > 0);
-    memset(bytes, 0, ZF3_BITS_TO_BYTES(bitCnt));
+    memset(bytes, 0, conv_bits_to_bytes(bitCnt));
 }
 
-inline int zf3_get_first_inactive_bit_index(const ZF3Byte* const bytes, const int bitCnt) {
+inline int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt) {
     assert(bytes);
     assert(bitCnt > 0);
 
     for (int i = 0; i < bitCnt; ++i) {
-        if (!zf3_is_bit_active(bytes, i)) {
+        if (!is_bit_active(bytes, i)) {
             return i;
         }
     }
@@ -294,12 +293,12 @@ inline int zf3_get_first_inactive_bit_index(const ZF3Byte* const bytes, const in
     return -1;
 }
 
-inline bool zf3_are_all_bits_active(const ZF3Byte* const bytes, const int bitCnt) {
+inline bool are_all_bits_active(const Byte* const bytes, const int bitCnt) {
     assert(bytes);
     assert(bitCnt > 0);
 
     for (int i = 0; i < bitCnt; ++i) {
-        if (!zf3_is_bit_active(bytes, i)) {
+        if (!is_bit_active(bytes, i)) {
             return false;
         }
     }
@@ -307,4 +306,4 @@ inline bool zf3_are_all_bits_active(const ZF3Byte* const bytes, const int bitCnt
     return true;
 }
 
-#endif
+}

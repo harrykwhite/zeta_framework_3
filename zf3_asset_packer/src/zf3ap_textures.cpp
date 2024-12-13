@@ -17,27 +17,27 @@ bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcA
         }
 
         // Get the texture file path.
-        strncpy(srcAssetFilePathBuf + srcAssetFilePathStartLen, cJSONTex->valuestring, SRC_ASSET_FILE_PATH_BUF_SIZE - srcAssetFilePathStartLen);
+        strncpy(srcAssetFilePathBuf + srcAssetFilePathStartLen, cJSONTex->valuestring, gk_srcAssetFilePathBufSize - srcAssetFilePathStartLen);
 
-        if (srcAssetFilePathBuf[SRC_ASSET_FILE_PATH_BUF_SIZE - 1]) {
-            zf3_log_error("The texture relative file path of \"%s\" exceeds the size limit of %d characters!", cJSONTex->valuestring, SRC_ASSET_FILE_PATH_BUF_SIZE - 1 - srcAssetFilePathStartLen);
+        if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
+            zf3::log_error("The texture relative file path of \"%s\" exceeds the size limit of %d characters!", cJSONTex->valuestring, gk_srcAssetFilePathBufSize - 1 - srcAssetFilePathStartLen);
             return false;
         }
 
         // Load the texture data.
-        ZF3Vec2DInt texSize;
-        stbi_uc* const texPxData = stbi_load(srcAssetFilePathBuf, &texSize.x, &texSize.y, NULL, ZF3_TEX_CHANNEL_COUNT);
+        zf3::Vec2DInt texSize;
+        stbi_uc* const texPxData = stbi_load(srcAssetFilePathBuf, &texSize.x, &texSize.y, NULL, zf3::gk_texChannelCnt);
 
         if (!texPxData) {
-            zf3_log_error("Failed to load pixel data for texture with relative file path \"%s\"!", cJSONTex->valuestring);
+            zf3::log_error("Failed to load pixel data for texture with relative file path \"%s\"!", cJSONTex->valuestring);
             return false;
         }
 
         // Write the texture size and pixel data to the output file.
         fwrite(&texSize, sizeof(texSize), 1, outputFS);
-        fwrite(texPxData, sizeof(*texPxData), texSize.x * texSize.y * ZF3_TEX_CHANNEL_COUNT, outputFS);
+        fwrite(texPxData, sizeof(*texPxData), texSize.x * texSize.y * zf3::gk_texChannelCnt, outputFS);
 
-        zf3_log("Packed texture with file path \"%s\".", srcAssetFilePathBuf);
+        zf3::log("Packed texture with file path \"%s\".", srcAssetFilePathBuf);
 
         stbi_image_free(texPxData);
     }

@@ -4,9 +4,9 @@ find_package(cJSON CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
 
 add_executable(zf3_asset_packer
-	src/zf3ap_main.c
-	src/zf3ap_textures.c
-	${CMAKE_SOURCE_DIR}/vendor/stb_image/src/stb_image.c
+	src/zf3ap_main.cpp
+	src/zf3ap_textures.cpp
+	${CMAKE_SOURCE_DIR}/vendor/stb_image/src/stb_image.cpp
 
 	src/zf3ap.h
 )

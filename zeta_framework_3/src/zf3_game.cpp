@@ -1,30 +1,32 @@
 #include <zf3_local.h>
 
-#define TARG_TICKS_PER_SEC 60
-#define TARG_TICK_DUR (1.0 / TARG_TICKS_PER_SEC)
-#define TICK_DUR_LIMIT_MULT 8
+namespace zf3 {
+
+static constexpr int ik_targTicksPerSec = 60;
+static constexpr double ik_targTickDur = 1.0 / ik_targTicksPerSec;
+static constexpr double ik_tickDurLimitMult = 8.0;
 
 typedef struct {
-    ZF3MemArena* memArena;
+    MemArena* memArena;
     GLFWwindow* glfwWindow;
-    ZF3Assets* assets;
-    ZF3ShaderProgs* shaderProgs;
-    ZF3Renderer* renderer;
+    Assets* assets;
+    ShaderProgs* shaderProgs;
+    Renderer* renderer;
 } GameCleanupPtrs;
 
-static void clean_game(const GameCleanupPtrs* const ptrs, const ZF3UserGameInfo* const userInfo) {
+static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* const userInfo) {
     userInfo->cleanup();
 
     if (ptrs->renderer) {
-        zf3_clean_renderer(ptrs->renderer);
+        clean_renderer(ptrs->renderer);
     }
 
     if (ptrs->shaderProgs) {
-        zf3_unload_shader_progs(ptrs->shaderProgs);
+        unload_shader_progs(ptrs->shaderProgs);
     }
 
     if (ptrs->assets) {
-        zf3_unload_assets(ptrs->assets);
+        unload_assets(ptrs->assets);
     }
 
     if (ptrs->glfwWindow) {
@@ -34,24 +36,24 @@ static void clean_game(const GameCleanupPtrs* const ptrs, const ZF3UserGameInfo*
     glfwTerminate();
 
     if (ptrs->memArena) {
-        zf3_clean_mem_arena(ptrs->memArena);
+        clean_mem_arena(ptrs->memArena);
     }
 }
 
 static double calc_valid_frame_dur(const double frameTime, const double frameTimeLast) {
     const double dur = frameTime - frameTimeLast;
-    return dur >= 0.0 && dur <= TARG_TICK_DUR * TICK_DUR_LIMIT_MULT ? dur : 0.0;
+    return dur >= 0.0 && dur <= ik_targTickDur * ik_tickDurLimitMult ? dur : 0.0;
 }
 
-void zf3_run_game(const ZF3UserGameInfo* const userInfo) {
+void run_game(const UserGameInfo* const userInfo) {
     GameCleanupPtrs cleanupPtrs = {0};
 
     //
     // Initialisation
     //
-    ZF3MemArena memArena;
+    MemArena memArena;
 
-    if (!zf3_init_mem_arena(&memArena, ZF3_MEGABYTES(4))) {
+    if (!init_mem_arena(&memArena, conv_megabytes_to_bytes(4))) {
         clean_game(&cleanupPtrs, userInfo);
         return;
     }
@@ -63,8 +65,8 @@ void zf3_run_game(const ZF3UserGameInfo* const userInfo) {
         return;
     }
 
-    ZF3WindowMeta windowMeta = {0};
-    GLFWwindow* const glfwWindow = zf3_create_glfw_window(&windowMeta, userInfo->initWindowWidth, userInfo->initWindowHeight, userInfo->windowTitle, userInfo->windowResizable);
+    WindowMeta windowMeta = {0};
+    GLFWwindow* const glfwWindow = create_glfw_window(&windowMeta, userInfo->initWindowWidth, userInfo->initWindowHeight, userInfo->windowTitle, userInfo->windowResizable);
 
     if (!glfwWindow) {
         clean_game(&cleanupPtrs, userInfo);
@@ -82,27 +84,27 @@ void zf3_run_game(const ZF3UserGameInfo* const userInfo) {
         return;
     }
 
-    ZF3Assets* const assets = zf3_push_to_mem_arena(&memArena, sizeof(*assets));
+    const auto assets = push_to_mem_arena<Assets>(&memArena);
     assert(assets);
 
-    if (!zf3_load_assets(assets)) {
+    if (!load_assets(assets)) {
         clean_game(&cleanupPtrs, userInfo);
         return;
     }
 
-    ZF3ShaderProgs shaderProgs;
-    zf3_load_shader_progs(&shaderProgs);
+    ShaderProgs shaderProgs;
+    load_shader_progs(&shaderProgs);
 
-    zf3_init_rendering_internals();
+    init_rendering_internals();
 
-    ZF3Renderer* const renderer = zf3_push_to_mem_arena(&memArena, sizeof(*renderer));
+    const auto renderer = push_to_mem_arena<Renderer>(&memArena);
     assert(renderer);
 
-    ZF3Camera cam = {
+    Camera cam = {
         .scale = 1.0f
     };
 
-    const ZF3UserGameFuncData userFuncData = {
+    const UserGameFuncData userFuncData = {
         .windowMeta = &windowMeta,
         .assets = assets,
         .renderer = renderer,
@@ -126,16 +128,16 @@ void zf3_run_game(const ZF3UserGameInfo* const userInfo) {
         const double frameDur = calc_valid_frame_dur(frameTime, frameTimeLast);
         frameDurAccum += frameDur;
 
-        const int tickCnt = frameDurAccum / TARG_TICK_DUR;
+        const int tickCnt = frameDurAccum / ik_targTickDur;
 
         if (tickCnt > 0) {
             int i = 0;
 
             do {
-                zf3_empty_sprite_batches(renderer);
+                empty_sprite_batches(renderer);
                 userInfo->tick(&userFuncData);
 
-                frameDurAccum -= TARG_TICK_DUR;
+                frameDurAccum -= ik_targTickDur;
                 ++i;
             } while (i < tickCnt);
 
@@ -144,11 +146,13 @@ void zf3_run_game(const ZF3UserGameInfo* const userInfo) {
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        zf3_render_sprite_batches(renderer, &cam, &shaderProgs, &windowMeta, assets);
+        render_sprite_batches(renderer, &cam, &shaderProgs, &windowMeta, assets);
         glfwSwapBuffers(glfwWindow);
 
         glfwPollEvents();
     }
 
     clean_game(&cleanupPtrs, userInfo);
+}
+
 }

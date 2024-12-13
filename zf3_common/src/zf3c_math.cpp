@@ -1,6 +1,8 @@
 #include <zf3c.h>
 
-void zf3_init_identity_matrix_4x4(ZF3Matrix4x4* const mat) {
+namespace zf3 {
+
+void init_identity_matrix_4x4(Matrix4x4* const mat) {
     memset(mat, 0, sizeof(*mat));
     mat->elems[0][0] = 1.0f;
     mat->elems[1][1] = 1.0f;
@@ -8,7 +10,7 @@ void zf3_init_identity_matrix_4x4(ZF3Matrix4x4* const mat) {
     mat->elems[3][3] = 1.0f;
 }
 
-void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void init_ortho_matrix_4x4(Matrix4x4* const mat, const float left, const float right, const float bottom, const float top, const float near, const float far) {
     memset(mat, 0, sizeof(*mat));
     mat->elems[0][0] = 2.0f / (right - left);
     mat->elems[1][1] = 2.0f / (top - bottom);
@@ -17,4 +19,6 @@ void zf3_init_ortho_matrix_4x4(ZF3Matrix4x4* const mat, const float left, const 
     mat->elems[3][1] = -(top + bottom) / (top - bottom);
     mat->elems[3][2] = -(far + near) / (far - near);
     mat->elems[3][3] = 1.0f;
+}
+
 }

@@ -1,10 +1,10 @@
 project(zf3_common)
 
 add_library(zf3_common STATIC
-    src/zf3c_logging.c
-    src/zf3c_math.c
-    src/zf3c_mem.c
-    src/zf3c_misc.c
+    src/zf3c_logging.cpp
+    src/zf3c_math.cpp
+    src/zf3c_mem.cpp
+    src/zf3c_misc.cpp
 
     include/zf3c.h
 )

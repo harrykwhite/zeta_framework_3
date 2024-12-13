@@ -1,6 +1,8 @@
 #include <zf3c.h>
 
-void zf3_log(const char* const format, ...) {
+namespace zf3 {
+
+void log(const char* const format, ...) {
     va_list args;
     va_start(args, format);
     vprintf(format, args);
@@ -8,7 +10,7 @@ void zf3_log(const char* const format, ...) {
     va_end(args);
 }
 
-void zf3_log_error(const char* const format, ...) {
+void log_error(const char* const format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -17,4 +19,6 @@ void zf3_log_error(const char* const format, ...) {
     fprintf(stderr, "\n");
 
     va_end(args);
+}
+
 }

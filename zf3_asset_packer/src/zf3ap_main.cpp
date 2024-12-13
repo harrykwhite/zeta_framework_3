@@ -1,7 +1,7 @@
 #include "zf3ap.h"
 
-#define PACKING_INSTRS_FILE_NAME "packing_instrs.json"
-#define OUTPUT_FILE_PATH_BUF_SIZE 256
+const char* const ik_packingInstrsFileName = "packing_instrs.json";
+constexpr int ik_outputFilePathBufSize = 256;
 
 typedef struct {
     char* instrsFileChars;
@@ -11,34 +11,34 @@ typedef struct {
 
 static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, const int srcAssetFilePathBufStartLen) {
     // Append the packing instructions file name to the source asset file path buffer.
-    strncpy(srcAssetFilePathBuf + srcAssetFilePathBufStartLen, PACKING_INSTRS_FILE_NAME, SRC_ASSET_FILE_PATH_BUF_SIZE - srcAssetFilePathBufStartLen);
+    strncpy(srcAssetFilePathBuf + srcAssetFilePathBufStartLen, ik_packingInstrsFileName, gk_srcAssetFilePathBufSize - srcAssetFilePathBufStartLen);
 
-    if (srcAssetFilePathBuf[SRC_ASSET_FILE_PATH_BUF_SIZE - 1]) {
-        zf3_log_error("The packing instructions file name is too long!");
+    if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
+        zf3::log_error("The packing instructions file name is too long!");
         return NULL;
     }
 
-    return zf3_get_file_contents(srcAssetFilePathBuf);
+    return zf3::get_file_contents(srcAssetFilePathBuf);
 }
 
 static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir, const char* const outputDir) {
-    assert(zf3_is_zero(packer, sizeof(*packer)));
+    memset(packer, 0, sizeof(*packer));
 
     // Determine the output file path using the directory.
-    char outputFilePath[OUTPUT_FILE_PATH_BUF_SIZE];
-    const int outputFilePathLen = snprintf(outputFilePath, OUTPUT_FILE_PATH_BUF_SIZE, "%s\\%s", outputDir, ZF3_ASSETS_FILE_NAME);
+    char outputFilePath[ik_outputFilePathBufSize];
+    const int outputFilePathLen = snprintf(outputFilePath, ik_outputFilePathBufSize, "%s\\%s", outputDir, zf3::gk_assetsFileName);
 
-    if (outputFilePathLen >= OUTPUT_FILE_PATH_BUF_SIZE) {
-        zf3_log_error("The provided output directory \"%s\" is too long!", outputDir);
+    if (outputFilePathLen >= ik_outputFilePathBufSize) {
+        zf3::log_error("The provided output directory \"%s\" is too long!", outputDir);
         return false;
     }
 
     // Initialise the source asset file path buffer with the source directory.
-    char srcAssetFilePathBuf[SRC_ASSET_FILE_PATH_BUF_SIZE] = {0};
-    const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, SRC_ASSET_FILE_PATH_BUF_SIZE, "%s\\", srcDir);
+    char srcAssetFilePathBuf[gk_srcAssetFilePathBufSize] = {0};
+    const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, gk_srcAssetFilePathBufSize, "%s\\", srcDir);
 
-    if (srcAssetFilePathStartLen >= SRC_ASSET_FILE_PATH_BUF_SIZE) {
-        zf3_log_error("The provided source directory of \"%s\" is too long!", srcDir);
+    if (srcAssetFilePathStartLen >= gk_srcAssetFilePathBufSize) {
+        zf3::log_error("The provided source directory of \"%s\" is too long!", srcDir);
         return false;
     }
 
@@ -53,7 +53,7 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
     packer->instrsCJ = cJSON_Parse(packer->instrsFileChars);
 
     if (!packer->instrsCJ) {
-        zf3_log_error("cJSON failed to parse the packing instructions file contents!");
+        zf3::log_error("cJSON failed to parse the packing instructions file contents!");
         return false;
     }
 
@@ -61,7 +61,7 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
     packer->outputFileStream = fopen(outputFilePath, "wb");
 
     if (!packer->outputFileStream) {
-        zf3_log_error("Failed to open the output file \"%s\"!", outputFilePath);
+        zf3::log_error("Failed to open the output file \"%s\"!", outputFilePath);
         return false;
     }
 
@@ -100,7 +100,7 @@ cJSON* getCJSONAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const
 int main(const int argCnt, const char* const* args) {
     // Get the source directory and output directory if provided.
     if (argCnt != 3) {
-        zf3_log_error("Invalid number of command-line arguments! Expected a source directory and an output directory to be provided.");
+        zf3::log_error("Invalid number of command-line arguments! Expected a source directory and an output directory to be provided.");
         return EXIT_FAILURE;
     }
 
@@ -108,7 +108,7 @@ int main(const int argCnt, const char* const* args) {
     const char* const outputDir = args[2]; // The directory to output the packed assets file to.
 
     // Run the asset packer.
-    AssetPacker packer = {0};
+    AssetPacker packer;
     const bool packingSuccessful = run_asset_packer(&packer, srcDir, outputDir);
     asset_packer_cleanup(&packer);
 

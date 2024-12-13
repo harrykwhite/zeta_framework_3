@@ -3,8 +3,8 @@ project(example)
 find_package(glfw3 CONFIG REQUIRED)
 
 add_executable(example
-	src/entry.c
-	src/game.c
+	src/entry.cpp
+	src/game.cpp
 
 	src/game.h
 )

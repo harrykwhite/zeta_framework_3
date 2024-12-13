@@ -1,6 +1,8 @@
 #include <zf3c.h>
 
-char* zf3_get_file_contents(const char* const filename) {
+namespace zf3 {
+
+char* get_file_contents(const char* const filename) {
     // Open the file.
     FILE* const fs = fopen(filename, "rb");
 
@@ -14,7 +16,7 @@ char* zf3_get_file_contents(const char* const filename) {
     fseek(fs, 0, SEEK_SET);
 
     // Allocate memory to store the file contents.
-    char* const contents = malloc(file_size + 1);
+    char* const contents = static_cast<char*>(malloc(file_size + 1));
 
     if (!contents) {
         fclose(fs);
@@ -28,4 +30,6 @@ char* zf3_get_file_contents(const char* const filename) {
     fclose(fs);
 
     return contents;
+}
+
 }
