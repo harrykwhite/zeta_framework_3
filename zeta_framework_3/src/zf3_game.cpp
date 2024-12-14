@@ -144,9 +144,7 @@ void run_game(const UserGameInfo* const userInfo) {
             windowMeta.inputStateSaved = windowMeta.inputState;
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        render_sprite_batches(renderer, &cam, &shaderProgs, &windowMeta, assets);
+        render_all(renderer, &cam, &shaderProgs, &windowMeta, assets);
         glfwSwapBuffers(glfwWindow);
 
         glfwPollEvents();
