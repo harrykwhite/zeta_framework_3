@@ -9,7 +9,6 @@ namespace zf3 {
 
 struct UserGameFuncData {
     const Assets* const assets;
-    Renderer* const renderer;
     Camera* const cam;
 };
 

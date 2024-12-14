@@ -7,10 +7,11 @@ find_package(OpenAL CONFIG REQUIRED)
 
 add_library(zeta_framework_3 STATIC
     src/zf3_game.cpp
-    src/zf3_window_s.cpp
-    src/zf3_window_l.cpp
+    src/zf3_s_window.cpp
+    src/zf3_l_window.cpp
     src/zf3_assets.cpp
-    src/zf3_rendering.cpp
+    src/zf3_s_rendering.cpp
+    src/zf3_l_rendering.cpp
     src/zf3_audio.cpp
     src/zf3_rand.cpp
     src/zf3_misc.cpp

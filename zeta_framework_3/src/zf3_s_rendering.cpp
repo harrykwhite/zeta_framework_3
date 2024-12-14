@@ -2,17 +2,79 @@
 
 namespace zf3 {
 
+static const char* i_spriteQuadVertShaderSrc =
+"#version 430 core\n"
+"layout (location = 0) in vec2 a_vert;\n"
+"layout (location = 1) in vec2 a_pos;\n"
+"layout (location = 2) in vec2 a_size;\n"
+"layout (location = 3) in float a_rot;\n"
+"layout (location = 4) in float a_texIndex;\n"
+"layout (location = 5) in vec2 a_texCoord;\n"
+"layout (location = 6) in float a_alpha;\n"
+"\n"
+"out flat int v_texIndex;\n"
+"out vec2 v_texCoord;\n"
+"out float v_alpha;\n"
+"\n"
+"uniform mat4 u_view;\n"
+"uniform mat4 u_proj;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    float rotCos = cos(a_rot);\n"
+"    float rotSin = -sin(a_rot);\n"
+"\n"
+"    mat4 model = mat4(\n"
+"        vec4(a_size.x * rotCos, a_size.x * rotSin, 0.0f, 0.0f),\n"
+"        vec4(a_size.y * -rotSin, a_size.y * rotCos, 0.0f, 0.0f),\n"
+"        vec4(0.0f, 0.0f, 1.0f, 0.0f),\n"
+"        vec4(a_pos.x, a_pos.y, 0.0f, 1.0f)\n"
+"    );\n"
+"\n"
+"    gl_Position = u_proj * u_view * model * vec4(a_vert, 0.0f, 1.0f);\n"
+"\n"
+"    v_texIndex = int(a_texIndex);\n"
+"    v_texCoord = a_texCoord;\n"
+"    v_alpha = a_alpha;\n"
+"}\n";
+
+static const char* i_spriteQuadFragShaderSrc =
+"#version 430 core\n"
+"\n"
+"in flat int v_texIndex;\n"
+"in vec2 v_texCoord;\n"
+"in float v_alpha;\n"
+"\n"
+"out vec4 o_fragColor;\n"
+"\n"
+"uniform sampler2D u_textures[32];\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 texColor = texture(u_textures[v_texIndex], v_texCoord);\n"
+"    o_fragColor = texColor * vec4(1.0f, 1.0f, 1.0f, v_alpha);\n"
+"}\n";
+
 static constexpr int ik_quadLimit = gk_spriteBatchSlotLimit;
 static constexpr int ik_quadIndicesLen = 6 * ik_quadLimit;
 
 static unsigned short i_quadIndices[ik_quadIndicesLen];
 static int i_texUnits[gk_texUnitLimit];
 
-static void clean_render_layers(Renderer* const renderer) {
-    assert(renderer);
+RenderLayer i_layers[gk_renderLayerLimit];
+int i_layerCnt;
+int i_camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
 
-    for (int i = 0; i < renderer->layerCnt; ++i) {
-        RenderLayer* const layer = &renderer->layers[i];
+Color g_bgColor = {0.0f, 0.0f, 0.0f, 1.0f};
+
+GLID i_spriteQuadShaderProgGLID;
+int i_spriteQuadShaderProgProjUniLoc;
+int i_spriteQuadShaderProgViewUniLoc;
+int i_spriteQuadShaderProgTexturesUniLoc;
+
+static void clean_render_layers() {
+    for (int i = 0; i < i_layerCnt; ++i) {
+        RenderLayer* const layer = &i_layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
             glDeleteVertexArrays(1, &layer->spriteBatchGLIDs[j].vertArrayGLID);
@@ -21,16 +83,16 @@ static void clean_render_layers(Renderer* const renderer) {
         }
     }
 
-    memset(renderer->layers, 0, sizeof(*renderer->layers) * renderer->layerCnt);
+    memset(i_layers, 0, sizeof(*i_layers) * i_layerCnt);
 
-    renderer->layerCnt = 0;
+    i_layerCnt = 0;
+    i_camLayerCnt = 0;
 }
 
-static void add_sprite_batch(Renderer* const renderer, const int layerIndex) {
-    assert(renderer);
-    assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
+static void add_sprite_batch(const int layerIndex) {
+    assert(layerIndex >= 0 && layerIndex < i_layerCnt);
 
-    RenderLayer* const layer = &renderer->layers[layerIndex];
+    RenderLayer* const layer = &i_layers[layerIndex];
     const int batchIndex = layer->spriteBatchCnt;
 
     SpriteBatchGLIDs* const glIDs = &layer->spriteBatchGLIDs[batchIndex];
@@ -120,44 +182,54 @@ void init_rendering_internals() {
     for (int i = 0; i < gk_texUnitLimit; ++i) {
         i_texUnits[i] = i;
     }
+
+    // Set up sprite quad shader program.
+    i_spriteQuadShaderProgGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
+    assert(i_spriteQuadShaderProgGLID);
+
+    i_spriteQuadShaderProgProjUniLoc = glGetUniformLocation(i_spriteQuadShaderProgGLID, "u_proj");
+    i_spriteQuadShaderProgViewUniLoc = glGetUniformLocation(i_spriteQuadShaderProgGLID, "u_view");
+    i_spriteQuadShaderProgTexturesUniLoc = glGetUniformLocation(i_spriteQuadShaderProgGLID, "u_textures");
 }
 
-void clean_renderer(Renderer* const renderer) {
-    clean_render_layers(renderer);
-    memset(renderer, 0, sizeof(*renderer));
+void rendering_cleanup() {
+    clean_render_layers();
+
+    glDeleteProgram(i_spriteQuadShaderProgGLID);
+    i_spriteQuadShaderProgGLID = 0;
 }
 
-void load_render_layers(Renderer* const renderer, const int layerCnt, const int camLayerCnt) {
+void load_render_layers(const int layerCnt, const int camLayerCnt) {
     assert(layerCnt > 0 && layerCnt <= gk_renderLayerLimit);
     assert(camLayerCnt >= 0 && camLayerCnt <= layerCnt);
 
-    clean_render_layers(renderer);
-    renderer->layerCnt = layerCnt;
-    renderer->camLayerCnt = camLayerCnt;
+    clean_render_layers();
+    i_layerCnt = layerCnt;
+    i_camLayerCnt = camLayerCnt;
 }
 
-void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const Assets* const assets) {
-    assert(renderer->bgColor.a == 1.0f);
-    assert(!cam == !renderer->camLayerCnt);
+void render_all(const Camera* const cam, const Assets* const assets) {
+    assert(g_bgColor.a == 1.0f);
+    assert(!cam == !i_camLayerCnt);
 
-    glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, renderer->bgColor.a);
+    glClearColor(g_bgColor.r, g_bgColor.g, g_bgColor.b, g_bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
     const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, get_window_size().x, get_window_size().y, 0.0f, -1.0f, 1.0f);
     const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam) : Matrix4x4 {};
     const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
-    for (int i = 0; i < renderer->layerCnt; ++i) {
-        glUseProgram(shaderProgs->spriteQuadGLID);
+    for (int i = 0; i < i_layerCnt; ++i) {
+        glUseProgram(i_spriteQuadShaderProgGLID);
 
-        glUniformMatrix4fv(shaderProgs->spriteQuadProjUniLoc, 1, false, (const float*)projMat.elems);
+        glUniformMatrix4fv(i_spriteQuadShaderProgProjUniLoc, 1, false, (const float*)projMat.elems);
 
-        const Matrix4x4* const viewMat = i < renderer->camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
-        glUniformMatrix4fv(shaderProgs->spriteQuadViewUniLoc, 1, false, (const float*)viewMat->elems);
+        const Matrix4x4* const viewMat = i < i_camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
+        glUniformMatrix4fv(i_spriteQuadShaderProgViewUniLoc, 1, false, (const float*)viewMat->elems);
 
-        glUniform1iv(shaderProgs->spriteQuadTexturesUniLoc, gk_texUnitLimit, i_texUnits);
+        glUniform1iv(i_spriteQuadShaderProgTexturesUniLoc, gk_texUnitLimit, i_texUnits);
 
-        const RenderLayer* const layer = &renderer->layers[i];
+        const RenderLayer* const layer = &i_layers[i];
 
         for (int j = 0; j < layer->spriteBatchCnt; ++j) {
             const SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[j];
@@ -176,21 +248,21 @@ void render_all(const Renderer* const renderer, const Camera* const cam, const S
     }
 }
 
-void empty_sprite_batches(Renderer* const renderer) {
-    for (int i = 0; i < renderer->layerCnt; ++i) {
-        RenderLayer* const layer = &renderer->layers[i];
+void empty_sprite_batches() {
+    for (int i = 0; i < i_layerCnt; ++i) {
+        RenderLayer* const layer = &i_layers[i];
         memset(layer->spriteBatchTransDatas, 0, sizeof(layer->spriteBatchTransDatas));
         layer->spriteBatchesFilled = 0;
     }
 }
 
-void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets) {
-    assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
+void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets) {
+    assert(layerIndex >= 0 && layerIndex < i_layerCnt);
 
-    RenderLayer* const layer = &renderer->layers[layerIndex];
+    RenderLayer* const layer = &i_layers[layerIndex];
 
     if (layer->spriteBatchCnt == 0) {
-        add_sprite_batch(renderer, layerIndex);
+        add_sprite_batch(layerIndex);
     }
 
     const int batchIndex = layer->spriteBatchesFilled;
@@ -202,10 +274,10 @@ void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const
         ++layer->spriteBatchesFilled;
 
         if (layer->spriteBatchesFilled == layer->spriteBatchCnt) {
-            add_sprite_batch(renderer, layerIndex);
+            add_sprite_batch(layerIndex);
         }
 
-        write_to_sprite_batch(renderer, layerIndex, writeData, assets);
+        write_to_sprite_batch(layerIndex, writeData, assets);
 
         return;
     }
@@ -264,9 +336,9 @@ void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const
         writeData->alpha
     };
 
-    const SpriteBatchGLIDs* const batchA = &layer->spriteBatchGLIDs[batchIndex];
-    glBindVertexArray(batchA->vertArrayGLID);
-    glBindBuffer(GL_ARRAY_BUFFER, batchA->vertBufGLID);
+    const SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[batchIndex];
+    glBindVertexArray(batchGLIDs->vertArrayGLID);
+    glBindBuffer(GL_ARRAY_BUFFER, batchGLIDs->vertBufGLID);
     glBufferSubData(GL_ARRAY_BUFFER, slotIndex * sizeof(float) * gk_spriteBatchSlotVertCnt, sizeof(verts), verts);
 
     ++batchTransData->slotsUsed;

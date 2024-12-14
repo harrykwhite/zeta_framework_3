@@ -20,6 +20,8 @@ struct Color {
     float a;
 };
 
+extern Color g_bgColor;
+
 struct SpriteBatchGLIDs {
     GLID vertArrayGLID;
     GLID vertBufGLID;
@@ -49,26 +51,20 @@ struct RenderLayer {
     int spriteBatchCnt;
 };
 
-struct Renderer {
-    RenderLayer layers[gk_renderLayerLimit];
-    int layerCnt;
-    int camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
-
-    Color bgColor;
-};
-
 struct Camera {
     Vec2D pos;
     float scale;
 };
 
 void init_rendering_internals();
+void rendering_cleanup();
+void load_render_layers(const int layerCnt, const int camLayerCnt);
+void render_batches(const Camera* const cam, const Assets* const assets);
+void empty_sprite_batches();
+void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets);
 
-void clean_renderer(Renderer* const renderer);
-void load_render_layers(Renderer* const renderer, const int layerCnt, const int camLayerCnt);
-void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const Assets* const assets);
-void empty_sprite_batches(Renderer* const renderer);
-void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets);
+GLID create_shader_from_src(const char* const src, const bool frag);
+GLID create_shader_prog_from_srcs(const char* const vertShaderSrc, const char* const fragShaderSrc);
 
 inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera* const cam) {
     return Vec2D {

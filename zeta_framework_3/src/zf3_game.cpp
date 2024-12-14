@@ -9,8 +9,6 @@ static constexpr double ik_tickDurLimitMult = 8.0;
 typedef struct {
     MemArena* memArena;
     Assets* assets;
-    ShaderProgs* shaderProgs;
-    Renderer* renderer;
 } GameCleanupPtrs;
 
 static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* const userInfo) {
@@ -18,13 +16,7 @@ static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* co
 
     userInfo->cleanup();
 
-    if (ptrs->renderer) {
-        clean_renderer(ptrs->renderer);
-    }
-
-    if (ptrs->shaderProgs) {
-        unload_shader_progs(ptrs->shaderProgs);
-    }
+    rendering_cleanup();
 
     if (ptrs->assets) {
         unload_assets(ptrs->assets);
@@ -88,13 +80,7 @@ void run_game(const UserGameInfo* const userInfo) {
         return;
     }
 
-    ShaderProgs shaderProgs;
-    load_shader_progs(&shaderProgs);
-
     init_rendering_internals();
-
-    const auto renderer = push_to_mem_arena<Renderer>(&memArena);
-    assert(renderer);
 
     Camera cam = {
         .scale = 1.0f
@@ -104,7 +90,6 @@ void run_game(const UserGameInfo* const userInfo) {
 
     const UserGameFuncData userFuncData = {
         .assets = assets,
-        .renderer = renderer,
         .cam = &cam
     };
 
@@ -133,7 +118,7 @@ void run_game(const UserGameInfo* const userInfo) {
             int i = 0;
 
             do {
-                empty_sprite_batches(renderer);
+                empty_sprite_batches();
                 userInfo->tick(&userFuncData);
 
                 frameDurAccum -= ik_targTickDur;
@@ -143,7 +128,7 @@ void run_game(const UserGameInfo* const userInfo) {
             save_input_state();
         }
 
-        render_all(renderer, &cam, &shaderProgs, assets);
+        render_all(&cam, assets);
         swap_window_buffers();
 
         glfwPollEvents();

@@ -16,17 +16,7 @@ struct Assets {
     Vec2DInt texSizes[gk_texLimit];
 };
 
-struct ShaderProgs {
-    GLID spriteQuadGLID;
-    int spriteQuadProjUniLoc;
-    int spriteQuadViewUniLoc;
-    int spriteQuadTexturesUniLoc;
-};
-
 bool load_assets(Assets* const assets);
 void unload_assets(Assets* const assets);
-
-void load_shader_progs(ShaderProgs* const progs);
-void unload_shader_progs(ShaderProgs* const progs);
 
 }
