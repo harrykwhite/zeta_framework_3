@@ -106,6 +106,8 @@ void run_game(const UserGameInfo* const userInfo) {
         .scale = 1.0f
     };
 
+    init_rng();
+
     const UserGameFuncData userFuncData = {
         .windowMeta = &windowMeta,
         .assets = assets,

@@ -11,6 +11,7 @@ add_library(zeta_framework_3 STATIC
     src/zf3_assets.cpp
     src/zf3_rendering.cpp
     src/zf3_audio.cpp
+    src/zf3_rand.cpp
     src/zf3_misc.cpp
     ${PARENT_DIR}/vendor/glad/src/glad.c
 
@@ -20,6 +21,7 @@ add_library(zeta_framework_3 STATIC
     include/zf3_assets.h
     include/zf3_rendering.h
     include/zf3_audio.h
+    include/zf3_rand.h
     include/zf3_misc.h
     ${PARENT_DIR}/vendor/glad/include/glad/glad.h
     ${PARENT_DIR}/vendor/glad/include/KHR/khrplatform.h

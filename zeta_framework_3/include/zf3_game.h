@@ -3,6 +3,7 @@
 #include <zf3_window.h>
 #include <zf3_assets.h>
 #include <zf3_rendering.h>
+#include <zf3_rand.h>
 
 namespace zf3 {
 
