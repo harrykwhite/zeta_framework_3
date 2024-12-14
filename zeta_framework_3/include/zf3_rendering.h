@@ -30,18 +30,9 @@ struct SpriteBatchGLIDs {
 
 struct SpriteBatchTransData {
     int slotsUsed;
+
     int texUnitTexIDs[gk_texUnitLimit];
     int texUnitsInUse;
-};
-
-struct SpriteBatchWriteData {
-    int texIndex;
-    Vec2D pos;
-    Rect srcRect;
-    Vec2D origin;
-    float rot;
-    Vec2D scale;
-    float alpha;
 };
 
 struct RenderLayer {
@@ -56,27 +47,29 @@ struct Camera {
     float scale;
 };
 
+extern Camera g_camera;
+
 void init_rendering_internals();
 void rendering_cleanup();
 void load_render_layers(const int layerCnt, const int camLayerCnt);
 void render_all();
 void empty_sprite_batches();
-void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData);
+void write_to_sprite_batch(const int layerIndex, const int texIndex, const Vec2D pos, const Rect srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
 
 GLID create_shader_from_src(const char* const src, const bool frag);
 GLID create_shader_prog_from_srcs(const char* const vertShaderSrc, const char* const fragShaderSrc);
 
-inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera* const cam) {
+inline Vec2D camera_to_screen_pos(const Vec2D pos) {
     return Vec2D {
-        .x = ((pos.x - cam->pos.x) * cam->scale) + (get_window_size().x / 2.0f),
-        .y = ((pos.y - cam->pos.y) * cam->scale) + (get_window_size().y / 2.0f)
+        .x = ((pos.x - g_camera.pos.x) * g_camera.scale) + (get_window_size().x / 2.0f),
+        .y = ((pos.y - g_camera.pos.y) * g_camera.scale) + (get_window_size().y / 2.0f)
     };
 }
 
-inline Vec2D screen_to_camera_pos(const Vec2D pos, const Camera* const cam) {
+inline Vec2D screen_to_camera_pos(const Vec2D pos) {
     return Vec2D {
-        .x = ((pos.x - (get_window_size().x / 2.0f)) / cam->scale) + cam->pos.x,
-        .y = ((pos.y - (get_window_size().y / 2.0f)) / cam->scale) + cam->pos.y
+        .x = ((pos.x - (get_window_size().x / 2.0f)) / g_camera.scale) + g_camera.pos.x,
+        .y = ((pos.y - (get_window_size().y / 2.0f)) / g_camera.scale) + g_camera.pos.y
     };
 }
 

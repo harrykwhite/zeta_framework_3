@@ -2,6 +2,11 @@
 
 namespace zf3 {
 
+GLID i_spriteQuadShaderProgGLID;
+int i_spriteQuadShaderProgProjUniLoc;
+int i_spriteQuadShaderProgViewUniLoc;
+int i_spriteQuadShaderProgTexturesUniLoc;
+
 static const char* i_spriteQuadVertShaderSrc =
 "#version 430 core\n"
 "layout (location = 0) in vec2 a_vert;\n"
@@ -38,7 +43,7 @@ static const char* i_spriteQuadVertShaderSrc =
 "    v_alpha = a_alpha;\n"
 "}\n";
 
-static const char* i_spriteQuadFragShaderSrc =
+static const char* ik_spriteQuadFragShaderSrc =
 "#version 430 core\n"
 "\n"
 "in flat int v_texIndex;\n"
@@ -67,10 +72,9 @@ int i_camLayerCnt; // Layers 0 through to this number are drawn with a camera vi
 
 Color g_bgColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-GLID i_spriteQuadShaderProgGLID;
-int i_spriteQuadShaderProgProjUniLoc;
-int i_spriteQuadShaderProgViewUniLoc;
-int i_spriteQuadShaderProgTexturesUniLoc;
+Camera g_camera = {
+    .scale = 1.0f
+};
 
 static void clean_render_layers() {
     for (int i = 0; i < i_layerCnt; ++i) {
@@ -157,13 +161,13 @@ static int add_tex_unit_to_sprite_batch(SpriteBatchTransData* const batchTransDa
     return batchTransData->texUnitsInUse++;
 }
 
-static Matrix4x4 create_cam_view_matrix(const Camera& cam) {
+static Matrix4x4 create_cam_view_matrix() {
     Matrix4x4 mat = {};
-    mat[0][0] = cam.scale;
-    mat[1][1] = cam.scale;
+    mat[0][0] = g_camera.scale;
+    mat[1][1] = g_camera.scale;
     mat[3][3] = 1.0f;
-    mat[3][0] = (-cam.pos.x * cam.scale) + (get_window_size().x / 2.0f);
-    mat[3][1] = (-cam.pos.y * cam.scale) + (get_window_size().y / 2.0f);
+    mat[3][0] = (-g_camera.pos.x * g_camera.scale) + (get_window_size().x / 2.0f);
+    mat[3][1] = (-g_camera.pos.y * g_camera.scale) + (get_window_size().y / 2.0f);
     return mat;
 }
 
@@ -184,7 +188,7 @@ void init_rendering_internals() {
     }
 
     // Set up sprite quad shader program.
-    i_spriteQuadShaderProgGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, i_spriteQuadFragShaderSrc);
+    i_spriteQuadShaderProgGLID = create_shader_prog_from_srcs(i_spriteQuadVertShaderSrc, ik_spriteQuadFragShaderSrc);
     assert(i_spriteQuadShaderProgGLID);
 
     i_spriteQuadShaderProgProjUniLoc = glGetUniformLocation(i_spriteQuadShaderProgGLID, "u_proj");
@@ -210,13 +214,13 @@ void load_render_layers(const int layerCnt, const int camLayerCnt) {
 
 void render_all() {
     assert(g_bgColor.a == 1.0f);
+    assert(g_camera.scale >= 1.0f);
 
     glClearColor(g_bgColor.r, g_bgColor.g, g_bgColor.b, g_bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
     const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, get_window_size().x, get_window_size().y, 0.0f, -1.0f, 1.0f);
-    //const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam) : Matrix4x4 {};
-    const Matrix4x4 camViewMat = create_identity_matrix_4x4();
+    const Matrix4x4 camViewMat = create_cam_view_matrix();
     const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
     for (int i = 0; i < i_layerCnt; ++i) {
@@ -256,7 +260,7 @@ void empty_sprite_batches() {
     }
 }
 
-void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData) {
+void write_to_sprite_batch(const int layerIndex, const int texIndex, const Vec2D pos, const Rect srcRect, const Vec2D origin, const float rot, const Vec2D scale, const float alpha) {
     assert(layerIndex >= 0 && layerIndex < i_layerCnt);
 
     RenderLayer* const layer = &i_layers[layerIndex];
@@ -270,70 +274,70 @@ void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* con
 
     int texUnit;
 
-    if (batchTransData->slotsUsed == gk_spriteBatchSlotLimit || (texUnit = add_tex_unit_to_sprite_batch(batchTransData, writeData->texIndex)) == -1) {
+    if (batchTransData->slotsUsed == gk_spriteBatchSlotLimit || (texUnit = add_tex_unit_to_sprite_batch(batchTransData, texIndex)) == -1) {
         ++layer->spriteBatchesFilled;
 
         if (layer->spriteBatchesFilled == layer->spriteBatchCnt) {
             add_sprite_batch(layerIndex);
         }
 
-        write_to_sprite_batch(layerIndex, writeData);
+        write_to_sprite_batch(layerIndex, texIndex, pos, srcRect, origin, rot, scale, alpha);
 
         return;
     }
 
     const int slotIndex = batchTransData->slotsUsed;
 
-    const Vec2DInt texSize = get_assets().texSizes[writeData->texIndex];
+    const Vec2DInt texSize = get_assets().texSizes[texIndex];
 
     const float verts[] = {
-        (0.0f - writeData->origin.x) * writeData->scale.x,
-        (0.0f - writeData->origin.y) * writeData->scale.y,
-        writeData->pos.x,
-        writeData->pos.y,
-        static_cast<float>(writeData->srcRect.width),
-        static_cast<float>(writeData->srcRect.height),
-        writeData->rot,
+        (0.0f - origin.x) * scale.x,
+        (0.0f - origin.y) * scale.y,
+        pos.x,
+        pos.y,
+        static_cast<float>(srcRect.width),
+        static_cast<float>(srcRect.height),
+        rot,
         static_cast<float>(texUnit),
-        static_cast<float>(writeData->srcRect.x) / texSize.x,
-        static_cast<float>(writeData->srcRect.y) / texSize.y,
-        writeData->alpha,
+        static_cast<float>(srcRect.x) / texSize.x,
+        static_cast<float>(srcRect.y) / texSize.y,
+        alpha,
 
-        (1.0f - writeData->origin.x) * writeData->scale.x,
-        (0.0f - writeData->origin.y) * writeData->scale.y,
-        writeData->pos.x,
-        writeData->pos.y,
-        static_cast<float>(writeData->srcRect.width),
-        static_cast<float>(writeData->srcRect.height),
-        writeData->rot,
+        (1.0f - origin.x) * scale.x,
+        (0.0f - origin.y) * scale.y,
+        pos.x,
+        pos.y,
+        static_cast<float>(srcRect.width),
+        static_cast<float>(srcRect.height),
+        rot,
         static_cast<float>(texUnit),
-        static_cast<float>(writeData->srcRect.x + writeData->srcRect.width) / texSize.x,
-        static_cast<float>(writeData->srcRect.y) / texSize.y,
-        writeData->alpha,
+        static_cast<float>(srcRect.x + srcRect.width) / texSize.x,
+        static_cast<float>(srcRect.y) / texSize.y,
+        alpha,
 
-        (1.0f - writeData->origin.x) * writeData->scale.x,
-        (1.0f - writeData->origin.y) * writeData->scale.y,
-        writeData->pos.x,
-        writeData->pos.y,
-        static_cast<float>(writeData->srcRect.width),
-        static_cast<float>(writeData->srcRect.height),
-        writeData->rot,
+        (1.0f - origin.x) * scale.x,
+        (1.0f - origin.y) * scale.y,
+        pos.x,
+        pos.y,
+        static_cast<float>(srcRect.width),
+        static_cast<float>(srcRect.height),
+        rot,
         static_cast<float>(texUnit),
-        static_cast<float>(writeData->srcRect.x + writeData->srcRect.width) / texSize.x,
-        static_cast<float>(writeData->srcRect.y + writeData->srcRect.height) / texSize.y,
-        writeData->alpha,
+        static_cast<float>(srcRect.x + srcRect.width) / texSize.x,
+        static_cast<float>(srcRect.y + srcRect.height) / texSize.y,
+        alpha,
 
-        (0.0f - writeData->origin.x) * writeData->scale.x,
-        (1.0f - writeData->origin.y) * writeData->scale.y,
-        writeData->pos.x,
-        writeData->pos.y,
-        static_cast<float>(writeData->srcRect.width),
-        static_cast<float>(writeData->srcRect.height),
-        writeData->rot,
+        (0.0f - origin.x) * scale.x,
+        (1.0f - origin.y) * scale.y,
+        pos.x,
+        pos.y,
+        static_cast<float>(srcRect.width),
+        static_cast<float>(srcRect.height),
+        rot,
         static_cast<float>(texUnit),
-        static_cast<float>(writeData->srcRect.x) / texSize.x,
-        static_cast<float>(writeData->srcRect.y + writeData->srcRect.height) / texSize.y,
-        writeData->alpha
+        static_cast<float>(srcRect.x) / texSize.x,
+        static_cast<float>(srcRect.y + srcRect.height) / texSize.y,
+        alpha
     };
 
     const SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[batchIndex];
