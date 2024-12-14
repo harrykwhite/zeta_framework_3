@@ -42,7 +42,7 @@ static void add_sprite_batch(Renderer* const renderer, const int layerIndex) {
     // Generate vertex buffer.
     glGenBuffers(1, &glIDs->vertBufGLID);
     glBindBuffer(GL_ARRAY_BUFFER, glIDs->vertBufGLID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * gk_spriteQuadShaderProgVertCnt * 4 * gk_spriteBatchSlotLimit, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * gk_spriteQuadShaderProgVertCnt * 4 * gk_spriteBatchSlotLimit, nullptr, GL_DYNAMIC_DRAW);
 
     // Generate element buffer.
     glGenBuffers(1, &glIDs->elemBufGLID);
@@ -52,25 +52,25 @@ static void add_sprite_batch(Renderer* const renderer, const int layerIndex) {
     // Set vertex attribute pointers.
     const int vertsStride = sizeof(float) * gk_spriteQuadShaderProgVertCnt;
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 0));
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 0));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 2));
+    glVertexAttribPointer(1, 2, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 4));
+    glVertexAttribPointer(2, 2, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 4));
     glEnableVertexAttribArray(2);
 
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 6));
+    glVertexAttribPointer(3, 1, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 6));
     glEnableVertexAttribArray(3);
 
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 7));
+    glVertexAttribPointer(4, 1, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 7));
     glEnableVertexAttribArray(4);
 
-    glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 8));
+    glVertexAttribPointer(5, 2, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 8));
     glEnableVertexAttribArray(5);
 
-    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, vertsStride, (const void*)(sizeof(float) * 10));
+    glVertexAttribPointer(6, 1, GL_FLOAT, false, vertsStride, reinterpret_cast<const void*>(sizeof(float) * 10));
     glEnableVertexAttribArray(6);
 
     // Unbind.
@@ -95,13 +95,14 @@ static int add_tex_unit_to_sprite_batch(SpriteBatchTransData* const batchTransDa
     return batchTransData->texUnitsInUse++;
 }
 
-static void init_cam_view_matrix(Matrix4x4* const mat, const Camera* const cam, const WindowMeta* const windowMeta) {
-    memset(mat, 0, sizeof(*mat));
-    mat->elems[0][0] = cam->scale;
-    mat->elems[1][1] = cam->scale;
-    mat->elems[3][3] = 1.0f;
-    mat->elems[3][0] = (-cam->pos.x * cam->scale) + (windowMeta->size.x / 2.0f);
-    mat->elems[3][1] = (-cam->pos.y * cam->scale) + (windowMeta->size.y / 2.0f);
+static Matrix4x4 create_cam_view_matrix(const Camera& cam, const WindowMeta& windowMeta) {
+    Matrix4x4 mat = {};
+    mat[0][0] = cam.scale;
+    mat[1][1] = cam.scale;
+    mat[3][3] = 1.0f;
+    mat[3][0] = (-cam.pos.x * cam.scale) + (windowMeta.size.x / 2.0f);
+    mat[3][1] = (-cam.pos.y * cam.scale) + (windowMeta.size.y / 2.0f);
+    return mat;
 }
 
 void init_rendering_internals() {
@@ -142,22 +143,17 @@ void render_all(const Renderer* const renderer, const Camera* const cam, const S
     glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, renderer->bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    Matrix4x4 projMat;
-    init_ortho_matrix_4x4(&projMat, 0.0f, windowMeta->size.x, windowMeta->size.y, 0.0f, -1.0f, 1.0f);
-
-    Matrix4x4 camViewMat;
-    init_cam_view_matrix(&camViewMat, cam, windowMeta);
-
-    Matrix4x4 defaultViewMat;
-    init_identity_matrix_4x4(&defaultViewMat);
+    const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, windowMeta->size.x, windowMeta->size.y, 0.0f, -1.0f, 1.0f);
+    const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam, *windowMeta) : Matrix4x4 {};
+    const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
     for (int i = 0; i < renderer->layerCnt; ++i) {
         glUseProgram(shaderProgs->spriteQuadGLID);
 
-        glUniformMatrix4fv(shaderProgs->spriteQuadProjUniLoc, 1, GL_FALSE, (const float*)projMat.elems);
+        glUniformMatrix4fv(shaderProgs->spriteQuadProjUniLoc, 1, false, (const float*)projMat.elems);
 
         const Matrix4x4* const viewMat = i < renderer->camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
-        glUniformMatrix4fv(shaderProgs->spriteQuadViewUniLoc, 1, GL_FALSE, (const float*)viewMat->elems);
+        glUniformMatrix4fv(shaderProgs->spriteQuadViewUniLoc, 1, false, (const float*)viewMat->elems);
 
         glUniform1iv(shaderProgs->spriteQuadTexturesUniLoc, gk_texUnitLimit, i_texUnits);
 
@@ -175,7 +171,7 @@ void render_all(const Renderer* const renderer, const Camera* const cam, const S
                 glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[batchTransData->texUnitTexIDs[k]]);
             }
 
-            glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, NULL);
+            glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, nullptr);
         }
     }
 }
