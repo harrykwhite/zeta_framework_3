@@ -7,13 +7,8 @@
 
 namespace zf3 {
 
-struct UserGameFuncData {
-    const Assets* const assets;
-    Camera* const cam;
-};
-
-using UserGameInit = void (*)(const UserGameFuncData* const data);
-using UserGameTick = void (*)(const UserGameFuncData* const data);
+using UserGameInit = void (*)();
+using UserGameTick = void (*)();
 using UserGameCleanup = void (*)();
 
 struct UserGameInfo {
@@ -28,6 +23,6 @@ struct UserGameInfo {
     bool hideCursor;
 };
 
-void run_game(const UserGameInfo* const userInfo);
+void run_game(const UserGameInfo& userInfo);
 
 }

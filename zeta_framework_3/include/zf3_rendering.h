@@ -59,9 +59,9 @@ struct Camera {
 void init_rendering_internals();
 void rendering_cleanup();
 void load_render_layers(const int layerCnt, const int camLayerCnt);
-void render_batches(const Camera* const cam, const Assets* const assets);
+void render_all();
 void empty_sprite_batches();
-void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets);
+void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData);
 
 GLID create_shader_from_src(const char* const src, const bool frag);
 GLID create_shader_prog_from_srcs(const char* const vertShaderSrc, const char* const fragShaderSrc);

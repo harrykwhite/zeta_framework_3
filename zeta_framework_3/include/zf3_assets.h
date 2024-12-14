@@ -16,7 +16,8 @@ struct Assets {
     Vec2DInt texSizes[gk_texLimit];
 };
 
-bool load_assets(Assets* const assets);
-void unload_assets(Assets* const assets);
+bool load_assets();
+void unload_assets();
+const Assets& get_assets();
 
 }

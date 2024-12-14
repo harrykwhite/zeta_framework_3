@@ -6,29 +6,14 @@ static constexpr int ik_targTicksPerSec = 60;
 static constexpr double ik_targTickDur = 1.0 / ik_targTicksPerSec;
 static constexpr double ik_tickDurLimitMult = 8.0;
 
-typedef struct {
-    MemArena* memArena;
-    Assets* assets;
-} GameCleanupPtrs;
-
-static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* const userInfo) {
+static void clean_game(const UserGameInfo& userInfo) {
     log("Cleaning up...");
 
-    userInfo->cleanup();
-
+    userInfo.cleanup();
     rendering_cleanup();
-
-    if (ptrs->assets) {
-        unload_assets(ptrs->assets);
-    }
-
+    unload_assets();
     clean_window();
-
     glfwTerminate();
-
-    if (ptrs->memArena) {
-        clean_mem_arena(ptrs->memArena);
-    }
 }
 
 static double calc_valid_frame_dur(const double frameTime, const double frameTimeLast) {
@@ -36,64 +21,39 @@ static double calc_valid_frame_dur(const double frameTime, const double frameTim
     return dur >= 0.0 && dur <= ik_targTickDur * ik_tickDurLimitMult ? dur : 0.0;
 }
 
-void run_game(const UserGameInfo* const userInfo) {
-    GameCleanupPtrs cleanupPtrs = {0};
-
+void run_game(const UserGameInfo& userInfo) {
     //
     // Initialisation
     //
     log("Initialising...");
 
-    MemArena memArena;
-
-    if (!init_mem_arena(&memArena, megabytes_to_bytes(4))) {
-        clean_game(&cleanupPtrs, userInfo);
-        return;
-    }
-
-    cleanupPtrs.memArena = &memArena;
-
     if (!glfwInit()) {
-        clean_game(&cleanupPtrs, userInfo);
+        clean_game(userInfo);
         return;
     }
 
-    if (!init_window(userInfo->initWindowWidth, userInfo->initWindowHeight, userInfo->windowTitle, userInfo->windowResizable, userInfo->hideCursor)) {
-        clean_game(&cleanupPtrs, userInfo);
+    if (!init_window(userInfo.initWindowWidth, userInfo.initWindowHeight, userInfo.windowTitle, userInfo.windowResizable, userInfo.hideCursor)) {
+        clean_game(userInfo);
         return;
     }
 
-    // Enable VSync.
-    glfwSwapInterval(1);
+    glfwSwapInterval(1); // Enables VSync.
 
-    // Initialise OpenGL function pointers.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        clean_game(&cleanupPtrs, userInfo);
+        clean_game(userInfo);
         return;
     }
 
-    const auto assets = push_to_mem_arena<Assets>(&memArena);
-    assert(assets);
-
-    if (!load_assets(assets)) {
-        clean_game(&cleanupPtrs, userInfo);
+    if (!load_assets()) {
+        clean_game(userInfo);
         return;
     }
 
     init_rendering_internals();
 
-    Camera cam = {
-        .scale = 1.0f
-    };
-
     init_rng();
 
-    const UserGameFuncData userFuncData = {
-        .assets = assets,
-        .cam = &cam
-    };
-
-    userInfo->init(&userFuncData);
+    userInfo.init();
 
     show_window();
 
@@ -119,7 +79,7 @@ void run_game(const UserGameInfo* const userInfo) {
 
             do {
                 empty_sprite_batches();
-                userInfo->tick(&userFuncData);
+                userInfo.tick();
 
                 frameDurAccum -= ik_targTickDur;
                 ++i;
@@ -128,13 +88,13 @@ void run_game(const UserGameInfo* const userInfo) {
             save_input_state();
         }
 
-        render_all(&cam, assets);
+        render_all();
         swap_window_buffers();
 
         glfwPollEvents();
     }
 
-    clean_game(&cleanupPtrs, userInfo);
+    clean_game(userInfo);
 }
 
 }

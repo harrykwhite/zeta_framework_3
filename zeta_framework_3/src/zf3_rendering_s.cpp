@@ -208,15 +208,15 @@ void load_render_layers(const int layerCnt, const int camLayerCnt) {
     i_camLayerCnt = camLayerCnt;
 }
 
-void render_all(const Camera* const cam, const Assets* const assets) {
+void render_all() {
     assert(g_bgColor.a == 1.0f);
-    assert(!cam == !i_camLayerCnt);
 
     glClearColor(g_bgColor.r, g_bgColor.g, g_bgColor.b, g_bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
     const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, get_window_size().x, get_window_size().y, 0.0f, -1.0f, 1.0f);
-    const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam) : Matrix4x4 {};
+    //const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam) : Matrix4x4 {};
+    const Matrix4x4 camViewMat = create_identity_matrix_4x4();
     const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
     for (int i = 0; i < i_layerCnt; ++i) {
@@ -240,7 +240,7 @@ void render_all(const Camera* const cam, const Assets* const assets) {
 
             for (int k = 0; k < batchTransData->texUnitsInUse; ++k) {
                 glActiveTexture(GL_TEXTURE0 + i_texUnits[k]);
-                glBindTexture(GL_TEXTURE_2D, assets->texGLIDs[batchTransData->texUnitTexIDs[k]]);
+                glBindTexture(GL_TEXTURE_2D, get_assets().texGLIDs[batchTransData->texUnitTexIDs[k]]);
             }
 
             glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, nullptr);
@@ -256,7 +256,7 @@ void empty_sprite_batches() {
     }
 }
 
-void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets) {
+void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* const writeData) {
     assert(layerIndex >= 0 && layerIndex < i_layerCnt);
 
     RenderLayer* const layer = &i_layers[layerIndex];
@@ -277,14 +277,14 @@ void write_to_sprite_batch(const int layerIndex, const SpriteBatchWriteData* con
             add_sprite_batch(layerIndex);
         }
 
-        write_to_sprite_batch(layerIndex, writeData, assets);
+        write_to_sprite_batch(layerIndex, writeData);
 
         return;
     }
 
     const int slotIndex = batchTransData->slotsUsed;
 
-    const Vec2DInt texSize = assets->texSizes[writeData->texIndex];
+    const Vec2DInt texSize = get_assets().texSizes[writeData->texIndex];
 
     const float verts[] = {
         (0.0f - writeData->origin.x) * writeData->scale.x,
