@@ -75,6 +75,8 @@ void run_game(const UserGameInfo* const userInfo) {
 
     cleanupPtrs.glfwWindow = glfwWindow;
 
+    glfwSetInputMode(glfwWindow, GLFW_CURSOR, userInfo->hideCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
     // Enable VSync.
     glfwSwapInterval(1);
 

@@ -26,6 +26,7 @@ struct UserGameInfo {
     int initWindowHeight;
     const char* windowTitle;
     bool windowResizable;
+    bool hideCursor;
 };
 
 void run_game(const UserGameInfo* const userInfo);
