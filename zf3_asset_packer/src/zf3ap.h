@@ -11,4 +11,4 @@ constexpr int gk_srcAssetFilePathBufSize = 256;
 
 cJSON* getCJSONAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJ, FILE* const outputFileStream, const char* const packingInstrsArrayName);
 
-bool pack_textures(cJSON* const instrsCJ, FILE* const outputFileStream, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen);
+bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen);

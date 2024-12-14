@@ -14,19 +14,19 @@ struct MemArena {
     int used;
 };
 
-constexpr int conv_kilobytes_to_bytes(int kb) {
+constexpr int kilobytes_to_bytes(int kb) {
     return kb << 10;
 }
 
-constexpr int conv_megabytes_to_bytes(int mb) {
+constexpr int megabytes_to_bytes(int mb) {
     return mb << 20;
 }
 
-constexpr int conv_gigabytes_to_bytes(int gb) {
+constexpr int gigabytes_to_bytes(int gb) {
     return gb << 30;
 }
 
-constexpr int conv_bits_to_bytes(int bits) {
+constexpr int bits_to_bytes(int bits) {
     return ((bits + 7) & ~7) / 8;
 }
 

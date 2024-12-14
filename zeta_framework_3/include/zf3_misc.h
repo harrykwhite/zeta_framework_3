@@ -9,7 +9,7 @@ using GLID = GLuint;
 
 template<int BITS>
 struct Bitset {
-    Byte bytes[conv_bits_to_bytes(BITS)];
+    Byte bytes[bits_to_bytes(BITS)];
 };
 
 int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
@@ -28,7 +28,7 @@ inline void deactivate_bit(Byte* const bytes, const int bitIndex) {
 }
 
 inline void clear_bits(Byte* const bytes, const int bitCnt) {
-    memset(bytes, 0, conv_bits_to_bytes(bitCnt));
+    memset(bytes, 0, bits_to_bytes(bitCnt));
 }
 
 }

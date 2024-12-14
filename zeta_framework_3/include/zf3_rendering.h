@@ -63,23 +63,24 @@ struct Camera {
 };
 
 void init_rendering_internals();
+
 void clean_renderer(Renderer* const renderer);
 void load_render_layers(Renderer* const renderer, const int layerCnt, const int camLayerCnt);
-void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const WindowMeta* const windowMeta, const Assets* const assets);
+void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const Assets* const assets);
 void empty_sprite_batches(Renderer* const renderer);
 void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const SpriteBatchWriteData* const writeData, const Assets* const assets);
 
-inline Vec2D conv_camera_to_screen_pos(const Vec2D pos, const Camera* const cam, const WindowMeta* const windowMeta) {
+inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera* const cam) {
     return Vec2D {
-        .x = ((pos.x - cam->pos.x) * cam->scale) + (windowMeta->size.x / 2.0f),
-        .y = ((pos.y - cam->pos.y) * cam->scale) + (windowMeta->size.y / 2.0f)
+        .x = ((pos.x - cam->pos.x) * cam->scale) + (get_window_size().x / 2.0f),
+        .y = ((pos.y - cam->pos.y) * cam->scale) + (get_window_size().y / 2.0f)
     };
 }
 
-inline Vec2D conv_screen_to_camera_pos(const Vec2D pos, const Camera* const cam, const WindowMeta* const windowMeta) {
+inline Vec2D screen_to_camera_pos(const Vec2D pos, const Camera* const cam) {
     return Vec2D {
-        .x = ((pos.x - (windowMeta->size.x / 2.0f)) / cam->scale) + cam->pos.x,
-        .y = ((pos.y - (windowMeta->size.y / 2.0f)) / cam->scale) + cam->pos.y
+        .x = ((pos.x - (get_window_size().x / 2.0f)) / cam->scale) + cam->pos.x,
+        .y = ((pos.y - (get_window_size().y / 2.0f)) / cam->scale) + cam->pos.y
     };
 }
 

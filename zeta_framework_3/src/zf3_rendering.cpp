@@ -95,13 +95,13 @@ static int add_tex_unit_to_sprite_batch(SpriteBatchTransData* const batchTransDa
     return batchTransData->texUnitsInUse++;
 }
 
-static Matrix4x4 create_cam_view_matrix(const Camera& cam, const WindowMeta& windowMeta) {
+static Matrix4x4 create_cam_view_matrix(const Camera& cam) {
     Matrix4x4 mat = {};
     mat[0][0] = cam.scale;
     mat[1][1] = cam.scale;
     mat[3][3] = 1.0f;
-    mat[3][0] = (-cam.pos.x * cam.scale) + (windowMeta.size.x / 2.0f);
-    mat[3][1] = (-cam.pos.y * cam.scale) + (windowMeta.size.y / 2.0f);
+    mat[3][0] = (-cam.pos.x * cam.scale) + (get_window_size().x / 2.0f);
+    mat[3][1] = (-cam.pos.y * cam.scale) + (get_window_size().y / 2.0f);
     return mat;
 }
 
@@ -136,15 +136,15 @@ void load_render_layers(Renderer* const renderer, const int layerCnt, const int 
     renderer->camLayerCnt = camLayerCnt;
 }
 
-void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const WindowMeta* const windowMeta, const Assets* const assets) {
+void render_all(const Renderer* const renderer, const Camera* const cam, const ShaderProgs* const shaderProgs, const Assets* const assets) {
     assert(renderer->bgColor.a == 1.0f);
     assert(!cam == !renderer->camLayerCnt);
 
     glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, renderer->bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, windowMeta->size.x, windowMeta->size.y, 0.0f, -1.0f, 1.0f);
-    const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam, *windowMeta) : Matrix4x4 {};
+    const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, get_window_size().x, get_window_size().y, 0.0f, -1.0f, 1.0f);
+    const Matrix4x4 camViewMat = cam ? create_cam_view_matrix(*cam) : Matrix4x4 {};
     const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
     for (int i = 0; i < renderer->layerCnt; ++i) {

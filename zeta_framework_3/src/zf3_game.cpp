@@ -8,7 +8,6 @@ static constexpr double ik_tickDurLimitMult = 8.0;
 
 typedef struct {
     MemArena* memArena;
-    GLFWwindow* glfwWindow;
     Assets* assets;
     ShaderProgs* shaderProgs;
     Renderer* renderer;
@@ -31,9 +30,7 @@ static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* co
         unload_assets(ptrs->assets);
     }
 
-    if (ptrs->glfwWindow) {
-        glfwDestroyWindow(ptrs->glfwWindow);
-    }
+    clean_window();
 
     glfwTerminate();
 
@@ -57,7 +54,7 @@ void run_game(const UserGameInfo* const userInfo) {
 
     MemArena memArena;
 
-    if (!init_mem_arena(&memArena, conv_megabytes_to_bytes(4))) {
+    if (!init_mem_arena(&memArena, megabytes_to_bytes(4))) {
         clean_game(&cleanupPtrs, userInfo);
         return;
     }
@@ -69,17 +66,10 @@ void run_game(const UserGameInfo* const userInfo) {
         return;
     }
 
-    WindowMeta windowMeta = {0};
-    GLFWwindow* const glfwWindow = create_glfw_window(&windowMeta, userInfo->initWindowWidth, userInfo->initWindowHeight, userInfo->windowTitle, userInfo->windowResizable);
-
-    if (!glfwWindow) {
+    if (!init_window(userInfo->initWindowWidth, userInfo->initWindowHeight, userInfo->windowTitle, userInfo->windowResizable, userInfo->hideCursor)) {
         clean_game(&cleanupPtrs, userInfo);
         return;
     }
-
-    cleanupPtrs.glfwWindow = glfwWindow;
-
-    glfwSetInputMode(glfwWindow, GLFW_CURSOR, userInfo->hideCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     // Enable VSync.
     glfwSwapInterval(1);
@@ -113,7 +103,6 @@ void run_game(const UserGameInfo* const userInfo) {
     init_rng();
 
     const UserGameFuncData userFuncData = {
-        .windowMeta = &windowMeta,
         .assets = assets,
         .renderer = renderer,
         .cam = &cam
@@ -121,7 +110,7 @@ void run_game(const UserGameInfo* const userInfo) {
 
     userInfo->init(&userFuncData);
 
-    glfwShowWindow(glfwWindow);
+    show_window();
 
     //
     // Main Loop
@@ -131,7 +120,7 @@ void run_game(const UserGameInfo* const userInfo) {
 
     log("Entering the main loop...");
 
-    while (!glfwWindowShouldClose(glfwWindow)) {
+    while (!should_window_close()) {
         const double frameTimeLast = frameTime;
         frameTime = glfwGetTime();
 
@@ -151,11 +140,11 @@ void run_game(const UserGameInfo* const userInfo) {
                 ++i;
             } while (i < tickCnt);
 
-            windowMeta.inputStateSaved = windowMeta.inputState;
+            save_input_state();
         }
 
-        render_all(renderer, &cam, &shaderProgs, &windowMeta, assets);
-        glfwSwapBuffers(glfwWindow);
+        render_all(renderer, &cam, &shaderProgs, assets);
+        swap_window_buffers();
 
         glfwPollEvents();
     }

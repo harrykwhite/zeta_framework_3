@@ -8,7 +8,6 @@
 namespace zf3 {
 
 struct UserGameFuncData {
-    const WindowMeta* const windowMeta;
     const Assets* const assets;
     Renderer* const renderer;
     Camera* const cam;

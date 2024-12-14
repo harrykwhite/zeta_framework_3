@@ -84,6 +84,13 @@ struct Rect {
     int height;
 };
 
+struct RectFloat {
+    float x;
+    float y;
+    float width;
+    float height;
+};
+
 struct Range {
     int begin;
     int end;

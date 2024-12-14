@@ -8,9 +8,6 @@
 
 namespace zf3 {
 
-using KeysDownBitset = unsigned long long;
-using MouseButtonsDownBitset = unsigned char;
-
 enum KeyCode {
     INVALID_KEY_CODE = -1,
 
@@ -93,46 +90,23 @@ enum MouseButtonCode {
     NUM_MOUSE_BUTTON_CODES
 };
 
-struct InputState {
-    KeysDownBitset keysDownBits;
-    MouseButtonsDownBitset mouseButtonsDownBits;
-    Vec2D mousePos;
-};
+bool init_window(const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);
+void clean_window();
+void show_window();
+bool should_window_close();
+void swap_window_buffers();
+Vec2DInt get_window_size();
 
-struct WindowMeta {
-    Vec2DInt size;
-    InputState inputState;
-    InputState inputStateSaved;
-};
+void save_input_state();
+bool is_key_down(const KeyCode keyCode);
+bool is_key_pressed(const KeyCode keyCode);
+bool is_key_released(const KeyCode keyCode);
+bool is_mouse_button_down(const MouseButtonCode buttonCode);
+bool is_mouse_button_pressed(const MouseButtonCode buttonCode);
+bool is_mouse_button_released(const MouseButtonCode buttonCode);
+Vec2D get_mouse_pos();
 
-GLFWwindow* create_glfw_window(WindowMeta* const windowMeta, const int width, const int height, const char* const title, const bool resizable);
-
-inline bool is_key_down(const KeyCode keyCode, const WindowMeta* const windowMeta) {
-    return windowMeta->inputState.keysDownBits & ((KeysDownBitset)1 << keyCode);
-}
-
-inline bool is_key_pressed(const KeyCode keyCode, const WindowMeta* const windowMeta) {
-    const KeysDownBitset keyBit = (KeysDownBitset)1 << keyCode;
-    return (windowMeta->inputState.keysDownBits & keyBit) && !(windowMeta->inputStateSaved.keysDownBits & keyBit);
-}
-
-inline bool is_key_released(const KeyCode keyCode, const WindowMeta* const windowMeta) {
-    const KeysDownBitset keyBit = (KeysDownBitset)1 << keyCode;
-    return !(windowMeta->inputState.keysDownBits & keyBit) && (windowMeta->inputStateSaved.keysDownBits & keyBit);
-}
-
-inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
-    return windowMeta->inputState.mouseButtonsDownBits & ((MouseButtonsDownBitset)1 << buttonCode);
-}
-
-inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
-    const MouseButtonsDownBitset buttonBit = (MouseButtonsDownBitset)1 << buttonCode;
-    return (windowMeta->inputState.mouseButtonsDownBits & buttonBit) && !(windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
-}
-
-inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const WindowMeta* const windowMeta) {
-    const MouseButtonsDownBitset buttonBit = (MouseButtonsDownBitset)1 << buttonCode;
-    return !(windowMeta->inputState.mouseButtonsDownBits & buttonBit) && (windowMeta->inputStateSaved.mouseButtonsDownBits & buttonBit);
-}
+KeyCode glfw_to_zf3_key_code(const int keyCode);
+MouseButtonCode glfw_to_zf3_mouse_button_code(const int buttonCode);
 
 }
