@@ -15,6 +15,8 @@ typedef struct {
 } GameCleanupPtrs;
 
 static void clean_game(const GameCleanupPtrs* const ptrs, const UserGameInfo* const userInfo) {
+    log("Cleaning up...");
+
     userInfo->cleanup();
 
     if (ptrs->renderer) {
@@ -51,6 +53,8 @@ void run_game(const UserGameInfo* const userInfo) {
     //
     // Initialisation
     //
+    log("Initialising...");
+
     MemArena memArena;
 
     if (!init_mem_arena(&memArena, conv_megabytes_to_bytes(4))) {
@@ -124,6 +128,8 @@ void run_game(const UserGameInfo* const userInfo) {
     //
     double frameTime = glfwGetTime();
     double frameDurAccum = 0.0;
+
+    log("Entering the main loop...");
 
     while (!glfwWindowShouldClose(glfwWindow)) {
         const double frameTimeLast = frameTime;
