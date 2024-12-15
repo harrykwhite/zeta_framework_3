@@ -7,8 +7,8 @@
 
 namespace zf3 {
 
-using UserGameInit = void (*)();
-using UserGameTick = void (*)();
+using UserGameInit = bool (*)();
+using UserGameTick = bool (*)();
 using UserGameCleanup = void (*)();
 
 struct UserGameInfo {

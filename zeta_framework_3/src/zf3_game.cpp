@@ -53,7 +53,10 @@ void run_game(const UserGameInfo& userInfo) {
 
     init_rng();
 
-    userInfo.init();
+    if (!userInfo.init()) {
+        clean_game(userInfo);
+        return;
+    }
 
     show_window();
 
@@ -79,7 +82,11 @@ void run_game(const UserGameInfo& userInfo) {
 
             do {
                 empty_sprite_batches();
-                userInfo.tick();
+
+                if (!userInfo.tick()) {
+                    clean_game(userInfo);
+                    return;
+                }
 
                 frameDurAccum -= ik_targTickDur;
                 ++i;
