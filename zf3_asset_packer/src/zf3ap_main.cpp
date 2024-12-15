@@ -26,7 +26,7 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
 
     // Determine the output file path using the directory.
     char outputFilePath[ik_outputFilePathBufSize];
-    const int outputFilePathLen = snprintf(outputFilePath, ik_outputFilePathBufSize, "%s\\%s", outputDir, zf3::gk_assetsFileName);
+    const int outputFilePathLen = snprintf(outputFilePath, ik_outputFilePathBufSize, "%s/%s", outputDir, zf3::gk_assetsFileName);
 
     if (outputFilePathLen >= ik_outputFilePathBufSize) {
         zf3::log_error("The provided output directory \"%s\" is too long!", outputDir);
@@ -35,7 +35,7 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
 
     // Initialise the source asset file path buffer with the source directory.
     char srcAssetFilePathBuf[gk_srcAssetFilePathBufSize] = {0};
-    const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, gk_srcAssetFilePathBufSize, "%s\\", srcDir);
+    const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, gk_srcAssetFilePathBufSize, "%s/", srcDir);
 
     if (srcAssetFilePathStartLen >= gk_srcAssetFilePathBufSize) {
         zf3::log_error("The provided source directory of \"%s\" is too long!", srcDir);
@@ -65,15 +65,16 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
         return false;
     }
 
-    // Pack assets.
-    if (!pack_textures(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)) {
+    // Perform packing for each asset type using the packing instructions file.
+    if (!pack_textures(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)
+        || !pack_fonts(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)) {
         return false;
     }
 
     return true;
 }
 
-static void asset_packer_cleanup(AssetPacker* const packer) {
+static void clean_asset_packer(AssetPacker* const packer) {
     cJSON_Delete(packer->instrsCJ);
 
     if (packer->outputFileStream) {
@@ -83,7 +84,7 @@ static void asset_packer_cleanup(AssetPacker* const packer) {
     free(packer->instrsFileChars);
 }
 
-cJSON* getCJSONAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const outputFileStream, const char* const arrayName) {
+cJSON* getCJAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const outputFileStream, const char* const arrayName) {
     cJSON* const assetsCJ = cJSON_GetObjectItemCaseSensitive(instrsCJObj, arrayName);
     const bool assetsCJFound = cJSON_IsArray(assetsCJ);
 
@@ -97,20 +98,30 @@ cJSON* getCJSONAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const
     return assetsCJ;
 }
 
+bool complete_asset_file_path(char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen, const char* const relPath) {
+    strncpy(srcAssetFilePathBuf + srcAssetFilePathStartLen, relPath, gk_srcAssetFilePathBufSize - srcAssetFilePathStartLen);
+
+    if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
+        const int lenLimit = gk_srcAssetFilePathBufSize - 1 - srcAssetFilePathStartLen;
+        zf3::log_error("The asset relative file path of \"%s\" exceeds the length limit of %d characters!", relPath, lenLimit);
+        return false;
+    }
+
+    return true;
+}
+
 int main(const int argCnt, const char* const* args) {
-    // Get the source directory and output directory if provided.
     if (argCnt != 3) {
-        zf3::log_error("Invalid number of command-line arguments! Expected a source directory and an output directory to be provided.");
+        zf3::log_error("Invalid number of command-line arguments! Expected a source directory and an output directory.");
         return EXIT_FAILURE;
     }
 
     const char* const srcDir = args[1]; // The directory containing the assets to pack.
     const char* const outputDir = args[2]; // The directory to output the packed assets file to.
 
-    // Run the asset packer.
     AssetPacker packer;
     const bool packingSuccessful = run_asset_packer(&packer, srcDir, outputDir);
-    asset_packer_cleanup(&packer);
+    clean_asset_packer(&packer);
 
     return packingSuccessful ? EXIT_SUCCESS : EXIT_FAILURE;
 }

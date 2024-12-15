@@ -8,6 +8,7 @@ find_package(Freetype REQUIRED)
 add_executable(zf3_asset_packer
 	src/zf3ap_main.cpp
 	src/zf3ap_textures.cpp
+	src/zf3ap_fonts.cpp
 	${PARENT_DIR}/vendor/stb_image/src/stb_image.cpp
 
 	src/zf3ap.h
