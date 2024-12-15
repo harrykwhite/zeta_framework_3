@@ -10,6 +10,7 @@ add_library(zeta_framework_3 STATIC
     src/zf3_sm_window.cpp
     src/zf3_lm_window.cpp
     src/zf3_sm_assets.cpp
+    src/zf3_lm_assets.cpp
     src/zf3_sm_rendering.cpp
     src/zf3_lm_rendering.cpp
     src/zf3_sm_audio.cpp

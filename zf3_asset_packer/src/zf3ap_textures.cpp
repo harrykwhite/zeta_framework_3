@@ -7,7 +7,14 @@ bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcA
         return true;
     }
 
-    const cJSON* cjTexRelFilePath = NULL;
+    const int texCnt = cJSON_GetArraySize(cjTextures);
+
+    if (texCnt > zf3::gk_texLimit) {
+        zf3::log_error("Texture count exceeds the limit of %d!", zf3::gk_texLimit);
+        return false;
+    }
+
+    const cJSON* cjTexRelFilePath = nullptr;
 
     cJSON_ArrayForEach(cjTexRelFilePath, cjTextures) {
         if (!cJSON_IsString(cjTexRelFilePath)) {
@@ -20,7 +27,7 @@ bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcA
         }
 
         zf3::Vec2DInt texSize;
-        stbi_uc* const texPxData = stbi_load(srcAssetFilePathBuf, &texSize.x, &texSize.y, NULL, zf3::gk_texChannelCnt);
+        stbi_uc* const texPxData = stbi_load(srcAssetFilePathBuf, &texSize.x, &texSize.y, nullptr, zf3::gk_texChannelCnt);
 
         if (!texPxData) {
             zf3::log_error("Failed to load pixel data for texture with relative file path \"%s\"!", cjTexRelFilePath->valuestring);

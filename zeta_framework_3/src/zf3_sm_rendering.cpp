@@ -272,7 +272,7 @@ void render_all() {
 
             for (int k = 0; k < batchTransData->texUnitsInUse; ++k) {
                 glActiveTexture(GL_TEXTURE0 + i_texUnits[k]);
-                glBindTexture(GL_TEXTURE_2D, get_assets().texGLIDs[batchTransData->texUnitTexIDs[k]]);
+                glBindTexture(GL_TEXTURE_2D, get_assets().textures.glIDs[batchTransData->texUnitTexIDs[k]]);
             }
 
             glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, nullptr);
@@ -316,7 +316,7 @@ void write_to_sprite_batch(const int layerIndex, const int texIndex, const Vec2D
 
     const int slotIndex = batchTransData->slotsUsed;
 
-    const Vec2DInt texSize = get_assets().texSizes[texIndex];
+    const Vec2DInt texSize = get_assets().textures.sizes[texIndex];
 
     const float verts[] = {
         (0.0f - origin.x) * scale.x,

@@ -8,16 +8,32 @@ namespace zf3 {
 
 constexpr int gk_spriteQuadShaderProgVertCnt = 11;
 
-constexpr int gk_texLimit = 256;
+struct Textures {
+    int cnt;
+    GLID glIDs[gk_texLimit];
+    Vec2DInt sizes[gk_texLimit];
+};
+
+struct Fonts {
+    int cnt;
+    FontArrangementInfo arrangementInfos[gk_fontLimit];
+    GLID texGLIDs[gk_fontLimit];
+    Vec2DInt texSizes[gk_fontLimit];
+};
 
 struct Assets {
-    int texCnt;
-    GLID texGLIDs[gk_texLimit];
-    Vec2DInt texSizes[gk_texLimit];
+    Textures textures;
+    Fonts fonts;
 };
 
 bool load_assets();
 void unload_assets();
 const Assets& get_assets();
+
+bool load_textures(Textures& textures, FILE* const fs);
+void unload_textures(Textures& textures);
+
+bool load_fonts(Fonts& fonts, FILE* const fs);
+void unload_fonts(Fonts& fonts);
 
 }
