@@ -77,18 +77,22 @@ struct Matrix4x4 {
     }
 };
 
-struct Rect {
-    int x;
-    int y;
-    int width;
-    int height;
-};
-
 struct RectFloat {
     float x;
     float y;
     float width;
     float height;
+};
+
+struct Rect {
+    int x;
+    int y;
+    int width;
+    int height;
+
+    operator RectFloat() const {
+        return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)};
+    }
 };
 
 struct Range {
@@ -138,6 +142,10 @@ inline float calc_dist(const Vec2D a, const Vec2D b) {
 inline Vec2D calc_normal(const Vec2D vec) {
     const float mag = calc_mag(vec);
     return mag ? vec / mag : Vec2D {};
+}
+
+inline bool do_rects_intersect(const RectFloat a, const RectFloat b) {
+    return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 }

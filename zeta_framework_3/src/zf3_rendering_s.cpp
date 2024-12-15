@@ -60,21 +60,49 @@ static const char* ik_spriteQuadFragShaderSrc =
 "    o_fragColor = texColor * vec4(1.0f, 1.0f, 1.0f, v_alpha);\n"
 "}\n";
 
-static constexpr int ik_quadLimit = gk_spriteBatchSlotLimit;
+static constexpr int ik_renderLayerLimit = 32;
+static constexpr int ik_renderLayerSpriteBatchLimit = 256;
+static constexpr int ik_spriteBatchSlotLimit = 4096;
+static constexpr int ik_texUnitLimit = 16; // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
+
+static constexpr int ik_quadLimit = ik_spriteBatchSlotLimit;
 static constexpr int ik_quadIndicesLen = 6 * ik_quadLimit;
 
 static unsigned short i_quadIndices[ik_quadIndicesLen];
-static int i_texUnits[gk_texUnitLimit];
+static int i_texUnits[ik_texUnitLimit];
 
-RenderLayer i_layers[gk_renderLayerLimit];
-int i_layerCnt;
-int i_camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
+static constexpr int ik_spriteBatchSlotVertCnt = gk_spriteQuadShaderProgVertCnt * 4;
+static constexpr int ik_spriteBatchSlotVertsSize = sizeof(float) * ik_spriteBatchSlotVertCnt;
 
 Color g_bgColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 Camera g_camera = {
     .scale = 1.0f
 };
+
+struct SpriteBatchGLIDs {
+    GLID vertArrayGLID;
+    GLID vertBufGLID;
+    GLID elemBufGLID;
+};
+
+struct SpriteBatchTransData {
+    int slotsUsed;
+
+    int texUnitTexIDs[ik_texUnitLimit];
+    int texUnitsInUse;
+};
+
+struct RenderLayer {
+    SpriteBatchGLIDs spriteBatchGLIDs[ik_renderLayerSpriteBatchLimit];
+    SpriteBatchTransData spriteBatchTransDatas[ik_renderLayerSpriteBatchLimit]; // Cleared on emptying.
+    int spriteBatchesFilled; // Cleared on emptying.
+    int spriteBatchCnt;
+};
+
+RenderLayer i_layers[ik_renderLayerLimit];
+int i_layerCnt;
+int i_camLayerCnt; // Layers 0 through to this number are drawn with a camera view matrix.
 
 static void clean_render_layers() {
     for (int i = 0; i < i_layerCnt; ++i) {
@@ -108,12 +136,12 @@ static void add_sprite_batch(const int layerIndex) {
     // Generate vertex buffer.
     glGenBuffers(1, &glIDs->vertBufGLID);
     glBindBuffer(GL_ARRAY_BUFFER, glIDs->vertBufGLID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * gk_spriteQuadShaderProgVertCnt * 4 * gk_spriteBatchSlotLimit, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * gk_spriteQuadShaderProgVertCnt * 4 * ik_spriteBatchSlotLimit, nullptr, GL_DYNAMIC_DRAW);
 
     // Generate element buffer.
     glGenBuffers(1, &glIDs->elemBufGLID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glIDs->elemBufGLID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * 6 * gk_spriteBatchSlotLimit, i_quadIndices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * 6 * ik_spriteBatchSlotLimit, i_quadIndices, GL_STATIC_DRAW);
 
     // Set vertex attribute pointers.
     const int vertsStride = sizeof(float) * gk_spriteQuadShaderProgVertCnt;
@@ -152,7 +180,7 @@ static int add_tex_unit_to_sprite_batch(SpriteBatchTransData* const batchTransDa
         }
     }
 
-    if (batchTransData->texUnitsInUse == gk_texUnitLimit) {
+    if (batchTransData->texUnitsInUse == ik_texUnitLimit) {
         return -1;
     }
 
@@ -183,7 +211,7 @@ void init_rendering_internals() {
     }
 
     // Set texture units.
-    for (int i = 0; i < gk_texUnitLimit; ++i) {
+    for (int i = 0; i < ik_texUnitLimit; ++i) {
         i_texUnits[i] = i;
     }
 
@@ -204,7 +232,7 @@ void rendering_cleanup() {
 }
 
 void load_render_layers(const int layerCnt, const int camLayerCnt) {
-    assert(layerCnt > 0 && layerCnt <= gk_renderLayerLimit);
+    assert(layerCnt > 0 && layerCnt <= ik_renderLayerLimit);
     assert(camLayerCnt >= 0 && camLayerCnt <= layerCnt);
 
     clean_render_layers();
@@ -231,7 +259,7 @@ void render_all() {
         const Matrix4x4* const viewMat = i < i_camLayerCnt ? &camViewMat : &defaultViewMat; // TODO: Pull this check out of the loop.
         glUniformMatrix4fv(i_spriteQuadShaderProgViewUniLoc, 1, false, (const float*)viewMat->elems);
 
-        glUniform1iv(i_spriteQuadShaderProgTexturesUniLoc, gk_texUnitLimit, i_texUnits);
+        glUniform1iv(i_spriteQuadShaderProgTexturesUniLoc, ik_texUnitLimit, i_texUnits);
 
         const RenderLayer* const layer = &i_layers[i];
 
@@ -274,7 +302,7 @@ void write_to_sprite_batch(const int layerIndex, const int texIndex, const Vec2D
 
     int texUnit;
 
-    if (batchTransData->slotsUsed == gk_spriteBatchSlotLimit || (texUnit = add_tex_unit_to_sprite_batch(batchTransData, texIndex)) == -1) {
+    if (batchTransData->slotsUsed == ik_spriteBatchSlotLimit || (texUnit = add_tex_unit_to_sprite_batch(batchTransData, texIndex)) == -1) {
         ++layer->spriteBatchesFilled;
 
         if (layer->spriteBatchesFilled == layer->spriteBatchCnt) {
@@ -343,7 +371,7 @@ void write_to_sprite_batch(const int layerIndex, const int texIndex, const Vec2D
     const SpriteBatchGLIDs* const batchGLIDs = &layer->spriteBatchGLIDs[batchIndex];
     glBindVertexArray(batchGLIDs->vertArrayGLID);
     glBindBuffer(GL_ARRAY_BUFFER, batchGLIDs->vertBufGLID);
-    glBufferSubData(GL_ARRAY_BUFFER, slotIndex * sizeof(float) * gk_spriteBatchSlotVertCnt, sizeof(verts), verts);
+    glBufferSubData(GL_ARRAY_BUFFER, slotIndex * sizeof(float) * ik_spriteBatchSlotVertCnt, sizeof(verts), verts);
 
     ++batchTransData->slotsUsed;
 }

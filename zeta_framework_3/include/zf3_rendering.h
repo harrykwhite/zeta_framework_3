@@ -7,12 +7,6 @@
 
 namespace zf3 {
 
-constexpr int gk_renderLayerLimit = 32;
-constexpr int gk_renderLayerSpriteBatchLimit = 256;
-constexpr int gk_spriteBatchSlotLimit = 4096;
-constexpr int gk_spriteBatchSlotVertCnt = gk_spriteQuadShaderProgVertCnt * 4;
-constexpr int gk_texUnitLimit = 16; // This is the minimum guaranteed by OpenGL. For now, we don't consider any higher than this.
-
 struct Color {
     float r;
     float g;
@@ -21,26 +15,6 @@ struct Color {
 };
 
 extern Color g_bgColor;
-
-struct SpriteBatchGLIDs {
-    GLID vertArrayGLID;
-    GLID vertBufGLID;
-    GLID elemBufGLID;
-};
-
-struct SpriteBatchTransData {
-    int slotsUsed;
-
-    int texUnitTexIDs[gk_texUnitLimit];
-    int texUnitsInUse;
-};
-
-struct RenderLayer {
-    SpriteBatchGLIDs spriteBatchGLIDs[gk_renderLayerSpriteBatchLimit];
-    SpriteBatchTransData spriteBatchTransDatas[gk_renderLayerSpriteBatchLimit]; // Cleared on emptying.
-    int spriteBatchesFilled; // Cleared on emptying.
-    int spriteBatchCnt;
-};
 
 struct Camera {
     Vec2D pos;
@@ -60,14 +34,14 @@ GLID create_shader_from_src(const char* const src, const bool frag);
 GLID create_shader_prog_from_srcs(const char* const vertShaderSrc, const char* const fragShaderSrc);
 
 inline Vec2D camera_to_screen_pos(const Vec2D pos) {
-    return Vec2D {
+    return {
         .x = ((pos.x - g_camera.pos.x) * g_camera.scale) + (get_window_size().x / 2.0f),
         .y = ((pos.y - g_camera.pos.y) * g_camera.scale) + (get_window_size().y / 2.0f)
     };
 }
 
 inline Vec2D screen_to_camera_pos(const Vec2D pos) {
-    return Vec2D {
+    return {
         .x = ((pos.x - (get_window_size().x / 2.0f)) / g_camera.scale) + g_camera.pos.x,
         .y = ((pos.y - (get_window_size().y / 2.0f)) / g_camera.scale) + g_camera.pos.y
     };
