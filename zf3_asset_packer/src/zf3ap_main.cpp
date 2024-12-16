@@ -3,11 +3,11 @@
 const char* const ik_packingInstrsFileName = "packing_instrs.json";
 constexpr int ik_outputFilePathBufSize = 256;
 
-typedef struct {
+struct AssetPacker {
     char* instrsFileChars;
     cJSON* instrsCJ;
     FILE* outputFileStream;
-} AssetPacker;
+};
 
 static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, const int srcAssetFilePathBufStartLen) {
     // Append the packing instructions file name to the source asset file path buffer.
@@ -15,7 +15,7 @@ static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, cons
 
     if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
         zf3::log_error("The packing instructions file name is too long!");
-        return NULL;
+        return nullptr;
     }
 
     return zf3::get_file_contents(srcAssetFilePathBuf);
@@ -92,7 +92,7 @@ cJSON* getCJAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const ou
     fwrite(&assetCnt, sizeof(assetCnt), 1, outputFileStream);
 
     if (!assetsCJFound) {
-        return NULL;
+        return nullptr;
     }
 
     return assetsCJ;

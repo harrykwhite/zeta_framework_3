@@ -4,31 +4,29 @@
 #include <zf3c.h>
 
 namespace zf3 {
+    using GLID = GLuint;
 
-using GLID = GLuint;
+    template<int BITS>
+    struct Bitset {
+        Byte bytes[bits_to_bytes(BITS)];
+    };
 
-template<int BITS>
-struct Bitset {
-    Byte bytes[bits_to_bytes(BITS)];
-};
+    int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
+    bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
 
-int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
-bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
+    inline bool is_bit_active(const Byte* const bytes, const int bitIndex) {
+        return bytes[bitIndex / 8] & (1 << (bitIndex % 8));
+    }
 
-inline bool is_bit_active(const Byte* const bytes, const int bitIndex) {
-    return bytes[bitIndex / 8] & (1 << (bitIndex % 8));
-}
+    inline void activate_bit(Byte* const bytes, const int bitIndex) {
+        bytes[bitIndex / 8] |= 1 << (bitIndex % 8);
+    }
 
-inline void activate_bit(Byte* const bytes, const int bitIndex) {
-    bytes[bitIndex / 8] |= 1 << (bitIndex % 8);
-}
+    inline void deactivate_bit(Byte* const bytes, const int bitIndex) {
+        bytes[bitIndex / 8] &= ~(1 << (bitIndex % 8));
+    }
 
-inline void deactivate_bit(Byte* const bytes, const int bitIndex) {
-    bytes[bitIndex / 8] &= ~(1 << (bitIndex % 8));
-}
-
-inline void clear_bits(Byte* const bytes, const int bitCnt) {
-    memset(bytes, 0, bits_to_bytes(bitCnt));
-}
-
+    inline void clear_bits(Byte* const bytes, const int bitCnt) {
+        memset(bytes, 0, bits_to_bytes(bitCnt));
+    }
 }

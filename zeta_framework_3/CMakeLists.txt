@@ -7,14 +7,11 @@ find_package(OpenAL CONFIG REQUIRED)
 
 add_library(zeta_framework_3 STATIC
     src/zf3_game.cpp
-    src/zf3_sm_window.cpp
-    src/zf3_lm_window.cpp
-    src/zf3_sm_assets.cpp
-    src/zf3_lm_assets.cpp
-    src/zf3_sm_rendering.cpp
-    src/zf3_lm_rendering.cpp
-    src/zf3_sm_audio.cpp
-    src/zf3_lm_audio.cpp
+    src/zf3_window.cpp
+    src/zf3_assets.cpp
+    src/zf3_shader_progs.cpp
+    src/zf3_renderer.cpp
+    src/zf3_audio.cpp
     src/zf3_rand.cpp
     src/zf3_misc.cpp
     ${PARENT_DIR}/vendor/glad/src/glad.c

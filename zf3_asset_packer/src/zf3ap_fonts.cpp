@@ -38,7 +38,7 @@ static zf3::Vec2DInt calc_font_tex_size(const FT_Face ftFace) {
     };
 }
 
-static bool load_font_data(FontData& fd, FT_Library ftLib, const char* const filePath, const int ptSize) {
+static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* const filePath, const int ptSize) {
     memset(&fd, 0, sizeof(fd));
 
     FT_Face ftFace;
@@ -157,8 +157,8 @@ bool pack_fonts(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAsse
     const cJSON* cjFont = nullptr;
 
     cJSON_ArrayForEach(cjFont, cjFonts) {
-        cJSON* cjRelFilePath = cJSON_GetObjectItem(cjFont, "relFilePath");
-        cJSON* cjPtSize = cJSON_GetObjectItem(cjFont, "ptSize");
+        const cJSON* const cjRelFilePath = cJSON_GetObjectItem(cjFont, "relFilePath");
+        const cJSON* const cjPtSize = cJSON_GetObjectItem(cjFont, "ptSize");
 
         if (!cJSON_IsString(cjRelFilePath) || !cJSON_IsNumber(cjPtSize)) {
             zf3::log_error("Invalid font entry in packing instructions JSON file!");

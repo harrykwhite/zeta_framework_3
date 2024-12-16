@@ -1,107 +1,133 @@
 #include <zf3_game.h>
 
 namespace zf3 {
+    static constexpr int ik_targTicksPerSec = 60;
+    static constexpr double ik_targTickDur = 1.0 / ik_targTicksPerSec;
+    static constexpr double ik_tickDurLimitMult = 8.0;
 
-static constexpr int ik_targTicksPerSec = 60;
-static constexpr double ik_targTickDur = 1.0 / ik_targTicksPerSec;
-static constexpr double ik_tickDurLimitMult = 8.0;
+    struct Game {
+        Assets assets;
+        ShaderProgs shaderProgs;
+        Renderer renderer;
+        Window window;
+        InputManager inputManager;
 
-static void clean_game(const UserGameInfo& userInfo) {
-    log("Cleaning up...");
+        UserGameInfo userInfo;
+        UserGameFuncData userFuncData;
+    };
 
-    userInfo.cleanup();
-    rendering_cleanup();
-    unload_assets();
-    clean_window();
-    glfwTerminate();
-}
+    static bool init_game(Game* const game) {
+        log("Initialising...");
 
-static double calc_valid_frame_dur(const double frameTime, const double frameTimeLast) {
-    const double dur = frameTime - frameTimeLast;
-    return dur >= 0.0 && dur <= ik_targTickDur * ik_tickDurLimitMult ? dur : 0.0;
-}
-
-void run_game(const UserGameInfo& userInfo) {
-    //
-    // Initialisation
-    //
-    log("Initialising...");
-
-    if (!glfwInit()) {
-        clean_game(userInfo);
-        return;
-    }
-
-    if (!init_window(userInfo.initWindowWidth, userInfo.initWindowHeight, userInfo.windowTitle, userInfo.windowResizable, userInfo.hideCursor)) {
-        clean_game(userInfo);
-        return;
-    }
-
-    glfwSwapInterval(1); // Enables VSync.
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        clean_game(userInfo);
-        return;
-    }
-
-    if (!load_assets()) {
-        clean_game(userInfo);
-        return;
-    }
-
-    init_rendering_internals();
-
-    init_rng();
-
-    if (!userInfo.init()) {
-        clean_game(userInfo);
-        return;
-    }
-
-    show_window();
-
-    //
-    // Main Loop
-    //
-    double frameTime = glfwGetTime();
-    double frameDurAccum = 0.0;
-
-    log("Entering the main loop...");
-
-    while (!should_window_close()) {
-        const double frameTimeLast = frameTime;
-        frameTime = glfwGetTime();
-
-        const double frameDur = calc_valid_frame_dur(frameTime, frameTimeLast);
-        frameDurAccum += frameDur;
-
-        const int tickCnt = frameDurAccum / ik_targTickDur;
-
-        if (tickCnt > 0) {
-            int i = 0;
-
-            do {
-                empty_sprite_batches();
-
-                if (!userInfo.tick()) {
-                    clean_game(userInfo);
-                    return;
-                }
-
-                frameDurAccum -= ik_targTickDur;
-                ++i;
-            } while (i < tickCnt);
-
-            save_input_state();
+        if (!glfwInit()) {
+            return false;
         }
 
-        render_all();
-        swap_window_buffers();
+        if (!init_window(game->window, game->inputManager, game->userInfo.initWindowWidth, game->userInfo.initWindowHeight, game->userInfo.windowTitle, game->userInfo.windowResizable, game->userInfo.hideCursor)) {
+            return false;
+        }
 
-        glfwPollEvents();
+        glfwSwapInterval(1); // Enable VSync.
+
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+            return false;
+        }
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        if (!init_assets(game->assets)) {
+            return false;
+        }
+
+        game->shaderProgs = load_shader_progs();
+
+        init_rng();
+
+        game->userFuncData = {
+            .window = &game->window,
+            .inputManager = &game->inputManager,
+            .assets = &game->assets,
+            .renderer = &game->renderer
+        };
+
+        if (!game->userInfo.init(game->userFuncData)) {
+            return false;
+        }
+
+        glfwShowWindow(game->window.glfwWindow);
+
+        return true;
     }
 
-    clean_game(userInfo);
-}
+    static double calc_valid_frame_dur(const double frameTime, const double frameTimeLast) {
+        const double dur = frameTime - frameTimeLast;
+        return dur >= 0.0 && dur <= ik_targTickDur * ik_tickDurLimitMult ? dur : 0.0;
+    }
 
+    static void run_game_loop(Game* const game) {
+        double frameTime = glfwGetTime();
+        double frameDurAccum = 0.0;
+
+        log("Entering the game loop...");
+
+        while (!glfwWindowShouldClose(game->window.glfwWindow)) {
+            const double frameTimeLast = frameTime;
+            frameTime = glfwGetTime();
+
+            const double frameDur = calc_valid_frame_dur(frameTime, frameTimeLast);
+            frameDurAccum += frameDur;
+
+            const int tickCnt = frameDurAccum / ik_targTickDur;
+
+            if (tickCnt > 0) {
+                int i = 0;
+
+                do {
+                    empty_sprite_batches(game->renderer);
+
+                    if (!game->userInfo.tick(game->userFuncData)) {
+                        return;
+                    }
+
+                    frameDurAccum -= ik_targTickDur;
+                    ++i;
+                } while (i < tickCnt);
+
+                save_input_state(game->inputManager);
+            }
+
+            render_all(game->renderer, game->shaderProgs, game->window, game->assets);
+            glfwSwapBuffers(game->window.glfwWindow);
+
+            glfwPollEvents();
+        }
+    }
+
+    void run_game(const UserGameInfo& userInfo) {
+        const auto game = static_cast<Game*>(calloc(1, sizeof(Game)));
+
+        if (!game) {
+            log_error("Failed to allocate game memory!");
+            return;
+        }
+
+        game->userInfo = userInfo;
+
+        if (init_game(game)) {
+            run_game_loop(game);
+        }
+
+        log("Cleaning up...");
+
+        if (game) {
+            clean_renderer(game->renderer);
+            clean_shader_progs(game->shaderProgs);
+            clean_assets(game->assets);
+            clean_window(game->window);
+            free(game);
+        }
+
+        glfwTerminate();
+    }
 }
