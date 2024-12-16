@@ -70,8 +70,7 @@ namespace zf3 {
             case GLFW_KEY_LEFT_ALT: return KEY_LEFT_ALT;
 
             default:
-                assert(false);
-                return INVALID_KEY_CODE;
+                return UNDEFINED_KEY_CODE;
         }
     }
 
@@ -82,8 +81,7 @@ namespace zf3 {
             case GLFW_MOUSE_BUTTON_MIDDLE: return MOUSE_BUTTON_MID;
 
             default:
-                assert(false);
-                return INVALID_MOUSE_BUTTON_CODE;
+                return UNDEFINED_MOUSE_BUTTON_CODE;
         }
     }
 
@@ -94,26 +92,32 @@ namespace zf3 {
     }
 
     static void glfw_key_callback(GLFWwindow* const window, const int key, const int scancode, const int action, const int mods) {
-        const GLFWWindowCallbackData* const cbData = static_cast<const GLFWWindowCallbackData*>(glfwGetWindowUserPointer(window));
+        const KeyCode keyCode = glfw_to_zf3_key_code(key);
 
-        const KeysDownBitset keyBit = static_cast<KeysDownBitset>(1) << glfw_to_zf3_key_code(key);
+        if (keyCode != UNDEFINED_KEY_CODE) {
+            const GLFWWindowCallbackData* const cbData = static_cast<const GLFWWindowCallbackData*>(glfwGetWindowUserPointer(window));
+            const KeysDownBitset keyBit = static_cast<KeysDownBitset>(1) << glfw_to_zf3_key_code(key);
 
-        if (action == GLFW_PRESS) {
-            cbData->inputState->keysDown |= keyBit;
-        } else if (action == GLFW_RELEASE) {
-            cbData->inputState->keysDown &= ~keyBit;
+            if (action == GLFW_PRESS) {
+                cbData->inputState->keysDown |= keyBit;
+            } else if (action == GLFW_RELEASE) {
+                cbData->inputState->keysDown &= ~keyBit;
+            }
         }
     }
 
     static void glfw_mouse_button_callback(GLFWwindow* const window, const int button, const int action, const int mods) {
-        const GLFWWindowCallbackData* const cbData = static_cast<const GLFWWindowCallbackData*>(glfwGetWindowUserPointer(window));
+        const MouseButtonCode buttonCode = glfw_to_zf3_mouse_button_code(button);
 
-        const MouseButtonsDownBitset buttonBit = static_cast<MouseButtonsDownBitset>(1) << glfw_to_zf3_mouse_button_code(button);
+        if (buttonCode != UNDEFINED_MOUSE_BUTTON_CODE) {
+            const GLFWWindowCallbackData* const cbData = static_cast<const GLFWWindowCallbackData*>(glfwGetWindowUserPointer(window));
+            const MouseButtonsDownBitset buttonBit = static_cast<MouseButtonsDownBitset>(1) << glfw_to_zf3_mouse_button_code(button);
 
-        if (action == GLFW_PRESS) {
-            cbData->inputState->mouseButtonsDown |= buttonBit;
-        } else if (action == GLFW_RELEASE) {
-            cbData->inputState->mouseButtonsDown &= ~buttonBit;
+            if (action == GLFW_PRESS) {
+                cbData->inputState->mouseButtonsDown |= buttonBit;
+            } else if (action == GLFW_RELEASE) {
+                cbData->inputState->mouseButtonsDown &= ~buttonBit;
+            }
         }
     }
 

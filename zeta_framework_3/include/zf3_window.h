@@ -11,7 +11,7 @@ namespace zf3 {
     using MouseButtonsDownBitset = unsigned char;
 
     enum KeyCode {
-        INVALID_KEY_CODE = -1,
+        UNDEFINED_KEY_CODE = -1,
 
         KEY_SPACE,
 
@@ -83,7 +83,7 @@ namespace zf3 {
     };
 
     enum MouseButtonCode {
-        INVALID_MOUSE_BUTTON_CODE = -1,
+        UNDEFINED_MOUSE_BUTTON_CODE = -1,
 
         MOUSE_BUTTON_LEFT,
         MOUSE_BUTTON_RIGHT,
