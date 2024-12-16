@@ -76,6 +76,144 @@ namespace zf3 {
         }
     };
 
+    union Vec3D {
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+
+        Vec3D operator+(const Vec3D& other) const {
+            return {x + other.x, y + other.y, z + other.z};
+        }
+
+        Vec3D operator-(const Vec3D& other) const {
+            return {x - other.x, y - other.y, z - other.z};
+        }
+
+        Vec3D operator*(const float scalar) const {
+            return {x * scalar, y * scalar, z * scalar};
+        }
+
+        Vec3D operator/(const float scalar) const {
+            return {x / scalar, y / scalar, z / scalar};
+        }
+
+        Vec3D& operator+=(const Vec3D& other) {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+            return *this;
+        }
+
+        Vec3D& operator-=(const Vec3D& other) {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+            return *this;
+        }
+
+        Vec3D& operator*=(const float scalar) {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
+            return *this;
+        }
+
+        Vec3D& operator/=(const float scalar) {
+            x /= scalar;
+            y /= scalar;
+            z /= scalar;
+            return *this;
+        }
+
+        bool operator==(const Vec3D& other) const {
+            return x == other.x && y == other.y && z == other.z;
+        }
+
+        bool operator!=(const Vec3D& other) const {
+            return !(*this == other);
+        }
+    };
+
+    union Vec4D {
+        struct {
+            float x;
+            float y;
+            float z;
+            float w;
+        };
+
+        struct {
+            float r;
+            float g;
+            float b;
+            float a;
+        };
+
+        Vec4D operator+(const Vec4D& other) const {
+            return {x + other.x, y + other.y, z + other.z, w + other.w};
+        }
+
+        Vec4D operator-(const Vec4D& other) const {
+            return {x - other.x, y - other.y, z - other.z, w - other.w};
+        }
+
+        Vec4D operator*(const float scalar) const {
+            return {x * scalar, y * scalar, z * scalar, w * scalar};
+        }
+
+        Vec4D operator/(const float scalar) const {
+            return {x / scalar, y / scalar, z / scalar, w / scalar};
+        }
+
+        Vec4D& operator+=(const Vec4D& other) {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+            w += other.w;
+            return *this;
+        }
+
+        Vec4D& operator-=(const Vec4D& other) {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+            w -= other.w;
+            return *this;
+        }
+
+        Vec4D& operator*=(const float scalar) {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
+            w *= scalar;
+            return *this;
+        }
+
+        Vec4D& operator/=(const float scalar) {
+            x /= scalar;
+            y /= scalar;
+            z /= scalar;
+            w /= scalar;
+            return *this;
+        }
+
+        bool operator==(const Vec4D& other) const {
+            return x == other.x && y == other.y && z == other.z && w == other.w;
+        }
+
+        bool operator!=(const Vec4D& other) const {
+            return !(*this == other);
+        }
+    };
+
     struct Matrix4x4 {
         float elems[4][4];
 

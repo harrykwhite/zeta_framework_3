@@ -127,7 +127,7 @@ namespace zf3 {
     }
 
     void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets) {
-        glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, renderer->bgColor.a);
+        glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, window->size.x, window->size.y, 0.0f, -1.0f, 1.0f);

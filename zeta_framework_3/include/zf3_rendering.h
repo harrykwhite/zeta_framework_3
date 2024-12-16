@@ -58,13 +58,6 @@ namespace zf3 {
         FONT_VER_ALIGN_BOTTOM
     };
 
-    struct Color {
-        float r;
-        float g;
-        float b;
-        float a;
-    };
-
     struct QuadBuf {
         GLID vertArrayGLID;
         GLID vertBufGLID;
@@ -81,7 +74,7 @@ namespace zf3 {
         int fontIndex;
         Vec2D pos;
         float rot;
-        Color blend;
+        Vec4D blend;
     };
 
     struct CharBatch {
@@ -114,7 +107,7 @@ namespace zf3 {
         int layerCnt;
         int camLayerCnt;
 
-        Color bgColor;
+        Vec3D bgColor;
         Camera cam;
     };
 
