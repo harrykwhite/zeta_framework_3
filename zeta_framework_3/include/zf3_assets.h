@@ -23,6 +23,6 @@ namespace zf3 {
         Fonts fonts;
     };
 
-    bool init_assets(Assets& assets);
-    void clean_assets(Assets& assets);
+    bool init_assets(Assets* const assets);
+    void clean_assets(Assets* const assets);
 }

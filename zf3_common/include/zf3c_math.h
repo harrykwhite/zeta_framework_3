@@ -66,6 +66,14 @@ namespace zf3 {
         operator Vec2D() const {
             return {static_cast<float>(x), static_cast<float>(y)};
         }
+
+        Vec2D operator*(const float scalar) const {
+            return {x * scalar, y * scalar};
+        }
+
+        Vec2D operator/(const float scalar) const {
+            return {x / scalar, y / scalar};
+        }
     };
 
     struct Matrix4x4 {

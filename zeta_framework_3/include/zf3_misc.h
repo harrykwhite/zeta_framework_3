@@ -6,9 +6,9 @@
 namespace zf3 {
     using GLID = GLuint;
 
-    template<int BITS>
+    template<int BIT_CNT>
     struct Bitset {
-        Byte bytes[bits_to_bytes(BITS)];
+        Byte bytes[bits_to_bytes(BIT_CNT)];
     };
 
     int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);

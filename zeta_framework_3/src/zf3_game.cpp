@@ -23,7 +23,7 @@ namespace zf3 {
             return false;
         }
 
-        if (!init_window(game->window, game->inputManager, game->userInfo.initWindowWidth, game->userInfo.initWindowHeight, game->userInfo.windowTitle, game->userInfo.windowResizable, game->userInfo.hideCursor)) {
+        if (!init_window(&game->window, &game->inputManager, game->userInfo.initWindowWidth, game->userInfo.initWindowHeight, game->userInfo.windowTitle, game->userInfo.windowResizable, game->userInfo.hideCursor)) {
             return false;
         }
 
@@ -36,7 +36,7 @@ namespace zf3 {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        if (!init_assets(game->assets)) {
+        if (!init_assets(&game->assets)) {
             return false;
         }
 
@@ -51,7 +51,7 @@ namespace zf3 {
             .renderer = &game->renderer
         };
 
-        if (!game->userInfo.init(game->userFuncData)) {
+        if (!game->userInfo.init(&game->userFuncData)) {
             return false;
         }
 
@@ -84,9 +84,9 @@ namespace zf3 {
                 int i = 0;
 
                 do {
-                    empty_sprite_batches(game->renderer);
+                    empty_sprite_batches(&game->renderer);
 
-                    if (!game->userInfo.tick(game->userFuncData)) {
+                    if (!game->userInfo.tick(&game->userFuncData)) {
                         return;
                     }
 
@@ -94,10 +94,10 @@ namespace zf3 {
                     ++i;
                 } while (i < tickCnt);
 
-                save_input_state(game->inputManager);
+                save_input_state(&game->inputManager);
             }
 
-            render_all(game->renderer, game->shaderProgs, game->window, game->assets);
+            render_all(&game->renderer, &game->shaderProgs, &game->window, &game->assets);
             glfwSwapBuffers(game->window.glfwWindow);
 
             glfwPollEvents();
@@ -121,10 +121,10 @@ namespace zf3 {
         log("Cleaning up...");
 
         if (game) {
-            clean_renderer(game->renderer);
-            clean_shader_progs(game->shaderProgs);
-            clean_assets(game->assets);
-            clean_window(game->window);
+            clean_renderer(&game->renderer);
+            clean_shader_progs(&game->shaderProgs);
+            clean_assets(&game->assets);
+            clean_window(&game->window);
             free(game);
         }
 

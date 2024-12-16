@@ -13,8 +13,8 @@ namespace zf3 {
         Renderer* renderer;
     };
 
-    using UserGameInit = bool (*)(const UserGameFuncData& data);
-    using UserGameTick = bool (*)(const UserGameFuncData& data);
+    using UserGameInit = bool (*)(const UserGameFuncData* const data);
+    using UserGameTick = bool (*)(const UserGameFuncData* const data);
 
     struct UserGameInfo {
         UserGameInit init;
