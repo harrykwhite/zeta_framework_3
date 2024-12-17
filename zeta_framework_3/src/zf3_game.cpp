@@ -6,11 +6,12 @@ namespace zf3 {
     static constexpr double ik_tickDurLimitMult = 8.0;
 
     struct Game {
+        Window window;
+        InputManager inputManager;
         Assets assets;
         ShaderProgs shaderProgs;
         Renderer renderer;
-        Window window;
-        InputManager inputManager;
+        SoundSrcManager sndSrcManager;
 
         UserGameInfo userInfo;
         UserGameFuncData userFuncData;
@@ -36,6 +37,10 @@ namespace zf3 {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        if (!init_audio_system()) {
+            return false;
+        }
+
         if (!init_assets(&game->assets)) {
             return false;
         }
@@ -48,7 +53,8 @@ namespace zf3 {
             .window = &game->window,
             .inputManager = &game->inputManager,
             .assets = &game->assets,
-            .renderer = &game->renderer
+            .renderer = &game->renderer,
+            .sndSrcManager = &game->sndSrcManager
         };
 
         if (!game->userInfo.init(&game->userFuncData)) {
@@ -121,6 +127,7 @@ namespace zf3 {
         log("Cleaning up...");
 
         if (game) {
+            clean_sound_srcs(&game->sndSrcManager);
             clean_renderer(&game->renderer);
             clean_shader_progs(&game->shaderProgs);
             clean_assets(&game->assets);
@@ -128,6 +135,7 @@ namespace zf3 {
             free(game);
         }
 
+        clean_audio_system();
         glfwTerminate();
     }
 }

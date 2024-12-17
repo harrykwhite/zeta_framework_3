@@ -3,6 +3,7 @@
 #include <zf3_window.h>
 #include <zf3_assets.h>
 #include <zf3_rendering.h>
+#include <zf3_audio.h>
 #include <zf3_rand.h>
 
 namespace zf3 {
@@ -11,6 +12,7 @@ namespace zf3 {
         const InputManager* inputManager;
         const Assets* assets;
         Renderer* renderer;
+        SoundSrcManager* sndSrcManager;
     };
 
     using UserGameInit = bool (*)(const UserGameFuncData* const data);

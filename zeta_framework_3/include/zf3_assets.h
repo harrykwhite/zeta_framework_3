@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assert.h>
+#include <AL/alext.h>
 #include <zf3c.h>
 #include <zf3_misc.h>
 

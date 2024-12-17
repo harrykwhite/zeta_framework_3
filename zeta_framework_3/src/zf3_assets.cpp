@@ -80,7 +80,7 @@ namespace zf3 {
                 const int sampleCnt = audioInfo.sampleCntPerChannel * audioInfo.channelCnt;
                 fread(samples, sizeof(*samples), sampleCnt, fs);
 
-                const ALenum format = audioInfo.channelCnt == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+                const ALenum format = audioInfo.channelCnt == 1 ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_STEREO_FLOAT32;
                 alBufferData(snds->bufALIDs[i], format, samples, sizeof(*samples) * sampleCnt, audioInfo.sampleRate);
             }
         }
