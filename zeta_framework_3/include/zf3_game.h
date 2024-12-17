@@ -8,12 +8,11 @@
 
 namespace zf3 {
     struct UserGameFuncData {
-        const Window* window;
-        const InputManager* inputManager;
-        const Assets* assets;
-        Renderer* renderer;
-        SoundSrcManager* sndSrcManager;
-        MusicSrcManager* musicSrcManager;
+        const Window& window;
+        const InputManager& inputManager;
+        Renderer& renderer;
+        SoundSrcManager& sndSrcManager;
+        MusicSrcManager& musicSrcManager;
     };
 
     using UserGameInit = bool (*)(const UserGameFuncData& data);
@@ -30,5 +29,5 @@ namespace zf3 {
         bool hideCursor;
     };
 
-    void run_game(const UserGameInfo& userInfo);
+    void start_game(const UserGameInfo& userInfo);
 }

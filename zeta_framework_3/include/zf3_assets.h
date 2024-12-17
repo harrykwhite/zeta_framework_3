@@ -39,5 +39,5 @@ namespace zf3 {
 
     bool init_assets();
     void clean_assets();
-    const Assets* get_assets();
+    const Assets& get_assets();
 }

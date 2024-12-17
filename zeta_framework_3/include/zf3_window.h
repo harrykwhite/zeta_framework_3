@@ -115,58 +115,58 @@ namespace zf3 {
         Vec2DInt size;
     };
 
-    bool init_window(Window* const window, InputManager* const inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);
-    void clean_window(Window* const window);
+    bool init_window(Window& window, InputManager& inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);
+    void clean_window(Window& window);
 
-    inline void save_input_state(InputManager* const inputManager) {
-        inputManager->inputStateSaved = inputManager->inputState;
+    inline void save_input_state(InputManager& inputManager) {
+        inputManager.inputStateSaved = inputManager.inputState;
     }
 
-    inline bool is_key_down(const KeyCode keyCode, const InputState* const inputState) {
-        return inputState->keysDown & (static_cast<KeysDownBitset>(1) << keyCode);
+    inline bool is_key_down(const KeyCode keyCode, const InputState& inputState) {
+        return inputState.keysDown & (static_cast<KeysDownBitset>(1) << keyCode);
     }
 
-    inline bool is_key_down(const KeyCode keyCode, const InputManager* const inputManager) {
-        return is_key_down(keyCode, &inputManager->inputState);
+    inline bool is_key_down(const KeyCode keyCode, const InputManager& inputManager) {
+        return is_key_down(keyCode, inputManager.inputState);
     }
 
-    inline bool is_key_pressed(const KeyCode keyCode, const InputState* const inputState, const InputState* const inputStateLast) {
+    inline bool is_key_pressed(const KeyCode keyCode, const InputState& inputState, const InputState& inputStateLast) {
         return is_key_down(keyCode, inputState) && !is_key_down(keyCode, inputStateLast);
     }
 
-    inline bool is_key_pressed(const KeyCode keyCode, const InputManager* const inputManager) {
-        return is_key_pressed(keyCode, &inputManager->inputState, &inputManager->inputStateSaved);
+    inline bool is_key_pressed(const KeyCode keyCode, const InputManager& inputManager) {
+        return is_key_pressed(keyCode, inputManager.inputState, inputManager.inputStateSaved);
     }
 
-    inline bool is_key_released(const KeyCode keyCode, const InputState* const inputState, const InputState* const inputStateLast) {
+    inline bool is_key_released(const KeyCode keyCode, const InputState& inputState, const InputState& inputStateLast) {
         return !is_key_down(keyCode, inputState) && is_key_down(keyCode, inputStateLast);
     }
 
-    inline bool is_key_released(const KeyCode keyCode, const InputManager* const inputManager) {
-        return is_key_released(keyCode, &inputManager->inputState, &inputManager->inputStateSaved);
+    inline bool is_key_released(const KeyCode keyCode, const InputManager& inputManager) {
+        return is_key_released(keyCode, inputManager.inputState, inputManager.inputStateSaved);
     }
 
-    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputState* const inputState) {
-        return inputState->mouseButtonsDown & (static_cast<MouseButtonsDownBitset>(1) << buttonCode);
+    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputState& inputState) {
+        return inputState.mouseButtonsDown & (static_cast<MouseButtonsDownBitset>(1) << buttonCode);
     }
 
-    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputManager* const inputManager) {
-        return is_mouse_button_down(buttonCode, &inputManager->inputState);
+    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputManager& inputManager) {
+        return is_mouse_button_down(buttonCode, inputManager.inputState);
     }
 
-    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputState* const inputState, const InputState* const inputStateLast) {
+    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputState& inputState, const InputState& inputStateLast) {
         return is_mouse_button_down(buttonCode, inputState) && !is_mouse_button_down(buttonCode, inputStateLast);
     }
 
-    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputManager* const inputManager) {
-        return is_mouse_button_pressed(buttonCode, &inputManager->inputState, &inputManager->inputStateSaved);
+    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputManager& inputManager) {
+        return is_mouse_button_pressed(buttonCode, inputManager.inputState, inputManager.inputStateSaved);
     }
 
-    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputState* const inputState, const InputState* const inputStateLast) {
+    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputState& inputState, const InputState& inputStateLast) {
         return !is_mouse_button_down(buttonCode, inputState) && is_mouse_button_down(buttonCode, inputStateLast);
     }
 
-    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputManager* const inputManager) {
-        return is_mouse_button_released(buttonCode, &inputManager->inputState, &inputManager->inputStateSaved);
+    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputManager& inputManager) {
+        return is_mouse_button_released(buttonCode, inputManager.inputState, inputManager.inputStateSaved);
     }
 }

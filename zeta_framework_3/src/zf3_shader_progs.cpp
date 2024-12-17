@@ -181,9 +181,9 @@ namespace zf3 {
         };
     }
 
-    void clean_shader_progs(ShaderProgs* const progs) {
-        glDeleteProgram(progs->charQuad.glID);
-        glDeleteProgram(progs->spriteQuad.glID);
-        memset(progs, 0, sizeof(ShaderProgs));
+    void clean_shader_progs(ShaderProgs& progs) {
+        glDeleteProgram(progs.charQuad.glID);
+        glDeleteProgram(progs.spriteQuad.glID);
+        zero_out(progs);
     }
 }

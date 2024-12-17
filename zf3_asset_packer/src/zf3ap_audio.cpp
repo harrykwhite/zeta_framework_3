@@ -130,7 +130,7 @@ static bool pack_music(FILE* const outputFS, char* const srcAssetFilePathBuf, zf
 }
 
 bool pack_audio(FILE* const outputFS, const cJSON* const instrsCJ, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen, char* const errorMsgBuf) {
-    const auto samples = static_cast<zf3::AudioSample*>(malloc(sizeof(zf3::AudioSample) * zf3::gk_audioSamplesPerChunk));
+    const auto samples = zf3::alloc<zf3::AudioSample>(zf3::gk_audioSamplesPerChunk);
 
     if (!samples) {
         return false;

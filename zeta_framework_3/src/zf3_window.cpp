@@ -126,13 +126,11 @@ namespace zf3 {
         cbData->inputState->mousePos = {static_cast<float>(x), static_cast<float>(y)};
     }
 
-    bool init_window(Window* const window, InputManager* const inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor) {
-        assert(window);
-        assert(inputManager);
+    bool init_window(Window& window, InputManager& inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor) {
         assert(width > 0 && height > 0);
         assert(title && title[0]);
 
-        *window = {};
+        zero_out(window);
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -140,38 +138,38 @@ namespace zf3 {
         glfwWindowHint(GLFW_RESIZABLE, resizable);
         glfwWindowHint(GLFW_VISIBLE, false);
 
-        window->glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        window.glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
-        if (!window->glfwWindow) {
+        if (!window.glfwWindow) {
             return false;
         }
 
-        glfwMakeContextCurrent(window->glfwWindow);
+        glfwMakeContextCurrent(window.glfwWindow);
 
-        window->glfwWindowCallbackData = {
-            .windowSize = &window->size,
-            .inputState = &inputManager->inputState
+        window.glfwWindowCallbackData = {
+            .windowSize = &window.size,
+            .inputState = &inputManager.inputState
         };
 
-        glfwSetWindowUserPointer(window->glfwWindow, &window->glfwWindowCallbackData);
+        glfwSetWindowUserPointer(window.glfwWindow, &window.glfwWindowCallbackData);
 
-        glfwSetWindowSizeCallback(window->glfwWindow, glfw_window_size_callback);
-        glfwSetKeyCallback(window->glfwWindow, glfw_key_callback);
-        glfwSetMouseButtonCallback(window->glfwWindow, glfw_mouse_button_callback);
-        glfwSetCursorPosCallback(window->glfwWindow, glfw_cursor_pos_callback);
+        glfwSetWindowSizeCallback(window.glfwWindow, glfw_window_size_callback);
+        glfwSetKeyCallback(window.glfwWindow, glfw_key_callback);
+        glfwSetMouseButtonCallback(window.glfwWindow, glfw_mouse_button_callback);
+        glfwSetCursorPosCallback(window.glfwWindow, glfw_cursor_pos_callback);
 
-        glfwSetInputMode(window->glfwWindow, GLFW_CURSOR, hideCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(window.glfwWindow, GLFW_CURSOR, hideCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
-        glfwGetWindowSize(window->glfwWindow, &window->size.x, &window->size.y);
+        glfwGetWindowSize(window.glfwWindow, &window.size.x, &window.size.y);
 
         return true;
     }
 
-    void clean_window(Window* const window) {
-        if (window->glfwWindow) {
-            glfwDestroyWindow(window->glfwWindow);
+    void clean_window(Window& window) {
+        if (window.glfwWindow) {
+            glfwDestroyWindow(window.glfwWindow);
         }
 
-        memset(window, 0, sizeof(Window));
+        zero_out(window);
     }
 }

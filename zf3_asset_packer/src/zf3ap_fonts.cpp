@@ -39,7 +39,7 @@ static zf3::Vec2DInt calc_font_tex_size(const FT_Face ftFace) {
 }
 
 static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* const filePath, const int ptSize) {
-    memset(&fd, 0, sizeof(fd));
+    zf3::zero_out(fd);
 
     FT_Face ftFace;
 
@@ -128,7 +128,7 @@ bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const s
         return false;
     }
 
-    const auto fontData = static_cast<FontData*>(malloc(sizeof(FontData))); // Reused for each font.
+    const auto fontData = zf3::alloc<FontData>(); // Reused for each font.
 
     if (!fontData) {
         FT_Done_FreeType(ftLib);

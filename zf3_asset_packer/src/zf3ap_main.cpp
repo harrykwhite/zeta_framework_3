@@ -36,13 +36,13 @@ static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, char
     return zf3::get_file_contents(srcAssetFilePathBuf);
 }
 
-static bool run_asset_packer(AssetPacker* const packer, char* const errorMsgBuf, const char* const srcDir, const char* const outputDir) {
-    memset(packer, 0, sizeof(*packer));
+static bool run_asset_packer(AssetPacker& packer, char* const errorMsgBuf, const char* const srcDir, const char* const outputDir) {
+    zf3::zero_out(packer);
 
     // Open the output file.
-    packer->outputFS = open_output_file(outputDir, errorMsgBuf);
+    packer.outputFS = open_output_file(outputDir, errorMsgBuf);
 
-    if (!packer->outputFS) {
+    if (!packer.outputFS) {
         return false;
     }
 
@@ -56,44 +56,44 @@ static bool run_asset_packer(AssetPacker* const packer, char* const errorMsgBuf,
     }
 
     // Get the contents of the packing instructions JSON file.
-    packer->instrsFileChars = get_packing_instrs_file_chars(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathStartLen);
+    packer.instrsFileChars = get_packing_instrs_file_chars(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathStartLen);
 
-    if (!packer->instrsFileChars) {
+    if (!packer.instrsFileChars) {
         return false;
     }
 
     // Parse the packing instructions file contents.
-    packer->instrsCJ = cJSON_Parse(packer->instrsFileChars);
+    packer.instrsCJ = cJSON_Parse(packer.instrsFileChars);
 
-    if (!packer->instrsCJ) {
+    if (!packer.instrsCJ) {
         zf3::log_error("cJSON failed to parse the packing instructions file contents!");
         return false;
     }
 
     // Perform packing for each asset type using the packing instructions file.
-    if (!pack_textures(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
-        || !pack_fonts(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
-        || !pack_audio(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)) {
+    if (!pack_textures(packer.outputFS, packer.instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
+        || !pack_fonts(packer.outputFS, packer.instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
+        || !pack_audio(packer.outputFS, packer.instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)) {
         return false;
     }
 
     return true;
 }
 
-static void clean_asset_packer(AssetPacker* const packer, const bool packingSuccessful) {
-    cJSON_Delete(packer->instrsCJ);
+static void clean_asset_packer(AssetPacker& packer, const bool packingSuccessful) {
+    cJSON_Delete(packer.instrsCJ);
 
-    free(packer->instrsFileChars);
+    free(packer.instrsFileChars);
 
-    if (packer->outputFS) {
-        fclose(packer->outputFS);
+    if (packer.outputFS) {
+        fclose(packer.outputFS);
 
         if (!packingSuccessful) {
             remove(zf3::gk_assetsFileName);
         }
     }
 
-    memset(packer, 0, sizeof(*packer));
+    zf3::zero_out(packer);
 }
 
 int main(const int argCnt, const char* const* args) {
@@ -108,8 +108,8 @@ int main(const int argCnt, const char* const* args) {
     char errorMsgBuf[gk_errorMsgBufSize] = {};
 
     AssetPacker packer;
-    const bool packingSuccessful = run_asset_packer(&packer, errorMsgBuf, srcDir, outputDir);
-    clean_asset_packer(&packer, packingSuccessful);
+    const bool packingSuccessful = run_asset_packer(packer, errorMsgBuf, srcDir, outputDir);
+    clean_asset_packer(packer, packingSuccessful);
 
     if (!packingSuccessful) {
         zf3::log_error(errorMsgBuf);

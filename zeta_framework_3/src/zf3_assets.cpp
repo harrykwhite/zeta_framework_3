@@ -5,7 +5,7 @@ namespace zf3 {
 
     static bool load_textures(Textures* const textures, FILE* const fs) {
         const int pxDataBufSize = gk_texChannelCnt * gk_texSizeLimit.x * gk_texSizeLimit.y;
-        const auto pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each texture.
+        const auto pxDataBuf = alloc<unsigned char>(pxDataBufSize); // For temporarily storing the pixel data of each texture.
 
         if (!pxDataBuf) {
             log_error("Failed to allocate memory for a texture pixel data buffer!");
@@ -36,7 +36,7 @@ namespace zf3 {
 
     static bool load_fonts(Fonts* const fonts, FILE* const fs) {
         const int pxDataBufSize = gk_texChannelCnt * gk_texSizeLimit.x * gk_texSizeLimit.y;
-        const auto pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each font texture.
+        const auto pxDataBuf = alloc<unsigned char>(pxDataBufSize); // For temporarily storing the pixel data of each font texture.
 
         if (!pxDataBuf) {
             log_error("Failed to allocate memory for a font texture pixel data buffer!");
@@ -66,7 +66,7 @@ namespace zf3 {
     }
 
     static bool load_sounds(Sounds* const snds, FILE* const fs) {
-        const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_audioSamplesPerChunk)); // TEMP
+        const auto samples = alloc_zeroed<AudioSample>(gk_audioSamplesPerChunk); // TODO: Set a proper limit on sample count for sounds.
 
         if (!samples) {
             log_error("Failed to allocate memory for a sound sample buffer!");
@@ -113,7 +113,7 @@ namespace zf3 {
     bool init_assets() {
         assert(!i_assets);
 
-        i_assets = static_cast<Assets*>(malloc(sizeof(Assets)));
+        i_assets = alloc_zeroed<Assets>();
 
         if (!i_assets) {
             log_error("Failed to allocate memory for assets!");
@@ -158,7 +158,7 @@ namespace zf3 {
         i_assets = nullptr;
     }
 
-    const Assets* get_assets() {
-        return i_assets;
+    const Assets& get_assets() {
+        return *i_assets;
     }
 }

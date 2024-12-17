@@ -16,7 +16,7 @@ namespace zf3 {
 
         // Allocate memory to store the file contents.
         const int contentsSize = fileSize + 1; // Accounts for '\0'.
-        const auto contents = static_cast<char*>(malloc(contentsSize));
+        const auto contents = alloc<char>(contentsSize);
 
         if (!contents) {
             fclose(fs);
