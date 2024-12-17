@@ -126,6 +126,15 @@ namespace zf3 {
         memset(renderer, 0, sizeof(*renderer));
     }
 
+    void reset_renderer(Renderer* const renderer, const int layerCnt, const int camLayerCnt, const Vec3D bgColor, const Vec2D camPos, const float camScale) {
+        clean_renderer(renderer);
+        renderer->layerCnt = layerCnt;
+        renderer->camLayerCnt = camLayerCnt;
+        renderer->bgColor = bgColor;
+        renderer->cam.pos = camPos;
+        renderer->cam.scale = camScale;
+    }
+
     void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets) {
         glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -133,6 +142,17 @@ namespace zf3 {
         const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, window->size.x, window->size.y, 0.0f, -1.0f, 1.0f);
         const Matrix4x4 camViewMat = create_cam_view_matrix(&renderer->cam, window);
         const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
+
+        static int lk_texUnits[gk_texUnitLimit];
+        static bool lk_texUnitsInitialized = false;
+
+        if (!lk_texUnitsInitialized) {
+            for (int i = 0; i < gk_texUnitLimit; ++i) {
+                lk_texUnits[i] = i;
+            }
+
+            lk_texUnitsInitialized = true;
+        }
 
         for (int i = 0; i < renderer->layerCnt; ++i) {
             //
@@ -145,6 +165,8 @@ namespace zf3 {
             const Matrix4x4* const viewMat = i < renderer->camLayerCnt ? &camViewMat : &defaultViewMat;
             glUniformMatrix4fv(shaderProgs->spriteQuad.viewUniLoc, 1, false, reinterpret_cast<const float*>(viewMat->elems));
 
+            glUniform1iv(shaderProgs->spriteQuad.texturesUniLoc, gk_texUnitLimit, lk_texUnits);
+
             const RenderLayer* const layer = &renderer->layers[i];
 
             for (int j = 0; j < layer->spriteBatchCnt; ++j) {
@@ -155,6 +177,7 @@ namespace zf3 {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchQuadBuf->elemBufGLID);
 
                 for (int k = 0; k < batchTransData->texUnitsInUse; ++k) {
+                    glActiveTexture(GL_TEXTURE0 + k);
                     glBindTexture(GL_TEXTURE_2D, assets->textures.glIDs[batchTransData->texUnitTexIDs[k]]);
                 }
 
@@ -229,28 +252,48 @@ namespace zf3 {
         const Vec2DInt texSize = textures->sizes[texIndex];
 
         const float verts[] = {
-            (0.0f - origin.x) * scale.x, (0.0f - origin.y) * scale.y, pos.x, pos.y,
-            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height), rot,
+            (0.0f - origin.x) * scale.x,
+            (0.0f - origin.y) * scale.y,
+            pos.x,
+            pos.y,
+            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height),
+            rot,
             static_cast<float>(texUnit),
-            static_cast<float>(srcRect.x) / texSize.x, static_cast<float>(srcRect.y) / texSize.y, alpha,
+            static_cast<float>(srcRect.x) / texSize.x, static_cast<float>(srcRect.y) / texSize.y,
+            alpha,
 
-            (1.0f - origin.x) * scale.x, (0.0f - origin.y) * scale.y, pos.x, pos.y,
-            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height), rot,
+            (1.0f - origin.x) * scale.x,
+            (0.0f - origin.y) * scale.y,
+            pos.x,
+            pos.y,
+            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height),
+            rot,
             static_cast<float>(texUnit),
             static_cast<float>(srcRect.x + srcRect.width) / texSize.x,
-            static_cast<float>(srcRect.y) / texSize.y, alpha,
+            static_cast<float>(srcRect.y) / texSize.y,
+            alpha,
 
-            (1.0f - origin.x) * scale.x, (1.0f - origin.y) * scale.y, pos.x, pos.y,
-            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height), rot,
+            (1.0f - origin.x) * scale.x,
+            (1.0f - origin.y) * scale.y,
+            pos.x,
+            pos.y,
+            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height),
+            rot,
             static_cast<float>(texUnit),
             static_cast<float>(srcRect.x + srcRect.width) / texSize.x,
-            static_cast<float>(srcRect.y + srcRect.height) / texSize.y, alpha,
+            static_cast<float>(srcRect.y + srcRect.height) / texSize.y,
+            alpha,
 
-            (0.0f - origin.x) * scale.x, (1.0f - origin.y) * scale.y, pos.x, pos.y,
-            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height), rot,
+            (0.0f - origin.x) * scale.x,
+            (1.0f - origin.y) * scale.y,
+            pos.x,
+            pos.y,
+            static_cast<float>(srcRect.width), static_cast<float>(srcRect.height),
+            rot,
             static_cast<float>(texUnit),
             static_cast<float>(srcRect.x) / texSize.x,
-            static_cast<float>(srcRect.y + srcRect.height) / texSize.y, alpha
+            static_cast<float>(srcRect.y + srcRect.height) / texSize.y,
+            alpha
         };
 
         const QuadBuf* const batchQuadBuf = &layer->spriteBatchQuadBufs[batchIndex];

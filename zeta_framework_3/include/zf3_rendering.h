@@ -112,6 +112,7 @@ namespace zf3 {
     };
 
     void clean_renderer(Renderer* const renderer);
+    void reset_renderer(Renderer* const renderer, const int layerCnt, const int camLayerCnt = 0, const Vec3D bgColor = {}, const Vec2D camPos = {}, const float camScale = 2.0f);
     void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets);
 
     void empty_sprite_batches(Renderer* const renderer);
