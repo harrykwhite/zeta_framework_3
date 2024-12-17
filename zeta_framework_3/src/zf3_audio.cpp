@@ -12,7 +12,7 @@ namespace zf3 {
         manager->alIDs[index] = 0;
     }
 
-    static bool load_music_buf_data(MusicSrc* const src, const ALID bufALID, const Music& music) {
+    static bool load_music_buf_data(MusicSrc* const src, const ALID bufALID) {
         assert(bufALID);
 
         const auto buf = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_musicBufSampleCnt)); // TODO: Allocate this once and reuse.
@@ -21,7 +21,7 @@ namespace zf3 {
             return false;
         }
 
-        const AudioInfo& musicInfo = music.infos[src->musicIndex];
+        const AudioInfo& musicInfo = get_assets()->music.infos[src->musicIndex];
 
         const int totalBytesToRead = sizeof(AudioSample) * musicInfo.sampleCntPerChannel * musicInfo.channelCnt;
         const int bytesToRead = min(gk_musicBufSize, totalBytesToRead - src->fsBytesRead);
@@ -38,7 +38,7 @@ namespace zf3 {
 
         if (src->fsBytesRead == totalBytesToRead) {
             src->fsBytesRead = 0;
-            fseek(src->fs, music.sampleDataFilePositions[src->musicIndex], SEEK_SET);
+            fseek(src->fs, get_assets()->music.sampleDataFilePositions[src->musicIndex], SEEK_SET);
         }
 
         const ALenum format = musicInfo.channelCnt == 1 ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_STEREO_FLOAT32;
@@ -131,11 +131,11 @@ namespace zf3 {
         }
     }
 
-    SoundSrcID add_sound_src(SoundSrcManager* const manager, const int sndIndex, const Sounds& snds) {
+    SoundSrcID add_sound_src(SoundSrcManager* const manager, const int sndIndex) {
         for (int i = 0; i < gk_soundSrcLimit; ++i) {
             if (!manager->alIDs[i]) {
                 alGenSources(1, &manager->alIDs[i]);
-                alSourcei(manager->alIDs[i], AL_BUFFER, snds.bufALIDs[sndIndex]);
+                alSourcei(manager->alIDs[i], AL_BUFFER, get_assets()->sounds.bufALIDs[sndIndex]);
 
                 ++manager->versions[i];
 
@@ -159,7 +159,7 @@ namespace zf3 {
         release_sound_src_by_index(manager, srcID.index);
     }
 
-    void play_sound_src(const SoundSrcManager* const manager, const SoundSrcID srcID, const Sounds& snds, const float gain, const float pitch) {
+    void play_sound_src(const SoundSrcManager* const manager, const SoundSrcID srcID, const float gain, const float pitch) {
         assert(srcID.index >= 0 && srcID.index < gk_soundSrcLimit);
         assert(manager->versions[srcID.index] == srcID.version);
         assert(manager->alIDs[srcID.index]);
@@ -170,9 +170,9 @@ namespace zf3 {
         alSourcePlay(manager->alIDs[srcID.index]);
     }
 
-    void add_and_play_sound_src(SoundSrcManager* const manager, const int sndIndex, const Sounds& snds, const float gain, const float pitch) {
-        const SoundSrcID srcID = add_sound_src(manager, sndIndex, snds);
-        play_sound_src(manager, srcID, snds, gain, pitch);
+    void add_and_play_sound_src(SoundSrcManager* const manager, const int sndIndex, const float gain, const float pitch) {
+        const SoundSrcID srcID = add_sound_src(manager, sndIndex);
+        play_sound_src(manager, srcID, gain, pitch);
         activate_bit(manager->autoReleases, srcID.index); // No reference to this source is returned, so it needs to be automatically released once it is detected as finished.
     }
 
@@ -186,8 +186,7 @@ namespace zf3 {
         memset(manager, 0, sizeof(*manager));
     }
 
-    bool refresh_music_src_bufs(MusicSrcManager* const manager, const Music& music) {
-        // TODO: Put this in a while loop and onto another thread.
+    bool refresh_music_src_bufs(MusicSrcManager* const manager) {
         for (int i = 0; i < gk_musicSrcLimit; ++i) {
             if (!is_bit_active(manager->activity, i)) {
                 continue;
@@ -203,7 +202,7 @@ namespace zf3 {
                 ALID bufALID;
                 alSourceUnqueueBuffers(src.alID, 1, &bufALID);
 
-                if (!load_music_buf_data(&src, bufALID, music)) {
+                if (!load_music_buf_data(&src, bufALID)) {
                     return false;
                 }
 
@@ -216,7 +215,7 @@ namespace zf3 {
         return true;
     }
 
-    MusicSrcID add_music_src(MusicSrcManager* const manager, const int musicIndex, const Music& music) {
+    MusicSrcID add_music_src(MusicSrcManager* const manager, const int musicIndex) {
         const int srcIndex = get_first_inactive_bit_index(manager->activity);
         assert(srcIndex != -1);
 
@@ -244,7 +243,7 @@ namespace zf3 {
         deactivate_bit(manager->activity, id.index);
     }
 
-    bool play_music_src(MusicSrcManager* const manager, const MusicSrcID id, const Music& music, const float gain) {
+    bool play_music_src(MusicSrcManager* const manager, const MusicSrcID id, const float gain) {
         assert(id.index >= 0 && id.index < gk_musicSrcLimit);
         assert(manager->versions[id.index] == id.version);
         assert(is_bit_active(manager->activity, id.index));
@@ -257,10 +256,10 @@ namespace zf3 {
             return false;
         }
 
-        fseek(src.fs, music.sampleDataFilePositions[src.musicIndex], SEEK_SET);
+        fseek(src.fs, get_assets()->music.sampleDataFilePositions[src.musicIndex], SEEK_SET);
 
         for (int i = 0; i < gk_musicBufCnt; ++i) {
-            if (!load_music_buf_data(&src, src.bufALIDs[i], music)) {
+            if (!load_music_buf_data(&src, src.bufALIDs[i])) {
                 return false;
             }
         }

@@ -113,14 +113,14 @@ namespace zf3 {
 
     void clean_renderer(Renderer* const renderer);
     void reset_renderer(Renderer* const renderer, const int layerCnt, const int camLayerCnt = 0, const Vec3D bgColor = {}, const Vec2D camPos = {}, const float camScale = 2.0f);
-    void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets);
+    void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window);
 
     void empty_sprite_batches(Renderer* const renderer);
-    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect& srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
+    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Vec2D pos, const Rect& srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
 
     CharBatchID activate_any_char_batch(Renderer* const renderer, const int layerIndex, const int slotCnt, const int fontIndex, const Vec2D pos);
     void deactivate_char_batch(Renderer* const renderer, const CharBatchID id);
-    void write_to_char_batch(Renderer* const renderer, const CharBatchID id, const char* const text, const FontHorAlign horAlign, const FontVerAlign verAlign, const Fonts* const fonts);
+    void write_to_char_batch(Renderer* const renderer, const CharBatchID id, const char* const text, const FontHorAlign horAlign, const FontVerAlign verAlign);
     void clear_char_batch(const Renderer* const renderer, const CharBatchID id);
 
     inline CharBatchDisplayProps* get_char_batch_display_props(Renderer* const renderer, const CharBatchID id) {

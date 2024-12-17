@@ -1,6 +1,8 @@
 #include <zf3_assets.h>
 
 namespace zf3 {
+    static Assets* i_assets;
+
     static bool load_textures(Textures* const textures, FILE* const fs) {
         const int pxDataBufSize = gk_texChannelCnt * gk_texSizeLimit.x * gk_texSizeLimit.y;
         const auto pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each texture.
@@ -105,34 +107,49 @@ namespace zf3 {
         return true;
     }
 
-    bool init_assets(Assets* const assets) {
+    bool init_assets() {
+        assert(!i_assets);
+
+        i_assets = static_cast<Assets*>(malloc(sizeof(Assets)));
+
+        if (!i_assets) {
+            return false;
+        }
+
         FILE* const fs = fopen(gk_assetsFileName, "rb");
 
         if (!fs) {
             return false;
         }
 
-        const bool success = load_textures(&assets->textures, fs)
-            && load_fonts(&assets->fonts, fs)
-            && load_sounds(&assets->sounds, fs)
-            && load_music(&assets->music, fs);
+        const bool success = load_textures(&i_assets->textures, fs)
+            && load_fonts(&i_assets->fonts, fs)
+            && load_sounds(&i_assets->sounds, fs)
+            && load_music(&i_assets->music, fs);
 
         fclose(fs);
 
         return success;
     }
 
-    void clean_assets(Assets* const assets) {
-        if (assets->sounds.cnt > 0) {
-            alDeleteBuffers(assets->sounds.cnt, assets->sounds.bufALIDs);
+    void clean_assets() {
+        if (i_assets->sounds.cnt > 0) {
+            alDeleteBuffers(i_assets->sounds.cnt, i_assets->sounds.bufALIDs);
         }
 
-        if (assets->fonts.cnt > 0) {
-            glDeleteTextures(assets->fonts.cnt, assets->fonts.texGLIDs);
+        if (i_assets->fonts.cnt > 0) {
+            glDeleteTextures(i_assets->fonts.cnt, i_assets->fonts.texGLIDs);
         }
 
-        if (assets->textures.cnt > 0) {
-            glDeleteTextures(assets->textures.cnt, assets->textures.glIDs);
+        if (i_assets->textures.cnt > 0) {
+            glDeleteTextures(i_assets->textures.cnt, i_assets->textures.glIDs);
         }
+
+        free(i_assets);
+        i_assets = nullptr;
+    }
+
+    const Assets* get_assets() {
+        return i_assets;
     }
 }

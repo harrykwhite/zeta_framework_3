@@ -8,7 +8,6 @@ namespace zf3 {
     struct Game {
         Window window;
         InputManager inputManager;
-        Assets assets;
         ShaderProgs shaderProgs;
         Renderer renderer;
         SoundSrcManager sndSrcManager;
@@ -42,7 +41,7 @@ namespace zf3 {
             return false;
         }
 
-        if (!init_assets(&game->assets)) {
+        if (!init_assets()) {
             return false;
         }
 
@@ -53,7 +52,6 @@ namespace zf3 {
         game->userFuncData = {
             .window = &game->window,
             .inputManager = &game->inputManager,
-            .assets = &game->assets,
             .renderer = &game->renderer,
             .sndSrcManager = &game->sndSrcManager,
             .musicSrcManager = &game->musicSrcManager
@@ -93,7 +91,7 @@ namespace zf3 {
 
                 do {
                     handle_auto_release_sound_srcs(&game->sndSrcManager);
-                    refresh_music_src_bufs(&game->musicSrcManager, game->assets.music); // TEMP
+                    refresh_music_src_bufs(&game->musicSrcManager); // TEMP
 
                     empty_sprite_batches(&game->renderer);
 
@@ -108,7 +106,7 @@ namespace zf3 {
                 save_input_state(&game->inputManager);
             }
 
-            render_all(&game->renderer, &game->shaderProgs, &game->window, &game->assets);
+            render_all(&game->renderer, &game->shaderProgs, &game->window);
             glfwSwapBuffers(game->window.glfwWindow);
 
             glfwPollEvents();
@@ -136,7 +134,7 @@ namespace zf3 {
             clean_sound_srcs(&game->sndSrcManager);
             clean_renderer(&game->renderer);
             clean_shader_progs(&game->shaderProgs);
-            clean_assets(&game->assets);
+            clean_assets();
             clean_window(&game->window);
             free(game);
         }

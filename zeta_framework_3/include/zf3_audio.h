@@ -51,14 +51,14 @@ namespace zf3 {
 
     void clean_sound_srcs(SoundSrcManager* const manager);
     void handle_auto_release_sound_srcs(SoundSrcManager* const manager);
-    SoundSrcID add_sound_src(SoundSrcManager* const manager, const int sndIndex, const Sounds& snds);
+    SoundSrcID add_sound_src(SoundSrcManager* const manager, const int sndIndex);
     void remove_sound_src(SoundSrcManager* const manager, const SoundSrcID srcID);
-    void play_sound_src(const SoundSrcManager* const manager, const SoundSrcID srcID, const Sounds& snds, const float gain = 1.0f, const float pitch = 1.0f);
-    void add_and_play_sound_src(SoundSrcManager* const manager, const int sndIndex, const Sounds& snds, const float gain = 1.0f, const float pitch = 1.0f);
+    void play_sound_src(const SoundSrcManager* const manager, const SoundSrcID srcID, const float gain = 1.0f, const float pitch = 1.0f);
+    void add_and_play_sound_src(SoundSrcManager* const manager, const int sndIndex, const float gain = 1.0f, const float pitch = 1.0f);
 
     void clean_music_srcs(MusicSrcManager* const manager);
-    bool refresh_music_src_bufs(MusicSrcManager* const manager, const Music& music);
-    MusicSrcID add_music_src(MusicSrcManager* const manager, const int musicIndex, const Music& music);
+    bool refresh_music_src_bufs(MusicSrcManager* const manager);
+    MusicSrcID add_music_src(MusicSrcManager* const manager, const int musicIndex);
     void remove_music_src(MusicSrcManager* const manager, const MusicSrcID id);
-    bool play_music_src(MusicSrcManager* const manager, const MusicSrcID id, const Music& music, const float gain = 1.0f);
+    bool play_music_src(MusicSrcManager* const manager, const MusicSrcID id, const float gain = 1.0f);
 }

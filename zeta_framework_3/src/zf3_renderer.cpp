@@ -135,7 +135,7 @@ namespace zf3 {
         renderer->cam.scale = camScale;
     }
 
-    void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets) {
+    void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window) {
         glClearColor(renderer->bgColor.r, renderer->bgColor.g, renderer->bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -178,7 +178,7 @@ namespace zf3 {
 
                 for (int k = 0; k < batchTransData->texUnitsInUse; ++k) {
                     glActiveTexture(GL_TEXTURE0 + k);
-                    glBindTexture(GL_TEXTURE_2D, assets->textures.glIDs[batchTransData->texUnitTexIDs[k]]);
+                    glBindTexture(GL_TEXTURE_2D, get_assets()->textures.glIDs[batchTransData->texUnitTexIDs[k]]);
                 }
 
                 glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, nullptr);
@@ -204,7 +204,7 @@ namespace zf3 {
                 glUniform4fv(shaderProgs->charQuad.blendUniLoc, 1, reinterpret_cast<const float*>(&batch->displayProps.blend));
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, assets->fonts.texGLIDs[batch->displayProps.fontIndex]);
+                glBindTexture(GL_TEXTURE_2D, get_assets()->fonts.texGLIDs[batch->displayProps.fontIndex]);
 
                 // Draw the batch.
                 glBindVertexArray(batch->quadBuf.vertArrayGLID);
@@ -221,7 +221,7 @@ namespace zf3 {
         }
     }
 
-    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect& srcRect, const Vec2D origin, const float rot, const Vec2D scale, const float alpha) {
+    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Vec2D pos, const Rect& srcRect, const Vec2D origin, const float rot, const Vec2D scale, const float alpha) {
         assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
 
         RenderLayer* const layer = &renderer->layers[layerIndex];
@@ -244,12 +244,12 @@ namespace zf3 {
                 ++layer->spriteBatchCnt;
             }
 
-            write_to_sprite_batch(renderer, layerIndex, texIndex, textures, pos, srcRect, origin, rot, scale, alpha);
+            write_to_sprite_batch(renderer, layerIndex, texIndex, pos, srcRect, origin, rot, scale, alpha);
             return;
         }
 
         const int slotIndex = batchTransData->slotsUsed;
-        const Vec2DInt texSize = textures->sizes[texIndex];
+        const Vec2DInt texSize = get_assets()->textures.sizes[texIndex];
 
         const float verts[] = {
             (0.0f - origin.x) * scale.x,
@@ -337,15 +337,15 @@ namespace zf3 {
         deactivate_bit(layer->charBatchActivity.bytes, id.batchIndex);
     }
 
-    void write_to_char_batch(Renderer* const renderer, const CharBatchID id, const char* const text, const FontHorAlign horAlign, const FontVerAlign verAlign, const Fonts* const fonts) {
+    void write_to_char_batch(Renderer* const renderer, const CharBatchID id, const char* const text, const FontHorAlign horAlign, const FontVerAlign verAlign) {
         RenderLayer* const layer = &renderer->layers[id.layerIndex];
         CharBatch* const batch = &layer->charBatches[id.batchIndex];
 
         const int textLen = strlen(text);
         assert(textLen > 0 && textLen <= batch->slotCnt);
 
-        const FontArrangementInfo* const fontArrangementInfo = &fonts->arrangementInfos[batch->displayProps.fontIndex];
-        const Vec2DInt* const fontTexSize = &fonts->texSizes[batch->displayProps.fontIndex];
+        const FontArrangementInfo* const fontArrangementInfo = &get_assets()->fonts.arrangementInfos[batch->displayProps.fontIndex];
+        const Vec2DInt* const fontTexSize = &get_assets()->fonts.texSizes[batch->displayProps.fontIndex];
 
         Vec2D charDrawPositions[gk_charBatchSlotLimit];
         Vec2D charDrawPosPen = {};
