@@ -1,35 +1,48 @@
 #include "zf3ap.h"
 
 const char* const ik_packingInstrsFileName = "packing_instrs.json";
-constexpr int ik_outputFilePathBufSize = 256;
 
 struct AssetPacker {
+    FILE* outputFS;
     char* instrsFileChars;
     cJSON* instrsCJ;
-    FILE* outputFileStream;
 };
 
-static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, const int srcAssetFilePathBufStartLen) {
-    // Append the packing instructions file name to the source asset file path buffer.
-    strncpy(srcAssetFilePathBuf + srcAssetFilePathBufStartLen, ik_packingInstrsFileName, gk_srcAssetFilePathBufSize - srcAssetFilePathBufStartLen);
+static FILE* open_output_file(const char* const outputDir, char* const errorMsgBuf) {
+    // Determine the output file path.
+    char filePath[256];
+    const int filePathLen = snprintf(filePath, sizeof(filePath), "%s/%s", outputDir, zf3::gk_assetsFileName);
 
-    if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
-        zf3::log_error("The packing instructions file name is too long!");
+    if (filePathLen >= sizeof(filePath)) {
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "The provided output directory \"%s\" is too long!", outputDir);
+        return nullptr;
+    }
+
+    // Create or replace the output file.
+    FILE* const outputFS = fopen(filePath, "wb");
+
+    if (!outputFS) {
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "Failed to open the output file \"%s\"!", filePath);
+    }
+
+    return outputFS;
+}
+
+static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, char* const errorMsgBuf, const int srcAssetFilePathBufStartLen) {
+    if (!complete_asset_file_path(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathBufStartLen, ik_packingInstrsFileName)) {
         return nullptr;
     }
 
     return zf3::get_file_contents(srcAssetFilePathBuf);
 }
 
-static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir, const char* const outputDir) {
+static bool run_asset_packer(AssetPacker* const packer, char* const errorMsgBuf, const char* const srcDir, const char* const outputDir) {
     memset(packer, 0, sizeof(*packer));
 
-    // Determine the output file path using the directory.
-    char outputFilePath[ik_outputFilePathBufSize];
-    const int outputFilePathLen = snprintf(outputFilePath, ik_outputFilePathBufSize, "%s/%s", outputDir, zf3::gk_assetsFileName);
+    // Open the output file.
+    packer->outputFS = open_output_file(outputDir, errorMsgBuf);
 
-    if (outputFilePathLen >= ik_outputFilePathBufSize) {
-        zf3::log_error("The provided output directory \"%s\" is too long!", outputDir);
+    if (!packer->outputFS) {
         return false;
     }
 
@@ -38,12 +51,12 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
     const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, gk_srcAssetFilePathBufSize, "%s/", srcDir);
 
     if (srcAssetFilePathStartLen >= gk_srcAssetFilePathBufSize) {
-        zf3::log_error("The provided source directory of \"%s\" is too long!", srcDir);
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "The provided source directory \"%s\" is too long!", srcDir);
         return false;
     }
 
     // Get the contents of the packing instructions JSON file.
-    packer->instrsFileChars = get_packing_instrs_file_chars(srcAssetFilePathBuf, srcAssetFilePathStartLen);
+    packer->instrsFileChars = get_packing_instrs_file_chars(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathStartLen);
 
     if (!packer->instrsFileChars) {
         return false;
@@ -57,58 +70,30 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
         return false;
     }
 
-    // Create or replace the output file.
-    packer->outputFileStream = fopen(outputFilePath, "wb");
-
-    if (!packer->outputFileStream) {
-        zf3::log_error("Failed to open the output file \"%s\"!", outputFilePath);
-        return false;
-    }
-
     // Perform packing for each asset type using the packing instructions file.
-    if (!pack_textures(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)
-        || !pack_fonts(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)
-        || !pack_sounds(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)) {
+    if (!pack_textures(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
+        || !pack_fonts(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)
+        || !pack_audio(packer->outputFS, packer->instrsCJ, srcAssetFilePathBuf, srcAssetFilePathStartLen, errorMsgBuf)) {
         return false;
     }
 
     return true;
 }
 
-static void clean_asset_packer(AssetPacker* const packer) {
+static void clean_asset_packer(AssetPacker* const packer, const bool packingSuccessful) {
     cJSON_Delete(packer->instrsCJ);
 
-    if (packer->outputFileStream) {
-        fclose(packer->outputFileStream);
-    }
-
     free(packer->instrsFileChars);
-}
 
-cJSON* getCJAssetsArrayAndWriteAssetCnt(cJSON* const instrsCJObj, FILE* const outputFileStream, const char* const arrayName) {
-    cJSON* const assetsCJ = cJSON_GetObjectItemCaseSensitive(instrsCJObj, arrayName);
-    const bool assetsCJFound = cJSON_IsArray(assetsCJ);
+    if (packer->outputFS) {
+        fclose(packer->outputFS);
 
-    const int assetCnt = assetsCJFound ? cJSON_GetArraySize(assetsCJ) : 0;
-    fwrite(&assetCnt, sizeof(assetCnt), 1, outputFileStream);
-
-    if (!assetsCJFound) {
-        return nullptr;
+        if (!packingSuccessful) {
+            remove(zf3::gk_assetsFileName);
+        }
     }
 
-    return assetsCJ;
-}
-
-bool complete_asset_file_path(char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen, const char* const relPath) {
-    strncpy(srcAssetFilePathBuf + srcAssetFilePathStartLen, relPath, gk_srcAssetFilePathBufSize - srcAssetFilePathStartLen);
-
-    if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
-        const int lenLimit = gk_srcAssetFilePathBufSize - 1 - srcAssetFilePathStartLen;
-        zf3::log_error("The asset relative file path of \"%s\" exceeds the length limit of %d characters!", relPath, lenLimit);
-        return false;
-    }
-
-    return true;
+    memset(packer, 0, sizeof(*packer));
 }
 
 int main(const int argCnt, const char* const* args) {
@@ -117,12 +102,41 @@ int main(const int argCnt, const char* const* args) {
         return EXIT_FAILURE;
     }
 
-    const char* const srcDir = args[1]; // The directory containing the assets to pack.
+    const char* const srcDir = args[1];    // The directory containing the assets to pack.
     const char* const outputDir = args[2]; // The directory to output the packed assets file to.
 
-    AssetPacker packer;
-    const bool packingSuccessful = run_asset_packer(&packer, srcDir, outputDir);
-    clean_asset_packer(&packer);
+    char errorMsgBuf[gk_errorMsgBufSize] = {};
 
-    return packingSuccessful ? EXIT_SUCCESS : EXIT_FAILURE;
+    AssetPacker packer;
+    const bool packingSuccessful = run_asset_packer(&packer, errorMsgBuf, srcDir, outputDir);
+    clean_asset_packer(&packer, packingSuccessful);
+
+    if (!packingSuccessful) {
+        zf3::log_error(errorMsgBuf);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+cJSON* get_cj_assets_array(const cJSON* const instrsCJObj, const char* const arrayName) {
+    cJSON* const assetsCJ = cJSON_GetObjectItemCaseSensitive(instrsCJObj, arrayName);
+
+    if (!cJSON_IsArray(assetsCJ)) {
+        return nullptr;
+    }
+
+    return assetsCJ;
+}
+
+bool complete_asset_file_path(char* const srcAssetFilePathBuf, char* const errorMsgBuf, const int srcAssetFilePathStartLen, const char* const relPath) {
+    strncpy(srcAssetFilePathBuf + srcAssetFilePathStartLen, relPath, gk_srcAssetFilePathBufSize - srcAssetFilePathStartLen);
+
+    if (srcAssetFilePathBuf[gk_srcAssetFilePathBufSize - 1]) {
+        const int lenLimit = gk_srcAssetFilePathBufSize - 1 - srcAssetFilePathStartLen;
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "The asset relative file path of \"%s\" exceeds the length limit of %d characters!", relPath, lenLimit);
+        return false;
+    }
+
+    return true;
 }

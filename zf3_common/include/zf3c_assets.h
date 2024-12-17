@@ -17,7 +17,7 @@ namespace zf3 {
     constexpr int gk_fontCharRangeBegin = 32;
     constexpr int gk_fontCharRangeSize = 95;
 
-    constexpr int gk_soundSampleLimit = 441000;
+    constexpr int gk_audioSamplesPerChunk = 44100;
 
     using AudioSample = float;
 

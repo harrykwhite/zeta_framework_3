@@ -11,11 +11,12 @@ namespace zf3 {
 
         // Get the file size.
         fseek(fs, 0, SEEK_END);
-        const long file_size = ftell(fs);
+        const long fileSize = ftell(fs);
         fseek(fs, 0, SEEK_SET);
 
         // Allocate memory to store the file contents.
-        char* const contents = static_cast<char*>(malloc(file_size + 1));
+        const int contentsSize = fileSize + 1; // Accounts for '\0'.
+        const auto contents = static_cast<char*>(malloc(contentsSize));
 
         if (!contents) {
             fclose(fs);
@@ -23,8 +24,8 @@ namespace zf3 {
         }
 
         // Read the contents into the buffer.
-        fread(contents, 1, file_size, fs);
-        contents[file_size] = '\0';
+        fread(contents, 1, contentsSize - 1, fs);
+        contents[contentsSize - 1] = '\0';
 
         fclose(fs);
 

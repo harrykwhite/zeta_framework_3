@@ -62,7 +62,7 @@ namespace zf3 {
     }
 
     static bool load_sounds(Sounds* const snds, FILE* const fs) {
-        const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_soundSampleLimit));
+        const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_audioSamplesPerChunk));
 
         if (!samples) {
             return false;

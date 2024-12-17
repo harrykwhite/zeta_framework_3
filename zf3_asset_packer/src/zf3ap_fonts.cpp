@@ -120,24 +120,25 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
     return true;
 }
 
-bool pack_fonts(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen) {
+bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen, char* const errorMsgBuf) {
     FT_Library ftLib;
 
     if (FT_Init_FreeType(&ftLib)) {
-        zf3::log_error("Failed to initialise FreeType!");
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "Failed to initialise FreeType!");
         return false;
     }
 
-    const auto fontData = static_cast<FontData*>(malloc(sizeof(FontData))); // Reused for every font.
+    const auto fontData = static_cast<FontData*>(malloc(sizeof(FontData))); // Reused for each font.
 
     if (!fontData) {
         FT_Done_FreeType(ftLib);
         return false;
     }
 
-    const cJSON* const cjFonts = getCJAssetsArrayAndWriteAssetCnt(instrsCJ, outputFS, "fonts");
+    const cJSON* const cjFonts = get_cj_assets_array(instrsCJ, "fonts");
 
     if (!cjFonts) {
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "Failed to get the fonts array from the packing instructions JSON file!");
         free(fontData);
         FT_Done_FreeType(ftLib);
         return false;
@@ -146,11 +147,13 @@ bool pack_fonts(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAsse
     const int fontCnt = cJSON_GetArraySize(cjFonts);
 
     if (fontCnt > zf3::gk_fontLimit) {
-        zf3::log_error("Font count exceeds the limit of %d!", zf3::gk_fontLimit);
+        snprintf(errorMsgBuf, gk_errorMsgBufSize, "Font count exceeds the limit of %d!", zf3::gk_fontLimit);
         free(fontData);
         FT_Done_FreeType(ftLib);
         return false;
     }
+
+    fwrite(&fontCnt, sizeof(fontCnt), 1, outputFS);
 
     bool success = true;
 
@@ -161,18 +164,18 @@ bool pack_fonts(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAsse
         const cJSON* const cjPtSize = cJSON_GetObjectItem(cjFont, "ptSize");
 
         if (!cJSON_IsString(cjRelFilePath) || !cJSON_IsNumber(cjPtSize)) {
-            zf3::log_error("Invalid font entry in packing instructions JSON file!");
+            snprintf(errorMsgBuf, gk_errorMsgBufSize, "Invalid font entry in packing instructions JSON file!");
             success = false;
             break;
         }
 
-        if (!complete_asset_file_path(srcAssetFilePathBuf, srcAssetFilePathStartLen, cjRelFilePath->valuestring)) {
+        if (!complete_asset_file_path(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathStartLen, cjRelFilePath->valuestring)) {
             success = false;
             break;
         }
 
         if (!load_font_data(*fontData, ftLib, srcAssetFilePathBuf, cjPtSize->valueint)) {
-            zf3::log_error("Failed to load data for font with relative file path %s and point size %d!", cjRelFilePath->valuestring, cjPtSize->valueint);
+            snprintf(errorMsgBuf, gk_errorMsgBufSize, "Failed to load data for font with relative file path %s and point size %d!", cjRelFilePath->valuestring, cjPtSize->valueint);
             success = false;
             break;
         }
