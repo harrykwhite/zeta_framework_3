@@ -7,6 +7,8 @@ namespace zf3 {
 
     constexpr int gk_texLimit = 512;
     constexpr int gk_fontLimit = 64;
+    constexpr int gk_soundLimit = 256;
+    constexpr int gk_musicLimit = 40;
 
     constexpr int gk_texChannelCnt = 4;
     constexpr Vec2DInt gk_texSizeLimit = {2048, 2048};
@@ -14,6 +16,8 @@ namespace zf3 {
 
     constexpr int gk_fontCharRangeBegin = 32;
     constexpr int gk_fontCharRangeSize = 95;
+
+    using AudioSample = float;
 
     struct FontCharsArrangementInfo {
         int horOffsets[gk_fontCharRangeSize];
@@ -28,5 +32,11 @@ namespace zf3 {
     struct FontArrangementInfo {
         int lineHeight;
         FontCharsArrangementInfo chars;
+    };
+
+    struct AudioInfo {
+        int channelCnt;
+        long long sampleCntPerChannel;
+        int sampleRate;
     };
 }

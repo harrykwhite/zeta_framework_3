@@ -67,7 +67,8 @@ static bool run_asset_packer(AssetPacker* const packer, const char* const srcDir
 
     // Perform packing for each asset type using the packing instructions file.
     if (!pack_textures(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)
-        || !pack_fonts(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)) {
+        || !pack_fonts(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)
+        || !pack_sounds(packer->instrsCJ, packer->outputFileStream, srcAssetFilePathBuf, srcAssetFilePathStartLen)) {
         return false;
     }
 

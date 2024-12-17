@@ -15,3 +15,4 @@ bool complete_asset_file_path(char* const srcAssetFilePathBuf, const int srcAsse
 
 bool pack_textures(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen);
 bool pack_fonts(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen);
+bool pack_sounds(cJSON* const instrsCJ, FILE* const outputFS, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen);
