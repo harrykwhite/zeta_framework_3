@@ -127,17 +127,15 @@ namespace zf3 {
         return renderer.layers[id.layerIndex].charBatches[id.batchIndex].displayProps;
     }
 
+    inline Vec2D get_camera_top_left(const Camera& cam, const Window& window) {
+        return cam.pos - (window.size / (cam.scale * 2.0f));
+    }
+
     inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera& cam, const Window& window) {
-        return {
-            (pos.x + (cam.pos.x * cam.scale)) - (window.size.x / 2.0f),
-            (pos.y + (cam.pos.y * cam.scale)) - (window.size.y / 2.0f)
-        };
+        return (pos - get_camera_top_left(cam, window)) * cam.scale;
     }
 
     inline Vec2D screen_to_camera_pos(const Vec2D pos, const Camera& cam, const Window& window) {
-        return {
-            (pos.x + (window.size.x / 2.0f)) / cam.scale - cam.pos.x,
-            (pos.y + (window.size.y / 2.0f)) / cam.scale - cam.pos.y
-        };
+        return get_camera_top_left(cam, window) + (pos / cam.scale);
     }
 }
