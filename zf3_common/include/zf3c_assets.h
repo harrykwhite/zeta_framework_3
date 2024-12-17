@@ -17,6 +17,8 @@ namespace zf3 {
     constexpr int gk_fontCharRangeBegin = 32;
     constexpr int gk_fontCharRangeSize = 95;
 
+    constexpr int gk_soundSampleLimit = 441000;
+
     using AudioSample = float;
 
     struct FontCharsArrangementInfo {

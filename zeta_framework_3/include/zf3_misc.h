@@ -1,10 +1,12 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <AL/al.h>
 #include <zf3c.h>
 
 namespace zf3 {
     using GLID = GLuint;
+    using ALID = ALuint;
 
     template<int BIT_CNT>
     struct Bitset {

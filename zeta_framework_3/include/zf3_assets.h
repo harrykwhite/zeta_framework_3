@@ -18,9 +18,15 @@ namespace zf3 {
         Vec2DInt texSizes[gk_fontLimit];
     };
 
+    struct Sounds {
+        int cnt;
+        ALID bufALIDs[gk_fontLimit];
+    };
+
     struct Assets {
         Textures textures;
         Fonts fonts;
+        Sounds sounds;
     };
 
     bool init_assets(Assets* const assets);
