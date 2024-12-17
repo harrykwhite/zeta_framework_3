@@ -284,6 +284,10 @@ namespace zf3 {
         return calc_mag(b - a);
     }
 
+    inline float calc_dir(const Vec2D a, const Vec2D b) {
+        return atan2f(-(b.y - a.y), b.x - a.x);
+    }
+
     inline Vec2D calc_normal(const Vec2D vec) {
         const float mag = calc_mag(vec);
         return mag ? vec / mag : Vec2D {};
