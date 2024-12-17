@@ -12,6 +12,57 @@ namespace zf3 {
         manager->alIDs[index] = 0;
     }
 
+    static bool load_music_buf_data(MusicSrc* const src, const ALID bufALID, const Music& music) {
+        assert(bufALID);
+
+        const auto buf = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_musicBufSampleCnt)); // TODO: Allocate this once and reuse.
+
+        if (!buf) {
+            return false;
+        }
+
+        const AudioInfo& musicInfo = music.infos[src->musicIndex];
+
+        const int totalBytesToRead = sizeof(AudioSample) * musicInfo.sampleCntPerChannel * musicInfo.channelCnt;
+        const int bytesToRead = min(gk_musicBufSize, totalBytesToRead - src->fsBytesRead);
+        const int bytesRead = fread(buf, 1, bytesToRead, src->fs);
+
+        if (bytesRead < bytesToRead) {
+            if (ferror(src->fs)) {
+                free(buf);
+                return false;
+            }
+        }
+
+        src->fsBytesRead += bytesToRead;
+
+        if (src->fsBytesRead == totalBytesToRead) {
+            src->fsBytesRead = 0;
+            fseek(src->fs, music.sampleDataFilePositions[src->musicIndex], SEEK_SET);
+        }
+
+        const ALenum format = musicInfo.channelCnt == 1 ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_STEREO_FLOAT32;
+        alBufferData(bufALID, format, buf, bytesToRead, musicInfo.sampleRate);
+
+        free(buf);
+
+        return true;
+    }
+
+    static void clean_active_music_src(MusicSrcManager* const manager, const int index) {
+        assert(is_bit_active(manager->activity, index));
+
+        alSourceStop(manager->srcs[index].alID);
+        alSourcei(manager->srcs[index].alID, AL_BUFFER, 0);
+
+        alDeleteBuffers(gk_musicBufCnt, manager->srcs[index].bufALIDs);
+        alDeleteSources(1, &manager->srcs[index].alID);
+
+        fclose(manager->srcs[index].fs);
+
+        memset(&manager->srcs[index], 0, sizeof(manager->srcs[index]));
+    }
+
     bool init_audio_system() {
         assert(!i_alDevice && !i_alContext);
 
@@ -123,5 +174,102 @@ namespace zf3 {
         const SoundSrcID srcID = add_sound_src(manager, sndIndex, snds);
         play_sound_src(manager, srcID, snds, gain, pitch);
         activate_bit(manager->autoReleases, srcID.index); // No reference to this source is returned, so it needs to be automatically released once it is detected as finished.
+    }
+
+    void clean_music_srcs(MusicSrcManager* const manager) {
+        for (int i = 0; i < gk_musicSrcLimit; ++i) {
+            if (is_bit_active(manager->activity, i)) {
+                clean_active_music_src(manager, i);
+            }
+        }
+
+        memset(manager, 0, sizeof(*manager));
+    }
+
+    bool refresh_music_src_bufs(MusicSrcManager* const manager, const Music& music) {
+        // TODO: Put this in a while loop and onto another thread.
+        for (int i = 0; i < gk_musicSrcLimit; ++i) {
+            if (!is_bit_active(manager->activity, i)) {
+                continue;
+            }
+
+            MusicSrc& src = manager->srcs[i];
+
+            // Retrieve all processed buffers, fill them with new data and queue them again.
+            int processedBufCnt;
+            alGetSourcei(src.alID, AL_BUFFERS_PROCESSED, &processedBufCnt);
+
+            while (processedBufCnt > 0) {
+                ALID bufALID;
+                alSourceUnqueueBuffers(src.alID, 1, &bufALID);
+
+                if (!load_music_buf_data(&src, bufALID, music)) {
+                    return false;
+                }
+
+                alSourceQueueBuffers(src.alID, 1, &bufALID);
+
+                processedBufCnt--;
+            }
+        }
+
+        return true;
+    }
+
+    MusicSrcID add_music_src(MusicSrcManager* const manager, const int musicIndex, const Music& music) {
+        const int srcIndex = get_first_inactive_bit_index(manager->activity);
+        assert(srcIndex != -1);
+
+        MusicSrc& src = manager->srcs[srcIndex];
+        src.musicIndex = musicIndex;
+
+        alGenSources(1, &src.alID);
+        alGenBuffers(gk_musicBufCnt, src.bufALIDs);
+
+        activate_bit(manager->activity, srcIndex);
+        ++manager->versions[srcIndex];
+
+        return {
+            .index = srcIndex,
+            .version = manager->versions[srcIndex]
+        };
+    }
+
+    void remove_music_src(MusicSrcManager* const manager, const MusicSrcID id) {
+        assert(id.index >= 0 && id.index < gk_musicSrcLimit);
+        assert(manager->versions[id.index] == id.version);
+        assert(is_bit_active(manager->activity, id.index));
+
+        clean_active_music_src(manager, id.index);
+        deactivate_bit(manager->activity, id.index);
+    }
+
+    bool play_music_src(MusicSrcManager* const manager, const MusicSrcID id, const Music& music, const float gain) {
+        assert(id.index >= 0 && id.index < gk_musicSrcLimit);
+        assert(manager->versions[id.index] == id.version);
+        assert(is_bit_active(manager->activity, id.index));
+
+        MusicSrc& src = manager->srcs[id.index];
+
+        src.fs = fopen(gk_assetsFileName, "rb");
+
+        if (!src.fs) {
+            return false;
+        }
+
+        fseek(src.fs, music.sampleDataFilePositions[src.musicIndex], SEEK_SET);
+
+        for (int i = 0; i < gk_musicBufCnt; ++i) {
+            if (!load_music_buf_data(&src, src.bufALIDs[i], music)) {
+                return false;
+            }
+        }
+
+        alSourceQueueBuffers(src.alID, gk_musicBufCnt, src.bufALIDs);
+
+        alSourcef(src.alID, AL_GAIN, gain);
+        alSourcePlay(src.alID);
+
+        return true;
     }
 }

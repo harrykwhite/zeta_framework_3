@@ -21,13 +21,20 @@ namespace zf3 {
 
     struct Sounds {
         int cnt;
-        ALID bufALIDs[gk_fontLimit];
+        ALID bufALIDs[gk_soundLimit];
+    };
+
+    struct Music {
+        int cnt;
+        int sampleDataFilePositions[gk_musicLimit];
+        AudioInfo infos[gk_musicLimit];
     };
 
     struct Assets {
         Textures textures;
         Fonts fonts;
         Sounds sounds;
+        Music music;
     };
 
     bool init_assets(Assets* const assets);

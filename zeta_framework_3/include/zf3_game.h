@@ -13,6 +13,7 @@ namespace zf3 {
         const Assets* assets;
         Renderer* renderer;
         SoundSrcManager* sndSrcManager;
+        MusicSrcManager* musicSrcManager;
     };
 
     using UserGameInit = bool (*)(const UserGameFuncData* const data);

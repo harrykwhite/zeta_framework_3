@@ -12,6 +12,7 @@ namespace zf3 {
         ShaderProgs shaderProgs;
         Renderer renderer;
         SoundSrcManager sndSrcManager;
+        MusicSrcManager musicSrcManager;
 
         UserGameInfo userInfo;
         UserGameFuncData userFuncData;
@@ -54,7 +55,8 @@ namespace zf3 {
             .inputManager = &game->inputManager,
             .assets = &game->assets,
             .renderer = &game->renderer,
-            .sndSrcManager = &game->sndSrcManager
+            .sndSrcManager = &game->sndSrcManager,
+            .musicSrcManager = &game->musicSrcManager
         };
 
         if (!game->userInfo.init(&game->userFuncData)) {
@@ -90,6 +92,9 @@ namespace zf3 {
                 int i = 0;
 
                 do {
+                    handle_auto_release_sound_srcs(&game->sndSrcManager);
+                    refresh_music_src_bufs(&game->musicSrcManager, game->assets.music); // TEMP
+
                     empty_sprite_batches(&game->renderer);
 
                     if (!game->userInfo.tick(&game->userFuncData)) {
@@ -127,6 +132,7 @@ namespace zf3 {
         log("Cleaning up...");
 
         if (game) {
+            clean_music_srcs(&game->musicSrcManager);
             clean_sound_srcs(&game->sndSrcManager);
             clean_renderer(&game->renderer);
             clean_shader_progs(&game->shaderProgs);

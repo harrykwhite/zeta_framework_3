@@ -62,7 +62,7 @@ namespace zf3 {
     }
 
     static bool load_sounds(Sounds* const snds, FILE* const fs) {
-        const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_audioSamplesPerChunk));
+        const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_audioSamplesPerChunk)); // TEMP
 
         if (!samples) {
             return false;
@@ -90,6 +90,21 @@ namespace zf3 {
         return true;
     }
 
+    static bool load_music(Music* const music, FILE* const fs) {
+        fread(&music->cnt, sizeof(music->cnt), 1, fs);
+
+        for (int i = 0; i < music->cnt; ++i) {
+            fread(&music->infos[i], sizeof(music->infos[i]), 1, fs);
+
+            music->sampleDataFilePositions[i] = ftell(fs);
+
+            const int sampleCnt = music->infos[i].sampleCntPerChannel * music->infos[i].channelCnt;
+            fseek(fs, sizeof(AudioSample) * sampleCnt, SEEK_CUR);
+        }
+
+        return true;
+    }
+
     bool init_assets(Assets* const assets) {
         FILE* const fs = fopen(gk_assetsFileName, "rb");
 
@@ -97,7 +112,10 @@ namespace zf3 {
             return false;
         }
 
-        const bool success = load_textures(&assets->textures, fs) && load_fonts(&assets->fonts, fs) && load_sounds(&assets->sounds, fs);
+        const bool success = load_textures(&assets->textures, fs)
+            && load_fonts(&assets->fonts, fs)
+            && load_sounds(&assets->sounds, fs)
+            && load_music(&assets->music, fs);
 
         fclose(fs);
 
