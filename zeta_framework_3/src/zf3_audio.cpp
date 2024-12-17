@@ -70,7 +70,7 @@ namespace zf3 {
         i_alDevice = alcOpenDevice(nullptr);
 
         if (!i_alDevice) {
-            log_error("Failed to open a device for OpenAL.");
+            log_error("Failed to open a device for OpenAL!");
             return false;
         }
 
@@ -78,7 +78,7 @@ namespace zf3 {
         i_alContext = alcCreateContext(i_alDevice, nullptr);
 
         if (!i_alContext) {
-            log_error("Failed to create an OpenAL context.");
+            log_error("Failed to create an OpenAL context!");
             return false;
         }
 

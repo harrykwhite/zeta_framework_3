@@ -16,8 +16,8 @@ namespace zf3 {
         MusicSrcManager* musicSrcManager;
     };
 
-    using UserGameInit = bool (*)(const UserGameFuncData* const data);
-    using UserGameTick = bool (*)(const UserGameFuncData* const data);
+    using UserGameInit = bool (*)(const UserGameFuncData& data);
+    using UserGameTick = bool (*)(const UserGameFuncData& data);
 
     struct UserGameInfo {
         UserGameInit init;

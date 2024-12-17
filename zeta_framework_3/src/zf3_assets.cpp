@@ -8,6 +8,7 @@ namespace zf3 {
         const auto pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each texture.
 
         if (!pxDataBuf) {
+            log_error("Failed to allocate memory for a texture pixel data buffer!");
             return false;
         }
 
@@ -38,6 +39,7 @@ namespace zf3 {
         const auto pxDataBuf = static_cast<unsigned char*>(malloc(pxDataBufSize)); // For temporarily storing the pixel data of each font texture.
 
         if (!pxDataBuf) {
+            log_error("Failed to allocate memory for a font texture pixel data buffer!");
             return false;
         }
 
@@ -67,6 +69,7 @@ namespace zf3 {
         const auto samples = static_cast<AudioSample*>(malloc(sizeof(AudioSample) * gk_audioSamplesPerChunk)); // TEMP
 
         if (!samples) {
+            log_error("Failed to allocate memory for a sound sample buffer!");
             return false;
         }
 
@@ -113,12 +116,14 @@ namespace zf3 {
         i_assets = static_cast<Assets*>(malloc(sizeof(Assets)));
 
         if (!i_assets) {
+            log_error("Failed to allocate memory for assets!");
             return false;
         }
 
         FILE* const fs = fopen(gk_assetsFileName, "rb");
 
         if (!fs) {
+            log_error("Failed to open \"%s\"!", gk_assetsFileName);
             return false;
         }
 
@@ -133,6 +138,10 @@ namespace zf3 {
     }
 
     void clean_assets() {
+        if (!i_assets) {
+            return;
+        }
+
         if (i_assets->sounds.cnt > 0) {
             alDeleteBuffers(i_assets->sounds.cnt, i_assets->sounds.bufALIDs);
         }

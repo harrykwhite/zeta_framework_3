@@ -21,16 +21,19 @@ namespace zf3 {
         log("Initialising...");
 
         if (!glfwInit()) {
+            log_error("Failed to initialise GLFW!");
             return false;
         }
 
         if (!init_window(&game->window, &game->inputManager, game->userInfo.initWindowWidth, game->userInfo.initWindowHeight, game->userInfo.windowTitle, game->userInfo.windowResizable, game->userInfo.hideCursor)) {
+            log_error("Failed to initialise the window!");
             return false;
         }
 
         glfwSwapInterval(1); // Enable VSync.
 
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+            log_error("Failed to initialise OpenGL function pointers!");
             return false;
         }
 
@@ -57,7 +60,7 @@ namespace zf3 {
             .musicSrcManager = &game->musicSrcManager
         };
 
-        if (!game->userInfo.init(&game->userFuncData)) {
+        if (!game->userInfo.init(game->userFuncData)) {
             return false;
         }
 
@@ -95,7 +98,7 @@ namespace zf3 {
 
                     empty_sprite_batches(&game->renderer);
 
-                    if (!game->userInfo.tick(&game->userFuncData)) {
+                    if (!game->userInfo.tick(game->userFuncData)) {
                         return;
                     }
 
