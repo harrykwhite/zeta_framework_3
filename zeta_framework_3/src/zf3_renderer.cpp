@@ -221,7 +221,7 @@ namespace zf3 {
         }
     }
 
-    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect srcRect, const Vec2D origin, const float rot, const Vec2D scale, const float alpha) {
+    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect& srcRect, const Vec2D origin, const float rot, const Vec2D scale, const float alpha) {
         assert(layerIndex >= 0 && layerIndex < renderer->layerCnt);
 
         RenderLayer* const layer = &renderer->layers[layerIndex];
@@ -417,8 +417,8 @@ namespace zf3 {
 
         const int textHeight = textFirstLineMinOffs + charDrawPosPen.y + textLastLineMaxHeight;
 
-        // Clear the batch so it can have only the new characters.
-        //clear_char_batch(renderer, key);
+        // Clear the batch so it will have only the new characters.
+        clear_char_batch(renderer, id);
 
         // Reserve memory to temporarily hold the vertex data for the characters, so we can submit it all at once at the end.
         const int vertsLen = ik_charBatchSlotVertsCnt * textLen;
@@ -463,12 +463,12 @@ namespace zf3 {
             slotVerts[2] = charTexCoordsTopLeft.x;
             slotVerts[3] = charTexCoordsTopLeft.y;
 
-            slotVerts[4] = charDrawPos.x + fontArrangementInfo->chars.srcRects[charIndex].width + 1;
+            slotVerts[4] = charDrawPos.x + fontArrangementInfo->chars.srcRects[charIndex].width;
             slotVerts[5] = charDrawPos.y;
             slotVerts[6] = charTexCoordsBottomRight.x;
             slotVerts[7] = charTexCoordsTopLeft.y;
 
-            slotVerts[8] = charDrawPos.x + fontArrangementInfo->chars.srcRects[charIndex].width + 1;
+            slotVerts[8] = charDrawPos.x + fontArrangementInfo->chars.srcRects[charIndex].width;
             slotVerts[9] = charDrawPos.y + fontArrangementInfo->chars.srcRects[charIndex].height;
             slotVerts[10] = charTexCoordsBottomRight.x;
             slotVerts[11] = charTexCoordsBottomRight.y;

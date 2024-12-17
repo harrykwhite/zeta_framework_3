@@ -116,7 +116,7 @@ namespace zf3 {
     void render_all(const Renderer* const renderer, const ShaderProgs* const shaderProgs, const Window* const window, const Assets* const assets);
 
     void empty_sprite_batches(Renderer* const renderer);
-    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
+    void write_to_sprite_batch(Renderer* const renderer, const int layerIndex, const int texIndex, const Textures* const textures, const Vec2D pos, const Rect& srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
 
     CharBatchID activate_any_char_batch(Renderer* const renderer, const int layerIndex, const int slotCnt, const int fontIndex, const Vec2D pos);
     void deactivate_char_batch(Renderer* const renderer, const CharBatchID id);

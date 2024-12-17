@@ -289,23 +289,23 @@ namespace zf3 {
         return mag ? vec / mag : Vec2D {};
     }
 
-    inline int rect_right(const Rect rect) {
+    inline int rect_right(const Rect& rect) {
         return rect.x + rect.width;
     }
 
-    inline float rect_right(const RectFloat rect) {
+    inline float rect_right(const RectFloat& rect) {
         return rect.x + rect.width;
     }
 
-    inline int rect_bottom(const Rect rect) {
+    inline int rect_bottom(const Rect& rect) {
         return rect.y + rect.height;
     }
 
-    inline float rect_bottom(const RectFloat rect) {
+    inline float rect_bottom(const RectFloat& rect) {
         return rect.y + rect.height;
     }
 
-    inline bool do_rects_intersect(const RectFloat a, const RectFloat b) {
+    inline bool do_rects_intersect(const RectFloat& a, const RectFloat& b) {
         return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
     }
 }
