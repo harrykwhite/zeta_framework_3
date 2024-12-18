@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <glad/glad.h>
 #include <AL/al.h>
 #include <zf3c.h>
@@ -29,6 +30,29 @@ namespace zf3 {
             return buf[index];
         }
     };
+
+    struct MemArena {
+        Byte* bytes;
+        int size;
+        int offs;
+
+        bool init(const int size);
+        void clean();
+        template<typename T> T* push(const int cnt = 1);
+        void* push_size(const int size, const int alignment);
+        void reset();
+    };
+
+    constexpr bool is_power_of_two(const int n) {
+        assert(n >= 0);
+        return n && !(n & (n - 1));
+    }
+
+    constexpr int align_forward(const int n, const int alignment) {
+        assert(n >= 0);
+        assert(is_power_of_two(alignment));
+        return (n + alignment - 1) & ~(alignment - 1);
+    }
 
     int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
     bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
@@ -89,5 +113,20 @@ namespace zf3 {
     inline const T& ActivityBuf<T, CNT>::operator[](const int index) const {
         assert(is_bit_active(activity, index));
         return buf[index];
+    }
+
+    template<typename T>
+    T* MemArena::push(const int cnt) {
+        const int pushSize = sizeof(T) * cnt;
+        const int offsAligned = align_forward(offs, alignof(T));
+        const int offsNext = offsAligned + pushSize;
+
+        if (offsNext > size) {
+            return nullptr;
+        }
+
+        offs = offsNext;
+
+        return reinterpret_cast<T*>(bytes + offsAligned);
     }
 }
