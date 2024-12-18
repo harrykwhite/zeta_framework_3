@@ -139,10 +139,6 @@ namespace zf3 {
         glClearColor(renderer.bgColor.r, renderer.bgColor.g, renderer.bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, window.size.x, window.size.y, 0.0f, -1.0f, 1.0f);
-        const Matrix4x4 camViewMat = create_cam_view_matrix(renderer.cam, window);
-        const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
-
         static int lk_texUnits[gk_texUnitLimit];
         static bool lk_texUnitsInitialized = false;
 
@@ -153,6 +149,10 @@ namespace zf3 {
 
             lk_texUnitsInitialized = true;
         }
+
+        const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, window.size.x, window.size.y, 0.0f, -1.0f, 1.0f);
+        const Matrix4x4 camViewMat = create_cam_view_matrix(renderer.cam, window);
+        const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
         for (int i = 0; i < renderer.layerCnt; ++i) {
             //

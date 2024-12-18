@@ -183,7 +183,7 @@ namespace zf3 {
             }
         }
 
-        zero_out(manager.srcs);
+        zero_out(manager);
     }
 
     bool refresh_music_src_bufs(MusicSrcManager& manager) {
