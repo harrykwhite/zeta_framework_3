@@ -24,7 +24,7 @@ namespace zf3 {
     bool MemArena::init(const int size) {
         zero_out(*this);
 
-        bytes = alloc<Byte>(size);
+        bytes = alloc_zeroed<Byte>(size);
 
         if (!bytes) {
             return false;
