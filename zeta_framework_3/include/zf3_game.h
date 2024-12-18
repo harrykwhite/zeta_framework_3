@@ -17,10 +17,12 @@ namespace zf3 {
 
     using UserGameInit = bool (*)(const UserGameFuncData& data);
     using UserGameTick = bool (*)(const UserGameFuncData& data);
+    using UserGameClean = void (*)();
 
     struct UserGameInfo {
         UserGameInit init;
         UserGameTick tick;
+        UserGameClean clean;
 
         int initWindowWidth;
         int initWindowHeight;

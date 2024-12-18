@@ -127,6 +127,8 @@ namespace zf3 {
 
         log("Cleaning up...");
 
+        userInfo.clean();
+
         if (game) {
             clean_music_srcs(game->musicSrcManager);
             clean_sound_srcs(game->sndSrcManager);
