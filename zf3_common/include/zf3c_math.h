@@ -227,6 +227,26 @@ namespace zf3 {
         float y;
         float width;
         float height;
+
+        float get_right() const {
+            return x + width;
+        }
+
+        float get_bottom() const {
+            return y + height;
+        }
+
+        Vec2D get_pos() const {
+            return {x, y};
+        }
+
+        Vec2D get_size() const {
+            return {width, height};
+        }
+
+        Vec2D get_center() const {
+            return {x + (width / 2), y + (height / 2)};
+        }
     };
 
     struct Rect {
@@ -237,6 +257,26 @@ namespace zf3 {
 
         operator RectFloat() const {
             return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)};
+        }
+
+        int get_right() const {
+            return x + width;
+        }
+
+        int get_bottom() const {
+            return y + height;
+        }
+
+        zf3::Vec2DInt get_pos() const {
+            return {x, y};
+        }
+
+        zf3::Vec2DInt get_size() const {
+            return {width, height};
+        }
+
+        zf3::Vec2DInt get_center() const {
+            return {x + (width / 2), y + (height / 2)};
         }
     };
 
