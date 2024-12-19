@@ -9,14 +9,14 @@ namespace zf3 {
     struct Textures {
         int cnt;
         GLID glIDs[gk_texLimit];
-        Vec2DInt sizes[gk_texLimit];
+        Pt2D sizes[gk_texLimit];
     };
 
     struct Fonts {
         int cnt;
         FontArrangementInfo arrangementInfos[gk_fontLimit];
         GLID texGLIDs[gk_fontLimit];
-        Vec2DInt texSizes[gk_fontLimit];
+        Pt2D texSizes[gk_fontLimit];
     };
 
     struct Sounds {

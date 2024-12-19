@@ -59,23 +59,6 @@ namespace zf3 {
         }
     };
 
-    struct Vec2DInt {
-        int x;
-        int y;
-
-        operator Vec2D() const {
-            return {static_cast<float>(x), static_cast<float>(y)};
-        }
-
-        Vec2D operator*(const float scalar) const {
-            return {x * scalar, y * scalar};
-        }
-
-        Vec2D operator/(const float scalar) const {
-            return {x / scalar, y / scalar};
-        }
-    };
-
     union Vec3D {
         struct {
             float x;
@@ -214,6 +197,11 @@ namespace zf3 {
         }
     };
 
+    struct Pt2D {
+        int x;
+        int y;
+    };
+
     struct Matrix4x4 {
         float elems[4][4];
 
@@ -267,15 +255,15 @@ namespace zf3 {
             return y + height;
         }
 
-        zf3::Vec2DInt get_pos() const {
+        Pt2D get_pos() const {
             return {x, y};
         }
 
-        zf3::Vec2DInt get_size() const {
+        Pt2D get_size() const {
             return {width, height};
         }
 
-        zf3::Vec2DInt get_center() const {
+        Pt2D get_center() const {
             return {x + (width / 2), y + (height / 2)};
         }
     };
@@ -284,6 +272,17 @@ namespace zf3 {
         int begin;
         int end;
     };
+
+    Matrix4x4 create_identity_matrix_4x4();
+    Matrix4x4 create_ortho_matrix_4x4(const float left, const float right, const float bottom, const float top, const float near, const float far);
+
+    constexpr Vec2D to_vec_2d(const Pt2D pt) {
+        return {static_cast<float>(pt.x), static_cast<float>(pt.y)};
+    }
+
+    constexpr Pt2D to_pt_2d(const Vec2D vec) {
+        return {static_cast<int>(vec.x), static_cast<int>(vec.y)};
+    }
 
     template<typename T>
     constexpr T min(const T& a, const T& b) {
@@ -296,25 +295,22 @@ namespace zf3 {
     }
 
     template<typename T>
-    constexpr float clamp(const T& val, const T& min, const T& max) {
-        if (val < min) {
+    constexpr T clamp(const T& value, const T& min, const T& max) {
+        if (value < min) {
             return min;
         }
 
-        if (val > max) {
+        if (value > max) {
             return max;
         }
 
-        return val;
+        return value;
     }
 
     template<typename T>
     constexpr T lerp(const T& a, const T& b, const float t) {
         return a + ((b - a) * t);
     }
-
-    Matrix4x4 create_identity_matrix_4x4();
-    Matrix4x4 create_ortho_matrix_4x4(const float left, const float right, const float bottom, const float top, const float near, const float far);
 
     inline float calc_mag(const Vec2D vec) {
         return sqrtf((vec.x * vec.x) + (vec.y * vec.y));
@@ -328,7 +324,7 @@ namespace zf3 {
         return atan2f(-(b.y - a.y), b.x - a.x);
     }
 
-    inline Vec2D calc_normal(const Vec2D vec) {
+    inline Vec2D normalized(const Vec2D vec) {
         const float mag = calc_mag(vec);
         return mag ? vec / mag : Vec2D {};
     }

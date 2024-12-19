@@ -105,14 +105,14 @@ namespace zf3 {
     };
 
     struct GLFWWindowCallbackData {
-        Vec2DInt* windowSize;
+        Pt2D* windowSize;
         InputState* inputState;
     };
 
     struct Window {
         GLFWwindow* glfwWindow;
         GLFWWindowCallbackData glfwWindowCallbackData;
-        Vec2DInt size;
+        Pt2D size;
     };
 
     bool init_window(Window& window, InputManager& inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);

@@ -249,7 +249,7 @@ namespace zf3 {
         }
 
         const int slotIndex = batchTransData.slotsUsed;
-        const Vec2DInt texSize = get_assets().textures.sizes[texIndex];
+        const Pt2D texSize = get_assets().textures.sizes[texIndex];
 
         const float verts[] = {
             (0.0f - origin.x) * scale.x,
@@ -345,7 +345,7 @@ namespace zf3 {
         assert(textLen > 0 && textLen <= batch.slotCnt);
 
         const FontArrangementInfo& fontArrangementInfo = get_assets().fonts.arrangementInfos[batch.displayProps.fontIndex];
-        const Vec2DInt fontTexSize = get_assets().fonts.texSizes[batch.displayProps.fontIndex];
+        const Pt2D fontTexSize = get_assets().fonts.texSizes[batch.displayProps.fontIndex];
 
         Vec2D charDrawPositions[gk_charBatchSlotLimit];
         Vec2D charDrawPosPen = {};

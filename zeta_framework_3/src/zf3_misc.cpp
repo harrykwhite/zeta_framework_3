@@ -44,6 +44,7 @@ namespace zf3 {
     }
 
     void* MemArena::push_size(const int size, const int alignment) {
+        assert(bytes);
         assert(size > 0);
         assert(is_power_of_two(alignment));
 

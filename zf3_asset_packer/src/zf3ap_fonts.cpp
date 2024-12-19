@@ -5,7 +5,7 @@
 
 struct FontData {
     zf3::FontArrangementInfo arrangementInfo;
-    zf3::Vec2DInt texSize;
+    zf3::Pt2D texSize;
     zf3::Byte texPxData[zf3::gk_texPxDataSizeLimit];
 };
 
@@ -28,7 +28,7 @@ static inline int get_line_height(const FT_Face ftFace) {
     return ftFace->size->metrics.height >> 6;
 }
 
-static zf3::Vec2DInt calc_font_tex_size(const FT_Face ftFace) {
+static zf3::Pt2D calc_font_tex_size(const FT_Face ftFace) {
     const int largestGlyphBitmapWidth = calc_largest_bitmap_width(ftFace);
     const int idealTexWidth = largestGlyphBitmapWidth * zf3::gk_fontCharRangeSize;
 

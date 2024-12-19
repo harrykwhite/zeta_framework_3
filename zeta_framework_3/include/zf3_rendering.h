@@ -128,7 +128,14 @@ namespace zf3 {
     }
 
     inline Vec2D get_camera_top_left(const Camera& cam, const Window& window) {
-        return cam.pos - (window.size / (cam.scale * 2.0f));
+        return cam.pos - (to_vec_2d(window.size) / (cam.scale * 2.0f));
+    }
+
+    inline Pt2D get_camera_size(const Camera& cam, const Window& window) {
+        return {
+            static_cast<int>(window.size.x / cam.scale),
+            static_cast<int>(window.size.y / cam.scale)
+        };
     }
 
     inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera& cam, const Window& window) {

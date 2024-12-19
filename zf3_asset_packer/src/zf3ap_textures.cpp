@@ -34,7 +34,7 @@ bool pack_textures(FILE* const outputFS, const cJSON* const instrsCJ, char* cons
         }
 
         // Load and write the size and pixel data of the texture.
-        zf3::Vec2DInt texSize;
+        zf3::Pt2D texSize;
         stbi_uc* const texPxData = stbi_load(srcAssetFilePathBuf, &texSize.x, &texSize.y, nullptr, zf3::gk_texChannelCnt);
 
         if (!texPxData) {

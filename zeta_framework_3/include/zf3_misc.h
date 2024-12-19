@@ -117,6 +117,8 @@ namespace zf3 {
 
     template<typename T>
     T* MemArena::push(const int cnt) {
+        assert(bytes);
+
         const int pushSize = sizeof(T) * cnt;
         const int offsAligned = align_forward(offs, alignof(T));
         const int offsNext = offsAligned + pushSize;
