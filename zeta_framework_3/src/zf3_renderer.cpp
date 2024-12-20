@@ -1,4 +1,4 @@
-#include <zf3_rendering.h>
+#include <zf3_renderer.h>
 
 namespace zf3 {
     static constexpr int ik_spriteBatchSlotVertCnt = gk_spriteQuadShaderProgVertCnt * 4;
@@ -126,7 +126,7 @@ namespace zf3 {
         zero_out(renderer);
     }
 
-    void reset_renderer(Renderer& renderer, const int layerCnt, const int camLayerCnt, const Vec3D bgColor, const Vec2D camPos, const float camScale) {
+    void reset_renderer(Renderer& renderer, const int layerCnt, const int camLayerCnt, const Color bgColor, const Vec2D camPos, const float camScale) {
         clean_renderer(renderer);
         renderer.layerCnt = layerCnt;
         renderer.camLayerCnt = camLayerCnt;
@@ -206,7 +206,6 @@ namespace zf3 {
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, get_assets().fonts.texGLIDs[batch->displayProps.fontIndex]);
 
-                // Draw the batch.
                 glBindVertexArray(batch->quadBuf.vertArrayGLID);
                 glDrawElements(GL_TRIANGLES, 6 * batch->slotCnt, GL_UNSIGNED_SHORT, nullptr);
             }
@@ -452,8 +451,8 @@ namespace zf3 {
             };
 
             const Vec2D charTexCoordsBottomRight = {
-                static_cast<float>(rect_right(fontArrangementInfo.chars.srcRects[charIndex])) / fontTexSize.x,
-                static_cast<float>(rect_bottom(fontArrangementInfo.chars.srcRects[charIndex])) / fontTexSize.y
+                static_cast<float>(get_rect_right(fontArrangementInfo.chars.srcRects[charIndex])) / fontTexSize.x,
+                static_cast<float>(get_rect_bottom(fontArrangementInfo.chars.srcRects[charIndex])) / fontTexSize.y
             };
 
             float* const slotVerts = verts + (i * ik_charBatchSlotVertsCnt);

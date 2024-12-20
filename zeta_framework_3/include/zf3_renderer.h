@@ -3,48 +3,16 @@
 #include <zf3c.h>
 #include <zf3_window.h>
 #include <zf3_assets.h>
+#include <zf3_shader_progs.h>
 #include <zf3_misc.h>
 
 namespace zf3 {
-    //
-    // Shader Programs
-    //
-    constexpr int gk_spriteQuadShaderProgVertCnt = 11;
-    constexpr int gk_charQuadShaderProgVertCnt = 4;
-
-    struct SpriteQuadShaderProg {
-        GLID glID;
-        int projUniLoc;
-        int viewUniLoc;
-        int texturesUniLoc;
-    };
-
-    struct CharQuadShaderProg {
-        GLID glID;
-        int projUniLoc;
-        int viewUniLoc;
-        int posUniLoc;
-        int rotUniLoc;
-        int blendUniLoc;
-    };
-
-    struct ShaderProgs {
-        SpriteQuadShaderProg spriteQuad;
-        CharQuadShaderProg charQuad;
-    };
-
-    ShaderProgs load_shader_progs();
-    void clean_shader_progs(ShaderProgs& progs);
-
-    //
-    // Renderer
-    //
-    static constexpr int gk_renderLayerLimit = 32;
-    static constexpr int gk_renderLayerSpriteBatchLimit = 256;
-    static constexpr int gk_renderLayerCharBatchLimit = 256;
-    static constexpr int gk_spriteBatchSlotLimit = 4096;
-    static constexpr int gk_charBatchSlotLimit = 1024;
-    static constexpr int gk_texUnitLimit = 16;
+    constexpr int gk_renderLayerLimit = 32;
+    constexpr int gk_renderLayerSpriteBatchLimit = 256;
+    constexpr int gk_renderLayerCharBatchLimit = 256;
+    constexpr int gk_spriteBatchSlotLimit = 4096;
+    constexpr int gk_charBatchSlotLimit = 1024;
+    constexpr int gk_texUnitLimit = 16;
 
     enum FontHorAlign {
         FONT_HOR_ALIGN_LEFT,
@@ -57,6 +25,16 @@ namespace zf3 {
         FONT_VER_ALIGN_CENTER,
         FONT_VER_ALIGN_BOTTOM
     };
+
+    struct Color {
+        float r, g, b, a;
+    };
+
+    inline const Color gk_white = {1.0f, 1.0f, 1.0f};
+    inline const Color gk_black = {0.0f, 0.0f, 0.0f};
+    inline const Color gk_red = {1.0f, 0.0f, 0.0f};
+    inline const Color gk_green = {0.0f, 1.0f, 0.0f};
+    inline const Color gk_blue = {0.0f, 0.0f, 1.0f};
 
     struct QuadBuf {
         GLID vertArrayGLID;
@@ -74,7 +52,7 @@ namespace zf3 {
         int fontIndex;
         Vec2D pos;
         float rot;
-        Vec4D blend;
+        Color blend;
     };
 
     struct CharBatch {
@@ -107,12 +85,12 @@ namespace zf3 {
         int layerCnt;
         int camLayerCnt;
 
-        Vec3D bgColor;
+        Color bgColor;
         Camera cam;
     };
 
     void clean_renderer(Renderer& renderer);
-    void reset_renderer(Renderer& renderer, const int layerCnt, const int camLayerCnt = 0, const Vec3D bgColor = {}, const Vec2D camPos = {}, const float camScale = 2.0f);
+    void reset_renderer(Renderer& renderer, const int layerCnt, const int camLayerCnt = 0, const Color bgColor = {}, const Vec2D camPos = {}, const float camScale = 2.0f);
     void render_all(const Renderer& renderer, const ShaderProgs& shaderProgs);
 
     void empty_sprite_batches(Renderer& renderer);

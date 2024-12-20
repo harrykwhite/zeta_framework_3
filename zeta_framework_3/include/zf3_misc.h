@@ -6,9 +6,6 @@
 #include <zf3c.h>
 
 namespace zf3 {
-    //
-    // Data Types and Constants
-    //
     using GLID = GLuint;
     using ALID = ALuint;
 
@@ -17,9 +14,6 @@ namespace zf3 {
         T* elems;
         int len;
         int cap;
-
-        T& operator[](const int index);
-        const T& operator[](const int index) const;
     };
 
     template<int BIT_CNT>
@@ -31,9 +25,6 @@ namespace zf3 {
     struct ActivityList {
         T elems[LEN];
         Bitset<LEN> activity;
-
-        T& operator[](const int index);
-        const T& operator[](const int index) const;
     };
 
     struct MemArena {
@@ -42,9 +33,6 @@ namespace zf3 {
         int offs;
     };
 
-    //
-    // Functions
-    //
     int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
     bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
 
@@ -62,18 +50,6 @@ namespace zf3 {
         assert(n >= 0);
         assert(is_power_of_two(alignment));
         return (n + alignment - 1) & ~(alignment - 1);
-    }
-
-    template<typename T>
-    inline T& List<T>::operator[](const int index) {
-        assert(index >= 0 && index < len);
-        return elems[index];
-    }
-
-    template<typename T>
-    inline const T& List<T>::operator[](const int index) const {
-        assert(index >= 0 && index < len);
-        return elems[index];
     }
 
     template<typename T>
@@ -141,18 +117,6 @@ namespace zf3 {
     template<int BIT_CNT>
     inline bool are_all_bits_active(const Bitset<BIT_CNT>& activity) {
         return are_all_bits_active(activity.bytes, BIT_CNT);
-    }
-
-    template<typename T, int CNT>
-    inline T& ActivityList<T, CNT>::operator[](const int index) {
-        assert(is_bit_active(activity, index));
-        return elems[index];
-    }
-
-    template<typename T, int CNT>
-    inline const T& ActivityList<T, CNT>::operator[](const int index) const {
-        assert(is_bit_active(activity, index));
-        return elems[index];
     }
 
     template<typename T>

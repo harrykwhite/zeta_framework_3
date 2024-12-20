@@ -28,7 +28,7 @@ namespace zf3 {
 
         // Allocate a memory arena for working space.
         constexpr int scratchSpaceSize = zf3::megabytes_to_bytes(32);
-        MemArena scratchSpace;
+        MemArena scratchSpace = {};
 
         if (!init_mem_arena(scratchSpace, scratchSpaceSize)) {
             log_error("Failed to initialise scratch space for assets initialisation!");

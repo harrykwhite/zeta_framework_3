@@ -130,12 +130,13 @@ namespace zf3 {
             clean_sound_srcs(game->sndSrcManager);
             clean_renderer(game->renderer);
             clean_shader_progs(game->shaderProgs);
-            clean_assets();
-            clean_window();
             free(game);
         }
 
+        clean_assets();
         clean_audio_system();
+        clean_window();
+
         glfwTerminate();
     }
 }

@@ -1,4 +1,4 @@
-#include <zf3_rendering.h>
+#include <zf3_shader_progs.h>
 
 namespace zf3 {
     static GLID create_shader_from_src(const char* const src, const bool frag) {

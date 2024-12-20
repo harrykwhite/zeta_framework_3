@@ -4,6 +4,7 @@ namespace zf3 {
     static bool i_rngInitialized;
 
     void init_rng() {
+        assert(!i_rngInitialized);
         srand(time(nullptr));
         i_rngInitialized = true;
     }

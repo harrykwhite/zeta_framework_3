@@ -22,7 +22,7 @@ namespace zf3 {
     }
 
     bool init_mem_arena(MemArena& arena, const int size) {
-        zero_out(arena);
+        assert(is_zero(arena));
 
         arena.buf = alloc_zeroed<Byte>(size);
 
@@ -61,6 +61,7 @@ namespace zf3 {
     }
 
     void reset_mem_arena(MemArena& arena) {
+        assert(arena.buf);
         memset(arena.buf, 0, arena.offs);
         arena.offs = 0;
     }

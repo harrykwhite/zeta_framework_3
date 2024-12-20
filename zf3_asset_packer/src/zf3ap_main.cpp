@@ -37,7 +37,7 @@ static char* get_packing_instrs_file_chars(char* const srcAssetFilePathBuf, char
 }
 
 static bool run_asset_packer(AssetPacker& packer, char* const errorMsgBuf, const char* const srcDir, const char* const outputDir) {
-    zf3::zero_out(packer);
+    assert(zf3::is_zero(packer));
 
     // Open the output file.
     packer.outputFS = open_output_file(outputDir, errorMsgBuf);

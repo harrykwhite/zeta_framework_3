@@ -1,4 +1,4 @@
-#include "zf3_audio.h"
+#include <zf3_audio.h>
 
 namespace zf3 {
     static ALCdevice* i_alDevice = nullptr;
@@ -131,7 +131,7 @@ namespace zf3 {
         }
     }
 
-    SoundSrcID add_sound_src(SoundSrcManager& manager, const int sndIndex) {
+    AudioSrcID add_sound_src(SoundSrcManager& manager, const int sndIndex) {
         for (int i = 0; i < gk_soundSrcLimit; ++i) {
             if (!manager.alIDs[i]) {
                 alGenSources(1, &manager.alIDs[i]);
@@ -151,7 +151,7 @@ namespace zf3 {
         return {};
     }
 
-    void remove_sound_src(SoundSrcManager& manager, const SoundSrcID srcID) {
+    void remove_sound_src(SoundSrcManager& manager, const AudioSrcID srcID) {
         assert(srcID.index >= 0 && srcID.index < gk_soundSrcLimit);
         assert(manager.versions[srcID.index] == srcID.version);
         assert(manager.alIDs[srcID.index]);
@@ -159,7 +159,7 @@ namespace zf3 {
         release_sound_src_by_index(manager, srcID.index);
     }
 
-    void play_sound_src(const SoundSrcManager& manager, const SoundSrcID srcID, const float gain, const float pitch) {
+    void play_sound_src(const SoundSrcManager& manager, const AudioSrcID srcID, const float gain, const float pitch) {
         assert(srcID.index >= 0 && srcID.index < gk_soundSrcLimit);
         assert(manager.versions[srcID.index] == srcID.version);
         assert(manager.alIDs[srcID.index]);
@@ -171,7 +171,7 @@ namespace zf3 {
     }
 
     void add_and_play_sound_src(SoundSrcManager& manager, const int sndIndex, const float gain, const float pitch) {
-        const SoundSrcID srcID = add_sound_src(manager, sndIndex);
+        const AudioSrcID srcID = add_sound_src(manager, sndIndex);
         play_sound_src(manager, srcID, gain, pitch);
         activate_bit(manager.autoReleases, srcID.index); // No reference to this source is returned, so it needs to be automatically released once it is detected as finished.
     }
@@ -215,7 +215,7 @@ namespace zf3 {
         return true;
     }
 
-    MusicSrcID add_music_src(MusicSrcManager& manager, const int musicIndex) {
+    AudioSrcID add_music_src(MusicSrcManager& manager, const int musicIndex) {
         const int srcIndex = get_first_inactive_bit_index(manager.activity);
         assert(srcIndex != -1);
 
@@ -234,7 +234,7 @@ namespace zf3 {
         };
     }
 
-    void remove_music_src(MusicSrcManager& manager, const MusicSrcID id) {
+    void remove_music_src(MusicSrcManager& manager, const AudioSrcID id) {
         assert(id.index >= 0 && id.index < gk_musicSrcLimit);
         assert(manager.versions[id.index] == id.version);
         assert(is_bit_active(manager.activity, id.index));
@@ -243,7 +243,7 @@ namespace zf3 {
         deactivate_bit(manager.activity, id.index);
     }
 
-    bool play_music_src(MusicSrcManager& manager, const MusicSrcID id, const float gain) {
+    bool play_music_src(MusicSrcManager& manager, const AudioSrcID id, const float gain) {
         assert(id.index >= 0 && id.index < gk_musicSrcLimit);
         assert(manager.versions[id.index] == id.version);
         assert(is_bit_active(manager.activity, id.index));
