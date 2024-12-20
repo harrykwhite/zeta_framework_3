@@ -47,7 +47,7 @@ static bool run_asset_packer(AssetPacker& packer, char* const errorMsgBuf, const
     }
 
     // Initialise the source asset file path buffer with the source directory.
-    char srcAssetFilePathBuf[gk_srcAssetFilePathBufSize] = {0};
+    char srcAssetFilePathBuf[gk_srcAssetFilePathBufSize] = {};
     const int srcAssetFilePathStartLen = snprintf(srcAssetFilePathBuf, gk_srcAssetFilePathBufSize, "%s/", srcDir);
 
     if (srcAssetFilePathStartLen >= gk_srcAssetFilePathBufSize) {

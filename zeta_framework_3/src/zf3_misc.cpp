@@ -21,47 +21,47 @@ namespace zf3 {
         return true;
     }
 
-    bool MemArena::init(const int size) {
-        zero_out(*this);
+    bool init_mem_arena(MemArena& arena, const int size) {
+        zero_out(arena);
 
-        bytes = alloc_zeroed<Byte>(size);
+        arena.buf = alloc_zeroed<Byte>(size);
 
-        if (!bytes) {
+        if (!arena.buf) {
             return false;
         }
 
-        this->size = size;
+        arena.size = size;
 
         return true;
     }
 
-    void MemArena::clean() {
-        if (bytes) {
-            free(bytes);
+    void clean_mem_arena(MemArena& arena) {
+        if (arena.buf) {
+            free(arena.buf);
         }
 
-        zero_out(*this);
+        zero_out(arena);
     }
 
-    void* MemArena::push_size(const int size, const int alignment) {
-        assert(bytes);
+    void* push_to_mem_arena(MemArena& arena, const int size, const int alignment) {
+        assert(arena.buf);
         assert(size > 0);
         assert(is_power_of_two(alignment));
 
-        const int offsAligned = align_forward(offs, alignment);
+        const int offsAligned = align_forward(arena.offs, alignment);
         const int offsNext = offsAligned + size;
 
-        if (offsNext > this->size) {
+        if (offsNext > arena.size) {
             return nullptr;
         }
 
-        offs = offsNext;
+        arena.offs = offsNext;
 
-        return bytes + offsAligned;
+        return static_cast<Byte*>(arena.buf) + offsAligned;
     }
 
-    void MemArena::reset() {
-        memset(bytes, 0, offs);
-        offs = 0;
+    void reset_mem_arena(MemArena& arena) {
+        memset(arena.buf, 0, arena.offs);
+        arena.offs = 0;
     }
 }

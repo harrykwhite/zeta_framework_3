@@ -30,7 +30,7 @@ namespace zf3 {
         constexpr int scratchSpaceSize = zf3::megabytes_to_bytes(32);
         MemArena scratchSpace;
 
-        if (!scratchSpace.init(scratchSpaceSize)) {
+        if (!init_mem_arena(scratchSpace, scratchSpaceSize)) {
             log_error("Failed to initialise scratch space for assets initialisation!");
 
             fclose(fs);
@@ -43,7 +43,7 @@ namespace zf3 {
 
         // Reserve space for pixel data, used for both textures and fonts.
         const int pxDataSize = gk_texChannelCnt * gk_texSizeLimit.x * gk_texSizeLimit.y;
-        auto pxData = scratchSpace.push<unsigned char>(pxDataSize);
+        auto pxData = push_to_mem_arena<unsigned char>(scratchSpace, pxDataSize);
         assert(pxData);
 
         // Load textures.
@@ -82,7 +82,7 @@ namespace zf3 {
         }
 
         // Clear the scratch space of the pixel data; it is no longer needed.
-        scratchSpace.reset();
+        reset_mem_arena(scratchSpace);
         pxData = nullptr;
 
         // Load sounds.
@@ -96,13 +96,13 @@ namespace zf3 {
                 fread(&audioInfo, sizeof(audioInfo), 1, fs);
 
                 const int sampleCnt = audioInfo.sampleCntPerChannel * audioInfo.channelCnt;
-                const auto samples = scratchSpace.push<AudioSample>(sampleCnt);
+                const auto samples = push_to_mem_arena<AudioSample>(scratchSpace, sampleCnt);
                 fread(samples, sizeof(*samples), sampleCnt, fs);
 
                 const ALenum format = audioInfo.channelCnt == 1 ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_STEREO_FLOAT32;
                 alBufferData(i_assets->sounds.bufALIDs[i], format, samples, sizeof(*samples) * sampleCnt, audioInfo.sampleRate);
 
-                scratchSpace.reset();
+                reset_mem_arena(scratchSpace);
             }
         }
 
@@ -119,7 +119,7 @@ namespace zf3 {
         }
 
         // Clean up.
-        scratchSpace.clean();
+        clean_mem_arena(scratchSpace);
         fclose(fs);
 
         return true;

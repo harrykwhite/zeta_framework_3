@@ -24,7 +24,15 @@ namespace zf3 {
 
     template<typename T>
     bool is_zero(const T& data) {
-        return !memcmp(&data, 0, sizeof(T));
+        const auto dataBytes = reinterpret_cast<const Byte*>(&data);
+
+        for (int i = 0; i < sizeof(T); ++i) {
+            if (dataBytes[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     constexpr int kilobytes_to_bytes(int kb) {

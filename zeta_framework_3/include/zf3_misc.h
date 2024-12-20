@@ -6,42 +6,52 @@
 #include <zf3c.h>
 
 namespace zf3 {
+    //
+    // Data Types and Constants
+    //
     using GLID = GLuint;
     using ALID = ALuint;
+
+    template<typename T>
+    struct List {
+        T* elems;
+        int len;
+        int cap;
+
+        T& operator[](const int index);
+        const T& operator[](const int index) const;
+    };
 
     template<int BIT_CNT>
     struct Bitset {
         Byte bytes[bits_to_bytes(BIT_CNT)];
     };
 
-    template<typename T, int CNT>
-    struct ActivityBuf {
-        T buf[CNT];
-        Bitset<CNT> activity;
+    template<typename T, int LEN>
+    struct ActivityList {
+        T elems[LEN];
+        Bitset<LEN> activity;
 
         T& operator[](const int index);
         const T& operator[](const int index) const;
-
-        T& get_even_if_inactive(const int index) {
-            return buf[index];
-        }
-
-        const T& get_even_if_inactive(const int index) const {
-            return buf[index];
-        }
     };
 
     struct MemArena {
-        Byte* bytes;
+        void* buf;
         int size;
         int offs;
-
-        bool init(const int size);
-        void clean();
-        template<typename T> T* push(const int cnt = 1);
-        void* push_size(const int size, const int alignment);
-        void reset();
     };
+
+    //
+    // Functions
+    //
+    int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
+    bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
+
+    bool init_mem_arena(MemArena& arena, const int size);
+    void clean_mem_arena(MemArena& arena);
+    void* push_to_mem_arena(MemArena& arena, const int size, const int alignment);
+    void reset_mem_arena(MemArena& arena);
 
     constexpr bool is_power_of_two(const int n) {
         assert(n >= 0);
@@ -54,8 +64,38 @@ namespace zf3 {
         return (n + alignment - 1) & ~(alignment - 1);
     }
 
-    int get_first_inactive_bit_index(const Byte* const bytes, const int bitCnt);
-    bool are_all_bits_active(const Byte* const bytes, const int bitCnt);
+    template<typename T>
+    inline T& List<T>::operator[](const int index) {
+        assert(index >= 0 && index < len);
+        return elems[index];
+    }
+
+    template<typename T>
+    inline const T& List<T>::operator[](const int index) const {
+        assert(index >= 0 && index < len);
+        return elems[index];
+    }
+
+    template<typename T>
+    void append(List<T>& list, const T& elem) {
+        assert(list.len < list.cap);
+
+        list.elems[list.len] = elem;
+        ++list.len;
+    }
+
+    template<typename T>
+    void insert(List<T>& list, const int index, const T& elem) {
+        assert(index >= 0 && index <= list.len);
+        assert(list.len < list.cap);
+
+        for (int i = list.len; i > index; --i) {
+            list.elems[i] = list.elems[i - 1];
+        }
+
+        list.elems[index] = elem;
+        ++list.len;
+    }
 
     inline void activate_bit(Byte* const bytes, const int bitIndex) {
         bytes[bitIndex / 8] |= 1 << (bitIndex % 8);
@@ -104,31 +144,31 @@ namespace zf3 {
     }
 
     template<typename T, int CNT>
-    inline T& ActivityBuf<T, CNT>::operator[](const int index) {
+    inline T& ActivityList<T, CNT>::operator[](const int index) {
         assert(is_bit_active(activity, index));
-        return buf[index];
+        return elems[index];
     }
 
     template<typename T, int CNT>
-    inline const T& ActivityBuf<T, CNT>::operator[](const int index) const {
+    inline const T& ActivityList<T, CNT>::operator[](const int index) const {
         assert(is_bit_active(activity, index));
-        return buf[index];
+        return elems[index];
     }
 
     template<typename T>
-    T* MemArena::push(const int cnt) {
-        assert(bytes);
+    T* push_to_mem_arena(MemArena& arena, const int cnt) {
+        assert(arena.buf);
 
         const int pushSize = sizeof(T) * cnt;
-        const int offsAligned = align_forward(offs, alignof(T));
+        const int offsAligned = align_forward(arena.offs, alignof(T));
         const int offsNext = offsAligned + pushSize;
 
-        if (offsNext > size) {
+        if (offsNext > arena.size) {
             return nullptr;
         }
 
-        offs = offsNext;
+        arena.offs = offsNext;
 
-        return reinterpret_cast<T*>(bytes + offsAligned);
+        return reinterpret_cast<T*>(static_cast<Byte*>(arena.buf) + offsAligned);
     }
 }
