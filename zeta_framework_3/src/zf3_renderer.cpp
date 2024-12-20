@@ -102,13 +102,13 @@ namespace zf3 {
         return batchTransData.texUnitsInUse++;
     }
 
-    static Matrix4x4 create_cam_view_matrix(const Camera& cam, const Window& window) {
+    static Matrix4x4 create_cam_view_matrix(const Camera& cam) {
         Matrix4x4 mat = {};
         mat[0][0] = cam.scale;
         mat[1][1] = cam.scale;
         mat[3][3] = 1.0f;
-        mat[3][0] = (-cam.pos.x * cam.scale) + (window.size.x / 2.0f);
-        mat[3][1] = (-cam.pos.y * cam.scale) + (window.size.y / 2.0f);
+        mat[3][0] = (-cam.pos.x * cam.scale) + (get_window_size().x / 2.0f);
+        mat[3][1] = (-cam.pos.y * cam.scale) + (get_window_size().y / 2.0f);
         return mat;
     }
 
@@ -135,7 +135,7 @@ namespace zf3 {
         renderer.cam.scale = camScale;
     }
 
-    void render_all(const Renderer& renderer, const ShaderProgs& shaderProgs, const Window& window) {
+    void render_all(const Renderer& renderer, const ShaderProgs& shaderProgs) {
         glClearColor(renderer.bgColor.r, renderer.bgColor.g, renderer.bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -150,8 +150,8 @@ namespace zf3 {
             lk_texUnitsInitialized = true;
         }
 
-        const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, window.size.x, window.size.y, 0.0f, -1.0f, 1.0f);
-        const Matrix4x4 camViewMat = create_cam_view_matrix(renderer.cam, window);
+        const Matrix4x4 projMat = create_ortho_matrix_4x4(0.0f, get_window_size().x, get_window_size().y, 0.0f, -1.0f, 1.0f);
+        const Matrix4x4 camViewMat = create_cam_view_matrix(renderer.cam);
         const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
         for (int i = 0; i < renderer.layerCnt; ++i) {

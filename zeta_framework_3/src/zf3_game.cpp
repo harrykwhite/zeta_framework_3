@@ -6,8 +6,6 @@ namespace zf3 {
     static constexpr double ik_tickDurLimitMult = 8.0;
 
     struct Game {
-        Window window;
-        InputManager inputManager;
         ShaderProgs shaderProgs;
         Renderer renderer;
         SoundSrcManager sndSrcManager;
@@ -30,7 +28,7 @@ namespace zf3 {
             return;
         }
 
-        if (!init_window(game.window, game.inputManager, userInfo.initWindowWidth, userInfo.initWindowHeight, userInfo.windowTitle, userInfo.windowResizable, userInfo.hideCursor)) {
+        if (!init_window(userInfo.initWindowWidth, userInfo.initWindowHeight, userInfo.windowTitle, userInfo.windowResizable, userInfo.hideCursor)) {
             log_error("Failed to initialise the window!");
             return;
         }
@@ -58,8 +56,6 @@ namespace zf3 {
         init_rng();
 
         const UserGameFuncData userFuncData = {
-            .window = game.window,
-            .inputManager = game.inputManager,
             .renderer = game.renderer,
             .sndSrcManager = game.sndSrcManager,
             .musicSrcManager = game.musicSrcManager
@@ -69,7 +65,7 @@ namespace zf3 {
             return;
         }
 
-        glfwShowWindow(game.window.glfwWindow);
+        show_window();
 
         //
         // Main Loop
@@ -79,7 +75,7 @@ namespace zf3 {
 
         log("Entering the main loop...");
 
-        while (!glfwWindowShouldClose(game.window.glfwWindow)) {
+        while (!window_should_close()) {
             const double frameTimeLast = frameTime;
             frameTime = glfwGetTime();
 
@@ -105,11 +101,11 @@ namespace zf3 {
                     ++i;
                 } while (i < tickCnt);
 
-                save_input_state(game.inputManager);
+                save_input_state();
             }
 
-            render_all(game.renderer, game.shaderProgs, game.window);
-            glfwSwapBuffers(game.window.glfwWindow);
+            render_all(game.renderer, game.shaderProgs);
+            swap_window_buffers();
 
             glfwPollEvents();
         }
@@ -135,7 +131,7 @@ namespace zf3 {
             clean_renderer(game->renderer);
             clean_shader_progs(game->shaderProgs);
             clean_assets();
-            clean_window(game->window);
+            clean_window();
             free(game);
         }
 

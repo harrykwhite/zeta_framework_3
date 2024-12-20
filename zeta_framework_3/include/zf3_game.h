@@ -8,8 +8,6 @@
 
 namespace zf3 {
     struct UserGameFuncData {
-        const Window& window;
-        const InputManager& inputManager;
         Renderer& renderer;
         SoundSrcManager& sndSrcManager;
         MusicSrcManager& musicSrcManager;

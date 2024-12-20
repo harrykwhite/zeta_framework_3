@@ -324,6 +324,10 @@ namespace zf3 {
         return atan2f(-(b.y - a.y), b.x - a.x);
     }
 
+    inline Vec2D len_dir(const float len, const float dir) {
+        return {len * cosf(dir), len * -sinf(dir)};
+    }
+
     inline Vec2D normalized(const Vec2D vec) {
         const float mag = calc_mag(vec);
         return mag ? vec / mag : Vec2D {};

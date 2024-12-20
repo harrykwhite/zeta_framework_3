@@ -92,81 +92,19 @@ namespace zf3 {
         NUM_MOUSE_BUTTON_CODES
     };
 
-    struct InputState {
-        KeysDownBitset keysDown;
+    bool init_window(const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);
+    void clean_window();
+    zf3::Pt2D get_window_size();
+    void show_window();
+    bool window_should_close();
+    void swap_window_buffers();
 
-        MouseButtonsDownBitset mouseButtonsDown;
-        Vec2D mousePos;
-    };
-
-    struct InputManager {
-        InputState inputState;
-        InputState inputStateSaved; // Used as a reference for press and release detection.
-    };
-
-    struct GLFWWindowCallbackData {
-        Pt2D* windowSize;
-        InputState* inputState;
-    };
-
-    struct Window {
-        GLFWwindow* glfwWindow;
-        GLFWWindowCallbackData glfwWindowCallbackData;
-        Pt2D size;
-    };
-
-    bool init_window(Window& window, InputManager& inputManager, const int width, const int height, const char* const title, const bool resizable, const bool hideCursor);
-    void clean_window(Window& window);
-
-    inline void save_input_state(InputManager& inputManager) {
-        inputManager.inputStateSaved = inputManager.inputState;
-    }
-
-    inline bool is_key_down(const KeyCode keyCode, const InputState& inputState) {
-        return inputState.keysDown & (static_cast<KeysDownBitset>(1) << keyCode);
-    }
-
-    inline bool is_key_down(const KeyCode keyCode, const InputManager& inputManager) {
-        return is_key_down(keyCode, inputManager.inputState);
-    }
-
-    inline bool is_key_pressed(const KeyCode keyCode, const InputState& inputState, const InputState& inputStateLast) {
-        return is_key_down(keyCode, inputState) && !is_key_down(keyCode, inputStateLast);
-    }
-
-    inline bool is_key_pressed(const KeyCode keyCode, const InputManager& inputManager) {
-        return is_key_pressed(keyCode, inputManager.inputState, inputManager.inputStateSaved);
-    }
-
-    inline bool is_key_released(const KeyCode keyCode, const InputState& inputState, const InputState& inputStateLast) {
-        return !is_key_down(keyCode, inputState) && is_key_down(keyCode, inputStateLast);
-    }
-
-    inline bool is_key_released(const KeyCode keyCode, const InputManager& inputManager) {
-        return is_key_released(keyCode, inputManager.inputState, inputManager.inputStateSaved);
-    }
-
-    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputState& inputState) {
-        return inputState.mouseButtonsDown & (static_cast<MouseButtonsDownBitset>(1) << buttonCode);
-    }
-
-    inline bool is_mouse_button_down(const MouseButtonCode buttonCode, const InputManager& inputManager) {
-        return is_mouse_button_down(buttonCode, inputManager.inputState);
-    }
-
-    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputState& inputState, const InputState& inputStateLast) {
-        return is_mouse_button_down(buttonCode, inputState) && !is_mouse_button_down(buttonCode, inputStateLast);
-    }
-
-    inline bool is_mouse_button_pressed(const MouseButtonCode buttonCode, const InputManager& inputManager) {
-        return is_mouse_button_pressed(buttonCode, inputManager.inputState, inputManager.inputStateSaved);
-    }
-
-    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputState& inputState, const InputState& inputStateLast) {
-        return !is_mouse_button_down(buttonCode, inputState) && is_mouse_button_down(buttonCode, inputStateLast);
-    }
-
-    inline bool is_mouse_button_released(const MouseButtonCode buttonCode, const InputManager& inputManager) {
-        return is_mouse_button_released(buttonCode, inputManager.inputState, inputManager.inputStateSaved);
-    }
+    void save_input_state();
+    bool is_key_down(const KeyCode keyCode);
+    bool is_key_pressed(const KeyCode keyCode);
+    bool is_key_released(const KeyCode keyCode);
+    bool is_mouse_button_down(const MouseButtonCode buttonCode);
+    bool is_mouse_button_pressed(const MouseButtonCode buttonCode);
+    bool is_mouse_button_released(const MouseButtonCode buttonCode);
+    Vec2D get_mouse_pos();
 }

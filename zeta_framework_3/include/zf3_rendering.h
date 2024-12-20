@@ -113,7 +113,7 @@ namespace zf3 {
 
     void clean_renderer(Renderer& renderer);
     void reset_renderer(Renderer& renderer, const int layerCnt, const int camLayerCnt = 0, const Vec3D bgColor = {}, const Vec2D camPos = {}, const float camScale = 2.0f);
-    void render_all(const Renderer& renderer, const ShaderProgs& shaderProgs, const Window& window);
+    void render_all(const Renderer& renderer, const ShaderProgs& shaderProgs);
 
     void empty_sprite_batches(Renderer& renderer);
     void write_to_sprite_batch(Renderer& renderer, const int layerIndex, const int texIndex, const Vec2D pos, const Rect& srcRect, const Vec2D origin = {0.5f, 0.5f}, const float rot = 0.0f, const Vec2D scale = {1.0f, 1.0f}, const float alpha = 1.0f);
@@ -127,22 +127,22 @@ namespace zf3 {
         return renderer.layers[id.layerIndex].charBatches[id.batchIndex].displayProps;
     }
 
-    inline Vec2D get_camera_top_left(const Camera& cam, const Window& window) {
-        return cam.pos - (to_vec_2d(window.size) / (cam.scale * 2.0f));
+    inline Vec2D get_camera_top_left(const Camera& cam) {
+        return cam.pos - (to_vec_2d(get_window_size()) / (cam.scale * 2.0f));
     }
 
-    inline Pt2D get_camera_size(const Camera& cam, const Window& window) {
+    inline Pt2D get_camera_size(const Camera& cam) {
         return {
-            static_cast<int>(window.size.x / cam.scale),
-            static_cast<int>(window.size.y / cam.scale)
+            static_cast<int>(get_window_size().x / cam.scale),
+            static_cast<int>(get_window_size().y / cam.scale)
         };
     }
 
-    inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera& cam, const Window& window) {
-        return (pos - get_camera_top_left(cam, window)) * cam.scale;
+    inline Vec2D camera_to_screen_pos(const Vec2D pos, const Camera& cam) {
+        return (pos - get_camera_top_left(cam)) * cam.scale;
     }
 
-    inline Vec2D screen_to_camera_pos(const Vec2D pos, const Camera& cam, const Window& window) {
-        return get_camera_top_left(cam, window) + (pos / cam.scale);
+    inline Vec2D screen_to_camera_pos(const Vec2D pos, const Camera& cam) {
+        return get_camera_top_left(cam) + (pos / cam.scale);
     }
 }
