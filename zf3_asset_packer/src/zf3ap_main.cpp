@@ -107,7 +107,7 @@ int main(const int argCnt, const char* const* args) {
 
     char errorMsgBuf[gk_errorMsgBufSize] = {};
 
-    AssetPacker packer;
+    AssetPacker packer = {};
     const bool packingSuccessful = run_asset_packer(packer, errorMsgBuf, srcDir, outputDir);
     clean_asset_packer(packer, packingSuccessful);
 
