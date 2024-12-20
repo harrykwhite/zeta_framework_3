@@ -11,7 +11,7 @@ namespace zf3 {
         float y;
 
         Vec2D() = default;
-        Vec2D(const float x, const float y) : x(x), y(y) {}
+        constexpr Vec2D(const float x, const float y) : x(x), y(y) {}
 
         Vec2D operator+(const Vec2D& other) const {
             return {x + other.x, y + other.y};
@@ -76,7 +76,7 @@ namespace zf3 {
         };
 
         Vec3D() = default;
-        Vec3D(const float x, const float y, const float z) : x(x), y(y), z(z) {}
+        constexpr Vec3D(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
         Vec3D operator+(const Vec3D& other) const {
             return {x + other.x, y + other.y, z + other.z};
@@ -147,7 +147,7 @@ namespace zf3 {
         };
 
         Vec4D() = default;
-        Vec4D(const float x, const float y, const float z, const float w) : x(x), y(y), z(z), w(w) {}
+        constexpr Vec4D(const float x, const float y, const float z, const float w) : x(x), y(y), z(z), w(w) {}
 
         Vec4D operator+(const Vec4D& other) const {
             return {x + other.x, y + other.y, z + other.z, w + other.w};
@@ -211,7 +211,7 @@ namespace zf3 {
         int y;
 
         Pt2D() = default;
-        Pt2D(const int x, const int y) : x(x), y(y) {}
+        constexpr Pt2D(const int x, const int y) : x(x), y(y) {}
     };
 
     struct Matrix4x4 {
@@ -229,9 +229,9 @@ namespace zf3 {
         float height;
 
         RectFloat() = default;
-        RectFloat(const float x, const float y, const float width, const float height) : x(x), y(y), width(width), height(height) {}
-        RectFloat(const float width, const float height) : x(0.0f), y(0.0f), width(width), height(height) {}
-        RectFloat(const Vec2D pos, const Vec2D size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        constexpr RectFloat(const float x, const float y, const float width, const float height) : x(x), y(y), width(width), height(height) {}
+        constexpr RectFloat(const float width, const float height) : x(0.0f), y(0.0f), width(width), height(height) {}
+        constexpr RectFloat(const Vec2D pos, const Vec2D size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         float get_right() const {
             return x + width;
@@ -261,9 +261,9 @@ namespace zf3 {
         int height;
 
         Rect() = default;
-        Rect(const int x, const int y, const int width, const int height) : x(x), y(y), width(width), height(height) {}
-        Rect(const int width, const int height) : x(0), y(0), width(width), height(height) {}
-        Rect(const Pt2D pos, const Pt2D size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
+        constexpr Rect(const int x, const int y, const int width, const int height) : x(x), y(y), width(width), height(height) {}
+        constexpr Rect(const int width, const int height) : x(0), y(0), width(width), height(height) {}
+        constexpr Rect(const Pt2D pos, const Pt2D size) : x(pos.x), y(pos.y), width(size.x), height(size.y) {}
 
         operator RectFloat() const {
             return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)};
