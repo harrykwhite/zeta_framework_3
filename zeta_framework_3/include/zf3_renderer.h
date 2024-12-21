@@ -72,7 +72,7 @@ namespace zf3 {
         int spriteBatchesFilled;
         int spriteBatchCnt;
         CharBatch charBatches[gk_renderLayerCharBatchLimit];
-        Bitset<gk_renderLayerCharBatchLimit> charBatchActivity;
+        StaticBitset<gk_renderLayerCharBatchLimit> charBatchActivity;
     };
 
     struct Camera {

@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#include <zf3c_mem.h>
 #include <zf3_misc.h>
 #include <zf3_assets.h>
 
@@ -22,7 +23,7 @@ namespace zf3 {
     struct SoundSrcManager {
         ALID alIDs[gk_soundSrcLimit];
         int versions[gk_soundSrcLimit];
-        Bitset<gk_soundSrcLimit> autoReleases; // Indicates which sources need to be automatically released when finished (due to not them not being referenced).
+        StaticBitset<gk_soundSrcLimit> autoReleases; // Indicates which sources need to be automatically released when finished (due to not them not being referenced).
     };
 
     struct MusicSrc {
@@ -37,7 +38,7 @@ namespace zf3 {
 
     struct MusicSrcManager {
         MusicSrc srcs[gk_musicSrcLimit];
-        Bitset<gk_musicSrcLimit> activity;
+        StaticBitset<gk_musicSrcLimit> activity;
         int versions[gk_musicSrcLimit];
     };
 

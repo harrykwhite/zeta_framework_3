@@ -193,7 +193,7 @@ namespace zf3 {
             glUniformMatrix4fv(shaderProgs.charQuad.viewUniLoc, 1, false, reinterpret_cast<const float*>(viewMat->elems));
 
             for (int j = 0; j < gk_renderLayerCharBatchLimit; ++j) {
-                if (!is_bit_active(layer.charBatchActivity.bytes, j)) {
+                if (!is_bit_active(layer.charBatchActivity, j)) {
                     continue;
                 }
 
@@ -309,10 +309,10 @@ namespace zf3 {
 
         RenderLayer& layer = renderer.layers[layerIndex];
 
-        const int batchIndex = get_first_inactive_bit_index(layer.charBatchActivity.bytes, gk_renderLayerCharBatchLimit);
+        const int batchIndex = get_first_inactive_bit_index(layer.charBatchActivity);
         assert(batchIndex != -1);
 
-        activate_bit(layer.charBatchActivity.bytes, batchIndex);
+        activate_bit(layer.charBatchActivity, batchIndex);
 
         layer.charBatches[batchIndex] = {
             .quadBuf = gen_quad_buf(slotCnt, false),
@@ -333,7 +333,7 @@ namespace zf3 {
 
     void deactivate_char_batch(Renderer& renderer, const CharBatchID id) {
         RenderLayer& layer = renderer.layers[id.layerIndex];
-        deactivate_bit(layer.charBatchActivity.bytes, id.batchIndex);
+        deactivate_bit(layer.charBatchActivity, id.batchIndex);
     }
 
     void write_to_char_batch(Renderer& renderer, const CharBatchID id, const char* const text, const FontHorAlign horAlign, const FontVerAlign verAlign) {

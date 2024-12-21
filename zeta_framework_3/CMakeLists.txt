@@ -13,7 +13,6 @@ add_library(zeta_framework_3 STATIC
     src/zf3_renderer.cpp
     src/zf3_audio.cpp
     src/zf3_rand.cpp
-    src/zf3_misc.cpp
     ${PARENT_DIR}/vendor/glad/src/glad.c
 
     include/zf3.h
