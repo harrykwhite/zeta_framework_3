@@ -37,7 +37,7 @@ namespace zf3 {
         Music music;
     };
 
-    bool init_assets();
-    void clean_assets();
+    bool load_assets();
+    void unload_assets();
     const Assets& get_assets();
 }

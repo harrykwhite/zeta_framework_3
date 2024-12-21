@@ -102,7 +102,7 @@ int main(const int argCnt, const char* const* args) {
         return EXIT_FAILURE;
     }
 
-    const char* const srcDir = args[1];    // The directory containing the assets to pack.
+    const char* const srcDir = args[1]; // The directory containing the assets to pack.
     const char* const outputDir = args[2]; // The directory to output the packed assets file to.
 
     char errorMsgBuf[gk_errorMsgBufSize] = {};

@@ -31,5 +31,5 @@ namespace zf3 {
     };
 
     ShaderProgs load_shader_progs();
-    void clean_shader_progs(ShaderProgs& progs);
+    void unload_shader_progs(ShaderProgs& progs);
 }

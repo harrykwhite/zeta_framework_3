@@ -80,7 +80,6 @@ namespace zf3 {
             glEnableVertexAttribArray(1);
         }
 
-        // Unbind.
         glBindVertexArray(0);
 
         return buf;
@@ -155,9 +154,7 @@ namespace zf3 {
         const Matrix4x4 defaultViewMat = create_identity_matrix_4x4();
 
         for (int i = 0; i < renderer.layerCnt; ++i) {
-            //
-            // Sprite Batches
-            //
+            // Render sprite batches.
             glUseProgram(shaderProgs.spriteQuad.glID);
 
             glUniformMatrix4fv(shaderProgs.spriteQuad.projUniLoc, 1, false, reinterpret_cast<const float*>(projMat.elems));
@@ -184,9 +181,7 @@ namespace zf3 {
                 glDrawElements(GL_TRIANGLES, 6 * batchTransData->slotsUsed, GL_UNSIGNED_SHORT, nullptr);
             }
 
-            //
-            // Character Batches
-            //
+            // Render character batches.
             glUseProgram(shaderProgs.charQuad.glID);
 
             glUniformMatrix4fv(shaderProgs.charQuad.projUniLoc, 1, false, reinterpret_cast<const float*>(projMat.elems));

@@ -18,9 +18,7 @@ namespace zf3 {
     }
 
     static void run_game(Game& game, const UserGameInfo& userInfo) {
-        //
-        // Initialisation
-        //
+        // Initialise the game.
         log("Initialising...");
 
         if (!glfwInit()) {
@@ -47,7 +45,7 @@ namespace zf3 {
             return;
         }
 
-        if (!init_assets()) {
+        if (!load_assets()) {
             return;
         }
 
@@ -67,9 +65,7 @@ namespace zf3 {
 
         show_window();
 
-        //
-        // Main Loop
-        //
+        // Run the main loop.
         double frameTime = glfwGetTime();
         double frameDurAccum = 0.0;
 
@@ -89,7 +85,7 @@ namespace zf3 {
 
                 do {
                     handle_auto_release_sound_srcs(game.sndSrcManager);
-                    refresh_music_src_bufs(game.musicSrcManager); // TEMP: Put on another thread.
+                    refresh_music_src_bufs(game.musicSrcManager);
 
                     empty_sprite_batches(game.renderer);
 
@@ -125,15 +121,13 @@ namespace zf3 {
 
         userInfo.clean();
 
-        if (game) {
-            clean_music_srcs(game->musicSrcManager);
-            clean_sound_srcs(game->sndSrcManager);
-            clean_renderer(game->renderer);
-            clean_shader_progs(game->shaderProgs);
-            free(game);
-        }
+        clean_music_srcs(game->musicSrcManager);
+        clean_sound_srcs(game->sndSrcManager);
+        clean_renderer(game->renderer);
+        unload_shader_progs(game->shaderProgs);
+        free(game);
 
-        clean_assets();
+        unload_assets();
         clean_audio_system();
         clean_window();
 

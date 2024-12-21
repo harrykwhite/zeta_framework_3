@@ -33,25 +33,28 @@ static zf3::Pt2D calc_font_tex_size(const FT_Face ftFace) {
     const int idealTexWidth = largestGlyphBitmapWidth * zf3::gk_fontCharRangeSize;
 
     return {
-        (idealTexWidth < zf3::gk_texSizeLimit.x) ? idealTexWidth : zf3::gk_texSizeLimit.x,
+        idealTexWidth < zf3::gk_texSizeLimit.x ? idealTexWidth : zf3::gk_texSizeLimit.x,
         get_line_height(ftFace) * ((idealTexWidth / zf3::gk_texSizeLimit.x) + 1)
     };
 }
 
 static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* const filePath, const int ptSize) {
-    zf3::zero_out(fd);
+    assert(zf3::is_zero(fd));
 
+    // Create a FreeType face object.
     FT_Face ftFace;
 
     if (FT_New_Face(ftLib, filePath, 0, &ftFace)) {
         zf3::log_error("Failed to create a FreeType face object for font with file path %s.", filePath);
         return false;
     }
+    //
 
     FT_Set_Char_Size(ftFace, ptSize << 6, 0, 96, 0);
 
     fd.arrangementInfo.lineHeight = get_line_height(ftFace);
 
+    // Calculate and check font texture size.
     fd.texSize = calc_font_tex_size(ftFace);
 
     if (fd.texSize.y > zf3::gk_texSizeLimit.y) {
@@ -60,6 +63,7 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
         return false;
     }
 
+    // Initialise the font texture pixel data to transparent white.
     const int texPxDataSize = zf3::gk_texChannelCnt * fd.texSize.x * fd.texSize.y;
 
     for (int i = 0; i < texPxDataSize; i += zf3::gk_texChannelCnt) {
@@ -68,6 +72,7 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
         fd.texPxData[i + 2] = 255;
         fd.texPxData[i + 3] = 0;
     }
+    //
 
     int charDrawX = 0;
     int charDrawY = 0;
@@ -78,11 +83,13 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
         FT_Load_Glyph(ftFace, ftCharIndex, FT_LOAD_DEFAULT);
         FT_Render_Glyph(ftFace->glyph, FT_RENDER_MODE_NORMAL);
 
+        // If we cannot horizontally fit this character's texture pixel data, to a new line.
         if (charDrawX + ftFace->glyph->bitmap.width > zf3::gk_texSizeLimit.x) {
             charDrawX = 0;
             charDrawY += fd.arrangementInfo.lineHeight;
         }
 
+        // Get character arrangement information.
         fd.arrangementInfo.chars.horOffsets[i] = ftFace->glyph->metrics.horiBearingX >> 6;
         fd.arrangementInfo.chars.verOffsets[i] = (ftFace->size->metrics.ascender - ftFace->glyph->metrics.horiBearingY) >> 6;
         fd.arrangementInfo.chars.horAdvances[i] = ftFace->glyph->metrics.horiAdvance >> 6;
@@ -92,12 +99,14 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
         fd.arrangementInfo.chars.srcRects[i].width = ftFace->glyph->bitmap.width;
         fd.arrangementInfo.chars.srcRects[i].height = ftFace->glyph->bitmap.rows;
 
+        // Get kernings for all character pairings.
         for (int j = 0; j < zf3::gk_fontCharRangeSize; j++) {
             FT_Vector ftKerning;
             FT_Get_Kerning(ftFace, FT_Get_Char_Index(ftFace, zf3::gk_fontCharRangeBegin + j), ftCharIndex, FT_KERNING_DEFAULT, &ftKerning);
             fd.arrangementInfo.chars.kernings[(zf3::gk_fontCharRangeSize * i) + j] = ftKerning.x >> 6;
         }
 
+        // Set the pixel data (alpha values only) for the character.
         for (int y = 0; y < fd.arrangementInfo.chars.srcRects[i].height; y++) {
             for (int x = 0; x < fd.arrangementInfo.chars.srcRects[i].width; x++) {
                 unsigned char pxAlpha = ftFace->glyph->bitmap.buffer[(y * ftFace->glyph->bitmap.width) + x];
@@ -111,6 +120,7 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
                 }
             }
         }
+        //
 
         charDrawX += fd.arrangementInfo.chars.srcRects[i].width;
     }
@@ -121,6 +131,7 @@ static bool load_font_data(FontData& fd, const FT_Library ftLib, const char* con
 }
 
 bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const srcAssetFilePathBuf, const int srcAssetFilePathStartLen, char* const errorMsgBuf) {
+    // Initialise FreeType.
     FT_Library ftLib;
 
     if (FT_Init_FreeType(&ftLib)) {
@@ -128,13 +139,15 @@ bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const s
         return false;
     }
 
-    const auto fontData = zf3::alloc<FontData>(); // Reused for each font.
+    // Allocate memory for font data, to be reused for all fonts.
+    const auto fontData = zf3::alloc<FontData>();
 
     if (!fontData) {
         FT_Done_FreeType(ftLib);
         return false;
     }
 
+    // Get the fonts array from the packing instructions JSON file.
     const cJSON* const cjFonts = get_cj_assets_array(instrsCJ, "fonts");
 
     if (!cjFonts) {
@@ -144,6 +157,7 @@ bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const s
         return false;
     }
 
+    // Get, check, and write the number of fonts to pack.
     const int fontCnt = cJSON_GetArraySize(cjFonts);
 
     if (fontCnt > zf3::gk_fontLimit) {
@@ -155,6 +169,7 @@ bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const s
 
     fwrite(&fontCnt, sizeof(fontCnt), 1, outputFS);
 
+    // Pack each font.
     bool success = true;
 
     const cJSON* cjFont = nullptr;
@@ -163,16 +178,20 @@ bool pack_fonts(FILE* const outputFS, const cJSON* const instrsCJ, char* const s
         const cJSON* const cjRelFilePath = cJSON_GetObjectItem(cjFont, "relFilePath");
         const cJSON* const cjPtSize = cJSON_GetObjectItem(cjFont, "ptSize");
 
+        // Check font entry types.
         if (!cJSON_IsString(cjRelFilePath) || !cJSON_IsNumber(cjPtSize)) {
             snprintf(errorMsgBuf, gk_errorMsgBufSize, "Invalid font entry in packing instructions JSON file!");
             success = false;
             break;
         }
 
+        // Get the relative path of the font.
         if (!complete_asset_file_path(srcAssetFilePathBuf, errorMsgBuf, srcAssetFilePathStartLen, cjRelFilePath->valuestring)) {
             success = false;
             break;
         }
+
+        zf3::zero_out(*fontData);
 
         if (!load_font_data(*fontData, ftLib, srcAssetFilePathBuf, cjPtSize->valueint)) {
             snprintf(errorMsgBuf, gk_errorMsgBufSize, "Failed to load data for font with relative file path %s and point size %d!", cjRelFilePath->valuestring, cjPtSize->valueint);

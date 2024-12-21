@@ -3,7 +3,7 @@
 namespace zf3 {
     static Assets* i_assets;
 
-    bool init_assets() {
+    bool load_assets() {
         assert(!i_assets);
 
         // Allocate memory for assets.
@@ -125,7 +125,7 @@ namespace zf3 {
         return true;
     }
 
-    void clean_assets() {
+    void unload_assets() {
         if (!i_assets) {
             return;
         }
